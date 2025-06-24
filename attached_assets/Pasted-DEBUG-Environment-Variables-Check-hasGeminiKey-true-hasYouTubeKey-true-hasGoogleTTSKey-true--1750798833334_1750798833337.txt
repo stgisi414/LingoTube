@@ -1,0 +1,247 @@
+DEBUG: Environment Variables Check: {hasGeminiKey: true, hasYouTubeKey: true, hasGoogleTTSKey: true, hasCustomSearchCX: true, hasCustomSearchKey: true, …}
+index-ia6XAj1R.js:265 🎓 Generating lesson plan for topic: "korean onomatopoiea"
+index-ia6XAj1R.js:301 ✅ Generated lesson plan with 5 segments
+index-ia6XAj1R.js:54 🗣️ Starting multilingual TTS for: "Annyeonghaseyo! <lang:ko>안녕하세요!</lang:ko> Welcome to our lesson on Korean onomatopoeia!  Today, we'l..."
+index-ia6XAj1R.js:54 🗣️ Parsed into 8 segments: (8) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+index-ia6XAj1R.js:54 🎵 Synthesizing "Annyeonghaseyo!" with voice en-US-Neural2-A
+index-ia6XAj1R.js:54 
+            
+            
+           POST https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyA9PqKR1BekV3xaSoa4nkyptR5FDpXpWBo 400 (Bad Request)
+mv @ index-ia6XAj1R.js:54
+pv @ index-ia6XAj1R.js:54
+(anonymous) @ index-ia6XAj1R.js:322
+onClick @ index-ia6XAj1R.js:322
+od @ index-ia6XAj1R.js:48
+(anonymous) @ index-ia6XAj1R.js:48
+vo @ index-ia6XAj1R.js:48
+us @ index-ia6XAj1R.js:48
+ps @ index-ia6XAj1R.js:49
+ey @ index-ia6XAj1R.js:49Understand this error
+index-ia6XAj1R.js:54 TTS synthesis failed for "Annyeonghaseyo!": Error: TTS API error: 400
+    at mv (index-ia6XAj1R.js:54:21684)
+    at async pv (index-ia6XAj1R.js:54:22127)
+    at async index-ia6XAj1R.js:322:14670
+mv @ index-ia6XAj1R.js:54
+await in mv
+pv @ index-ia6XAj1R.js:54
+(anonymous) @ index-ia6XAj1R.js:322
+onClick @ index-ia6XAj1R.js:322
+od @ index-ia6XAj1R.js:48
+(anonymous) @ index-ia6XAj1R.js:48
+vo @ index-ia6XAj1R.js:48
+us @ index-ia6XAj1R.js:48
+ps @ index-ia6XAj1R.js:49
+ey @ index-ia6XAj1R.js:49Understand this error
+index-ia6XAj1R.js:54 🎵 Synthesizing "안녕하세요!" with voice ko-KR-Neural2-A
+index-ia6XAj1R.js:54 
+            
+            
+           POST https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyA9PqKR1BekV3xaSoa4nkyptR5FDpXpWBo 400 (Bad Request)
+mv @ index-ia6XAj1R.js:54
+pv @ index-ia6XAj1R.js:54
+await in pv
+(anonymous) @ index-ia6XAj1R.js:322
+onClick @ index-ia6XAj1R.js:322
+od @ index-ia6XAj1R.js:48
+(anonymous) @ index-ia6XAj1R.js:48
+vo @ index-ia6XAj1R.js:48
+us @ index-ia6XAj1R.js:48
+ps @ index-ia6XAj1R.js:49
+ey @ index-ia6XAj1R.js:49Understand this error
+index-ia6XAj1R.js:54 TTS synthesis failed for "안녕하세요!": Error: TTS API error: 400
+    at mv (index-ia6XAj1R.js:54:21684)
+    at async pv (index-ia6XAj1R.js:54:22127)
+    at async index-ia6XAj1R.js:322:14670
+mv @ index-ia6XAj1R.js:54
+await in mv
+pv @ index-ia6XAj1R.js:54
+await in pv
+(anonymous) @ index-ia6XAj1R.js:322
+onClick @ index-ia6XAj1R.js:322
+od @ index-ia6XAj1R.js:48
+(anonymous) @ index-ia6XAj1R.js:48
+vo @ index-ia6XAj1R.js:48
+us @ index-ia6XAj1R.js:48
+ps @ index-ia6XAj1R.js:49
+ey @ index-ia6XAj1R.js:49Understand this error
+index-ia6XAj1R.js:54 🎵 Synthesizing "Welcome to our lesson on Korean onomatopoeia!  Today, we'll explore the fascinating world of" with voice en-US-Neural2-A
+index-ia6XAj1R.js:54 
+            
+            
+           POST https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyA9PqKR1BekV3xaSoa4nkyptR5FDpXpWBo 400 (Bad Request)
+mv @ index-ia6XAj1R.js:54
+pv @ index-ia6XAj1R.js:54
+await in pv
+(anonymous) @ index-ia6XAj1R.js:322
+onClick @ index-ia6XAj1R.js:322
+od @ index-ia6XAj1R.js:48
+(anonymous) @ index-ia6XAj1R.js:48
+vo @ index-ia6XAj1R.js:48
+us @ index-ia6XAj1R.js:48
+ps @ index-ia6XAj1R.js:49
+ey @ index-ia6XAj1R.js:49Understand this error
+index-ia6XAj1R.js:54 TTS synthesis failed for "Welcome to our lesson on Korean onomatopoeia!  Today, we'll explore the fascinating world of": Error: TTS API error: 400
+    at mv (index-ia6XAj1R.js:54:21684)
+    at async pv (index-ia6XAj1R.js:54:22127)
+    at async index-ia6XAj1R.js:322:14670
+mv @ index-ia6XAj1R.js:54
+await in mv
+pv @ index-ia6XAj1R.js:54
+await in pv
+(anonymous) @ index-ia6XAj1R.js:322
+onClick @ index-ia6XAj1R.js:322
+od @ index-ia6XAj1R.js:48
+(anonymous) @ index-ia6XAj1R.js:48
+vo @ index-ia6XAj1R.js:48
+us @ index-ia6XAj1R.js:48
+ps @ index-ia6XAj1R.js:49
+ey @ index-ia6XAj1R.js:49Understand this error
+index-ia6XAj1R.js:54 🎵 Synthesizing "의성어" with voice ko-KR-Neural2-A
+index-ia6XAj1R.js:54 
+            
+            
+           POST https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyA9PqKR1BekV3xaSoa4nkyptR5FDpXpWBo 400 (Bad Request)
+mv @ index-ia6XAj1R.js:54
+pv @ index-ia6XAj1R.js:54
+await in pv
+(anonymous) @ index-ia6XAj1R.js:322
+onClick @ index-ia6XAj1R.js:322
+od @ index-ia6XAj1R.js:48
+(anonymous) @ index-ia6XAj1R.js:48
+vo @ index-ia6XAj1R.js:48
+us @ index-ia6XAj1R.js:48
+ps @ index-ia6XAj1R.js:49
+ey @ index-ia6XAj1R.js:49Understand this error
+index-ia6XAj1R.js:54 TTS synthesis failed for "의성어": Error: TTS API error: 400
+    at mv (index-ia6XAj1R.js:54:21684)
+    at async pv (index-ia6XAj1R.js:54:22127)
+    at async index-ia6XAj1R.js:322:14670
+mv @ index-ia6XAj1R.js:54
+await in mv
+pv @ index-ia6XAj1R.js:54
+await in pv
+(anonymous) @ index-ia6XAj1R.js:322
+onClick @ index-ia6XAj1R.js:322
+od @ index-ia6XAj1R.js:48
+(anonymous) @ index-ia6XAj1R.js:48
+vo @ index-ia6XAj1R.js:48
+us @ index-ia6XAj1R.js:48
+ps @ index-ia6XAj1R.js:49
+ey @ index-ia6XAj1R.js:49Understand this error
+index-ia6XAj1R.js:54 🎵 Synthesizing "and" with voice en-US-Neural2-A
+index-ia6XAj1R.js:54 
+            
+            
+           POST https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyA9PqKR1BekV3xaSoa4nkyptR5FDpXpWBo 400 (Bad Request)
+mv @ index-ia6XAj1R.js:54
+pv @ index-ia6XAj1R.js:54
+await in pv
+(anonymous) @ index-ia6XAj1R.js:322
+onClick @ index-ia6XAj1R.js:322
+od @ index-ia6XAj1R.js:48
+(anonymous) @ index-ia6XAj1R.js:48
+vo @ index-ia6XAj1R.js:48
+us @ index-ia6XAj1R.js:48
+ps @ index-ia6XAj1R.js:49
+ey @ index-ia6XAj1R.js:49Understand this error
+index-ia6XAj1R.js:54 TTS synthesis failed for "and": Error: TTS API error: 400
+    at mv (index-ia6XAj1R.js:54:21684)
+    at async pv (index-ia6XAj1R.js:54:22127)
+    at async index-ia6XAj1R.js:322:14670
+mv @ index-ia6XAj1R.js:54
+await in mv
+pv @ index-ia6XAj1R.js:54
+await in pv
+(anonymous) @ index-ia6XAj1R.js:322
+onClick @ index-ia6XAj1R.js:322
+od @ index-ia6XAj1R.js:48
+(anonymous) @ index-ia6XAj1R.js:48
+vo @ index-ia6XAj1R.js:48
+us @ index-ia6XAj1R.js:48
+ps @ index-ia6XAj1R.js:49
+ey @ index-ia6XAj1R.js:49Understand this error
+index-ia6XAj1R.js:54 🎵 Synthesizing "의태어" with voice ko-KR-Neural2-A
+index-ia6XAj1R.js:54 
+            
+            
+           POST https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyA9PqKR1BekV3xaSoa4nkyptR5FDpXpWBo 400 (Bad Request)
+mv @ index-ia6XAj1R.js:54
+pv @ index-ia6XAj1R.js:54
+await in pv
+(anonymous) @ index-ia6XAj1R.js:322
+onClick @ index-ia6XAj1R.js:322
+od @ index-ia6XAj1R.js:48
+(anonymous) @ index-ia6XAj1R.js:48
+vo @ index-ia6XAj1R.js:48
+us @ index-ia6XAj1R.js:48
+ps @ index-ia6XAj1R.js:49
+ey @ index-ia6XAj1R.js:49Understand this error
+index-ia6XAj1R.js:54 TTS synthesis failed for "의태어": Error: TTS API error: 400
+    at mv (index-ia6XAj1R.js:54:21684)
+    at async pv (index-ia6XAj1R.js:54:22127)
+    at async index-ia6XAj1R.js:322:14670
+mv @ index-ia6XAj1R.js:54
+await in mv
+pv @ index-ia6XAj1R.js:54
+await in pv
+(anonymous) @ index-ia6XAj1R.js:322
+onClick @ index-ia6XAj1R.js:322
+od @ index-ia6XAj1R.js:48
+(anonymous) @ index-ia6XAj1R.js:48
+vo @ index-ia6XAj1R.js:48
+us @ index-ia6XAj1R.js:48
+ps @ index-ia6XAj1R.js:49
+ey @ index-ia6XAj1R.js:49Understand this error
+index-ia6XAj1R.js:54 🎵 Synthesizing ", words that mimic sounds and actions.  Get ready to learn how these expressive words bring Korean to life!" with voice en-US-Neural2-A
+index-ia6XAj1R.js:54 
+            
+            
+           POST https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyA9PqKR1BekV3xaSoa4nkyptR5FDpXpWBo 400 (Bad Request)
+mv @ index-ia6XAj1R.js:54
+pv @ index-ia6XAj1R.js:54
+await in pv
+(anonymous) @ index-ia6XAj1R.js:322
+onClick @ index-ia6XAj1R.js:322
+od @ index-ia6XAj1R.js:48
+(anonymous) @ index-ia6XAj1R.js:48
+vo @ index-ia6XAj1R.js:48
+us @ index-ia6XAj1R.js:48
+ps @ index-ia6XAj1R.js:49
+ey @ index-ia6XAj1R.js:49Understand this error
+index-ia6XAj1R.js:54 TTS synthesis failed for ", words that mimic sounds and actions.  Get ready to learn how these expressive words bring Korean to life!": Error: TTS API error: 400
+    at mv (index-ia6XAj1R.js:54:21684)
+    at async pv (index-ia6XAj1R.js:54:22127)
+    at async index-ia6XAj1R.js:322:14670
+mv @ index-ia6XAj1R.js:54
+await in mv
+pv @ index-ia6XAj1R.js:54
+await in pv
+(anonymous) @ index-ia6XAj1R.js:322
+onClick @ index-ia6XAj1R.js:322
+od @ index-ia6XAj1R.js:48
+(anonymous) @ index-ia6XAj1R.js:48
+vo @ index-ia6XAj1R.js:48
+us @ index-ia6XAj1R.js:48
+ps @ index-ia6XAj1R.js:49
+ey @ index-ia6XAj1R.js:49Understand this error
+index-ia6XAj1R.js:54 🎵 Synthesizing "Let's begin!" with voice en-US-Neural2-A
+index-ia6XAj1R.js:54 
+            
+            
+           POST https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyA9PqKR1BekV3xaSoa4nkyptR5FDpXpWBo 400 (Bad Request)
+mv @ index-ia6XAj1R.js:54
+pv @ index-ia6XAj1R.js:54
+await in pv
+(anonymous) @ index-ia6XAj1R.js:322
+onClick @ index-ia6XAj1R.js:322
+od @ index-ia6XAj1R.js:48
+(anonymous) @ index-ia6XAj1R.js:48
+vo @ index-ia6XAj1R.js:48
+us @ index-ia6XAj1R.js:48
+ps @ index-ia6XAj1R.js:49
+ey @ index-ia6XAj1R.js:49Understand this error
+index-ia6XAj1R.js:54 TTS synthesis failed for "Let's begin!": Error: TTS API error: 400
+    at mv (index-ia6XAj1R.js:54:21684)
+    at async pv (index-ia6XAj1R.js:54:22127)
+    at async index-ia6XAj1R.js:322:14670
