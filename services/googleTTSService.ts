@@ -1,15 +1,16 @@
+
 import { GOOGLE_TTS_API_KEY } from '../constants';
 
-// Language-specific voice configurations
+// Language-specific voice configurations - using Standard voices for better reliability
 const VOICE_CONFIG = {
-  'en': { languageCode: 'en-US', voiceName: 'en-US-Neural2-A' },
-  'es': { languageCode: 'es-ES', voiceName: 'es-ES-Neural2-A' },
-  'fr': { languageCode: 'fr-FR', voiceName: 'fr-FR-Neural2-A' },
-  'de': { languageCode: 'de-DE', voiceName: 'de-DE-Neural2-A' },
-  'it': { languageCode: 'it-IT', voiceName: 'it-IT-Neural2-A' },
-  'zh': { languageCode: 'zh-CN', voiceName: 'zh-CN-Neural2-A' },
-  'ja': { languageCode: 'ja-JP', voiceName: 'ja-JP-Neural2-A' },
-  'ko': { languageCode: 'ko-KR', voiceName: 'ko-KR-Neural2-A' }
+  'en': { languageCode: 'en-US', voiceName: 'en-US-Standard-C' },
+  'es': { languageCode: 'es-ES', voiceName: 'es-ES-Standard-A' },
+  'fr': { languageCode: 'fr-FR', voiceName: 'fr-FR-Standard-A' },
+  'de': { languageCode: 'de-DE', voiceName: 'de-DE-Standard-A' },
+  'it': { languageCode: 'it-IT', voiceName: 'it-IT-Standard-A' },
+  'zh': { languageCode: 'zh-CN', voiceName: 'zh-CN-Standard-A' },
+  'ja': { languageCode: 'ja-JP', voiceName: 'ja-JP-Standard-A' },
+  'ko': { languageCode: 'ko-KR', voiceName: 'ko-KR-Standard-A' }
 };
 
 interface LanguageSegment {
@@ -40,27 +41,33 @@ class SpeechManager {
     }
 
     const audioContent = this.audioQueue[this.currentIndex];
-    const audioBlob = this.base64ToBlob(audioContent);
-    const audioUrl = URL.createObjectURL(audioBlob);
+    try {
+      const audioBlob = this.base64ToBlob(audioContent);
+      const audioUrl = URL.createObjectURL(audioBlob);
 
-    this.currentAudio = new Audio(audioUrl);
+      this.currentAudio = new Audio(audioUrl);
 
-    return new Promise((resolve, reject) => {
-      if (!this.currentAudio) return reject(new Error('Audio creation failed'));
+      return new Promise((resolve, reject) => {
+        if (!this.currentAudio) return reject(new Error('Audio creation failed'));
 
-      this.currentAudio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-        this.currentIndex++;
-        this.playNext().then(resolve).catch(reject);
-      };
+        this.currentAudio.onended = () => {
+          URL.revokeObjectURL(audioUrl);
+          this.currentIndex++;
+          this.playNext().then(resolve).catch(reject);
+        };
 
-      this.currentAudio.onerror = () => {
-        URL.revokeObjectURL(audioUrl);
-        reject(new Error('Audio playback failed'));
-      };
+        this.currentAudio.onerror = () => {
+          URL.revokeObjectURL(audioUrl);
+          reject(new Error('Audio playback failed'));
+        };
 
-      this.currentAudio.play().catch(reject);
-    });
+        this.currentAudio.play().catch(reject);
+      });
+    } catch (error) {
+      console.error(`Failed to play audio segment ${this.currentIndex}:`, error);
+      this.currentIndex++;
+      await this.playNext();
+    }
   }
 
   stop(): void {
@@ -133,7 +140,7 @@ function parseLanguageSegments(text: string): LanguageSegment[] {
 }
 
 /**
- * Synthesize speech for a single segment
+ * Synthesize speech for a single segment with fallback options
  */
 async function synthesizeSegment(text: string, langCode: string): Promise<string | null> {
   if (!GOOGLE_TTS_API_KEY) {
@@ -143,13 +150,34 @@ async function synthesizeSegment(text: string, langCode: string): Promise<string
 
   const voiceConfig = VOICE_CONFIG[langCode as keyof typeof VOICE_CONFIG] || VOICE_CONFIG.en;
 
-  console.log(`🎵 Synthesizing "${text}" with voice ${voiceConfig.voiceName}`);
+  console.log(`🎵 Synthesizing "${text.substring(0, 50)}..." with voice ${voiceConfig.voiceName}`);
 
-  const requestBody = {
+  // Try with specified voice first
+  let result = await tryTTSRequest(text, voiceConfig.voiceName, voiceConfig.languageCode);
+  
+  if (!result) {
+    // Fallback: try without specifying voice name
+    console.log(`🔄 Retrying without voice name for language ${voiceConfig.languageCode}`);
+    result = await tryTTSRequest(text, undefined, voiceConfig.languageCode);
+  }
+  
+  if (!result) {
+    // Final fallback: use English
+    console.log(`🔄 Final fallback to English for text: "${text.substring(0, 30)}..."`);
+    result = await tryTTSRequest(text, 'en-US-Standard-C', 'en-US');
+  }
+
+  return result;
+}
+
+/**
+ * Helper function to try TTS request with specific parameters
+ */
+async function tryTTSRequest(text: string, voiceName: string | undefined, languageCode: string): Promise<string | null> {
+  const requestBody: any = {
     input: { text },
     voice: {
-      languageCode: voiceConfig.languageCode,
-      name: voiceConfig.voiceName,
+      languageCode,
       ssmlGender: 'NEUTRAL'
     },
     audioConfig: {
@@ -158,6 +186,11 @@ async function synthesizeSegment(text: string, langCode: string): Promise<string
       pitch: 0.0
     }
   };
+
+  // Only add voice name if specified
+  if (voiceName) {
+    requestBody.voice.name = voiceName;
+  }
 
   try {
     const response = await fetch(
@@ -170,13 +203,15 @@ async function synthesizeSegment(text: string, langCode: string): Promise<string
     );
 
     if (!response.ok) {
-      throw new Error(`TTS API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error(`TTS API error ${response.status}:`, errorText);
+      return null;
     }
 
     const data = await response.json();
     return data.audioContent;
   } catch (error) {
-    console.error(`TTS synthesis failed for "${text}":`, error);
+    console.error(`TTS request failed:`, error);
     return null;
   }
 }
@@ -190,7 +225,7 @@ export async function speakMultilingualText(text: string): Promise<void> {
   const segments = parseLanguageSegments(text);
   console.log(`🗣️ Parsed into ${segments.length} segments:`, segments.map(s => ({
     langCode: s.langCode,
-    text: s.text.substring(0, 30) + '...'
+    text: s.text.substring(0, 30) + (s.text.length > 30 ? '...' : '')
   })));
 
   if (segments.length === 0) return;
@@ -201,12 +236,16 @@ export async function speakMultilingualText(text: string): Promise<void> {
     const audioContent = await synthesizeSegment(segment.text, segment.langCode);
     if (audioContent) {
       audioContents.push(audioContent);
+    } else {
+      console.warn(`⚠️ Skipping failed TTS segment: "${segment.text.substring(0, 30)}..."`);
     }
   }
 
   if (audioContents.length > 0) {
     console.log(`🗣️ Playing ${audioContents.length} audio segments`);
     await speechManager.playSequence(audioContents);
+  } else {
+    console.error('❌ No audio content could be generated');
   }
 }
 
