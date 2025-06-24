@@ -1,4 +1,3 @@
-
 import { GOOGLE_TTS_API_KEY } from '../constants';
 
 // Language-specific voice configurations - using Standard voices for better reliability
@@ -8,7 +7,7 @@ const VOICE_CONFIG = {
   'fr': { languageCode: 'fr-FR', voiceName: 'fr-FR-Standard-A' },
   'de': { languageCode: 'de-DE', voiceName: 'de-DE-Standard-A' },
   'it': { languageCode: 'it-IT', voiceName: 'it-IT-Standard-A' },
-  'zh': { languageCode: 'zh-CN', voiceName: 'zh-CN-Standard-A' },
+  'zh': { languageCode: 'cmn-CN', voiceName: 'cmn-CN-Standard-A' }, // Corrected language code for Mandarin Chinese
   'ja': { languageCode: 'ja-JP', voiceName: 'ja-JP-Standard-A' },
   'ko': { languageCode: 'ko-KR', voiceName: 'ko-KR-Standard-A' }
 };
@@ -154,13 +153,13 @@ async function synthesizeSegment(text: string, langCode: string): Promise<string
 
   // Try with specified voice first
   let result = await tryTTSRequest(text, voiceConfig.voiceName, voiceConfig.languageCode);
-  
+
   if (!result) {
     // Fallback: try without specifying voice name
     console.log(`🔄 Retrying without voice name for language ${voiceConfig.languageCode}`);
     result = await tryTTSRequest(text, undefined, voiceConfig.languageCode);
   }
-  
+
   if (!result) {
     // Final fallback: use English
     console.log(`🔄 Final fallback to English for text: "${text.substring(0, 30)}..."`);

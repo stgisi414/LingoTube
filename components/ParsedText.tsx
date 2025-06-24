@@ -1,124 +1,89 @@
+// components/ParsedText.tsx
+
 import React from 'react';
 
-// Exporting ParsedSegment for use elsewhere
 export interface ParsedSegment {
   type: 'plain' | 'lang';
   text: string;
   langCode?: string;
-  translation?: {
-    langCode: string;
-    text: string;
-  };
 }
 
 interface ParsedTextProps {
   text: string;
 }
 
-// Clean text by removing parenthetical content for TTS
-const cleanTextForTTS = (text: string): string => {
-  return text
-    .replace(/\([^)]*\)/g, '') // Remove content in parentheses
-    .replace(/\s+/g, ' ') // Normalize whitespace
-    .trim();
-};
-
-// Exporting parseLangText for use elsewhere (e.g. TTS logic)
+/**
+ * A more robust parser that splits the text by language tags and reconstructs it.
+ * This handles malformed or mismatched tags better for display purposes.
+ */
 export const parseLangText = (inputText: string): ParsedSegment[] => {
+  if (!inputText || typeof inputText !== 'string') return [];
+
+  // Regex to split the text by any potential lang tag, keeping the tags in the result array
+  const splitter = /(<\/?lang:\w{2,3}>)/g;
+  const parts = inputText.replace(/\([^)]*\)/g, '').trim().split(splitter);
+
   const segments: ParsedSegment[] = [];
-  const regex = /\[LANG:(\w{2,3})\]\s*([^[]+?)\s*(?:\[LANG:(\w{2,3})\]\s*([^[]+?)\s*)?(?=\[LANG:\w{2,3}\]|$)/g;
+  let isInsideLangTag = false;
+  let currentLangCode: string | undefined = undefined;
 
-  let lastIndex = 0;
-  let match;
+  for (const part of parts) {
+    if (!part) continue;
 
-  while ((match = regex.exec(inputText)) !== null) {
-    if (match.index > lastIndex) {
-      const plainText = cleanTextForTTS(inputText.substring(lastIndex, match.index));
-      if (plainText) {
-        segments.push({ type: 'plain', text: plainText });
+    const openTagMatch = part.match(/<lang:(\w{2,3})>/);
+    const isCloseTag = part.startsWith('</lang:');
+
+    if (openTagMatch) {
+      isInsideLangTag = true;
+      currentLangCode = openTagMatch[1];
+    } else if (isCloseTag) {
+      isInsideLangTag = false;
+      currentLangCode = undefined;
+    } else {
+      // This part is actual text content
+      if (isInsideLangTag && currentLangCode) {
+        segments.push({ type: 'lang', text: part, langCode: currentLangCode });
+      } else {
+        segments.push({ type: 'plain', text: part });
       }
     }
-
-    const langCode1 = match[1];
-    const text1 = cleanTextForTTS(match[2]);
-    const langCode2 = match[3];
-    const text2 = match[4] ? cleanTextForTTS(match[4]) : undefined;
-
-    if (text1) {
-      const langSegment: ParsedSegment = {
-        type: 'lang',
-        langCode: langCode1,
-        text: text1,
-      };
-
-      if (langCode2 && text2) {
-        langSegment.translation = {
-          langCode: langCode2,
-          text: text2,
-        };
-      }
-      segments.push(langSegment);
-    }
-    lastIndex = regex.lastIndex;
   }
 
-  if (lastIndex < inputText.length) {
-    const remainingText = cleanTextForTTS(inputText.substring(lastIndex));
-    if (remainingText) {
-      segments.push({ type: 'plain', text: remainingText });
-    }
+  // If no segments were produced, it means there were no tags.
+  // Return the original text as a single plain segment.
+  if (segments.length === 0 && inputText) {
+      return [{type: 'plain', text: inputText}]
   }
 
-  // Filter out empty segments
-  const nonEmptySegments = segments.filter(seg => seg.text.length > 0);
-
-  if (nonEmptySegments.length === 0 && inputText.length > 0) {
-    const cleanedText = cleanTextForTTS(inputText);
-    if (cleanedText) {
-      return [{ type: 'plain', text: cleanedText }];
-    }
-  }
-
-  return nonEmptySegments;
+  return segments;
 };
-
 
 const ParsedText: React.FC<ParsedTextProps> = ({ text }) => {
   const parsedSegments = parseLangText(text);
 
+  // Fallback to prevent crashing if text is weird
   if (!parsedSegments || parsedSegments.length === 0) {
-    return <p className="text-slate-300 whitespace-pre-line leading-relaxed">{text}</p>;
+    return <>{text || ''}</>;
   }
 
   return (
-    <div className="text-slate-300 whitespace-pre-line leading-relaxed">
+    <>
       {parsedSegments.map((segment, index) => {
-        if (segment.type === 'lang') {
+        if (segment.type === 'lang' && segment.text.trim()) {
+          // Render the language-specific text with special styling
           return (
-            <span key={index} className="my-1 block">
-              <span 
-                className="text-lg font-semibold text-purple-300 block" 
-                lang={segment.langCode}
-              >
-                {segment.text}
-              </span>
-              {segment.translation && (
-                <span 
-                  className="text-sm text-slate-400 italic ml-1 block" 
-                  lang={segment.translation.langCode}
-                >
-                  ({segment.translation.text})
-                </span>
-              )}
+            <span key={index} className="mx-1 font-semibold text-purple-300" lang={segment.langCode}>
+              {segment.text}
             </span>
           );
+        } else if (segment.type === 'plain' && segment.text.trim()) {
+           // Render plain text segments, preserving spaces
+           return <span key={index}>{segment.text}</span>;
         }
-        // Ensure plain text segments are also rendered, not just React.Fragment
-        return <span key={index}>{segment.text}</span>;
+        return null; // Don't render empty segments
       })}
-    </div>
+    </>
   );
 };
 
-// Default export for better bundler compatibility
 export default ParsedText;
