@@ -143,13 +143,13 @@ function parseLanguageSegments(text: string): LanguageSegment[] {
  */
 async function synthesizeSegment(text: string, langCode: string): Promise<string | null> {
   if (!GOOGLE_TTS_API_KEY) {
-    console.error('🚨 Google TTS API key not configured! Check VITE_GOOGLE_TTS_API_KEY in .env.local');
+    console.error('Google TTS API key not configured');
     return null;
   }
 
   const voiceConfig = VOICE_CONFIG[langCode as keyof typeof VOICE_CONFIG] || VOICE_CONFIG.en;
 
-  console.log(`🎵 Synthesizing "${text.substring(0, 50)}..." with voice ${voiceConfig.voiceName} (${langCode})`);
+  console.log(`🎵 Synthesizing "${text.substring(0, 50)}..." with voice ${voiceConfig.voiceName}`);
 
   // Try with specified voice first
   let result = await tryTTSRequest(text, voiceConfig.voiceName, voiceConfig.languageCode);
@@ -164,10 +164,6 @@ async function synthesizeSegment(text: string, langCode: string): Promise<string
     // Final fallback: use English
     console.log(`🔄 Final fallback to English for text: "${text.substring(0, 30)}..."`);
     result = await tryTTSRequest(text, 'en-US-Standard-C', 'en-US');
-  }
-
-  if (!result) {
-    console.error(`❌ All TTS attempts failed for: "${text.substring(0, 30)}..."`);
   }
 
   return result;
@@ -224,7 +220,6 @@ async function tryTTSRequest(text: string, voiceName: string | undefined, langua
  */
 export async function speakMultilingualText(text: string): Promise<void> {
   console.log(`🗣️ Starting multilingual TTS for: "${text.substring(0, 100)}..."`);
-  console.log(`🗣️ TTS API Key available: ${!!GOOGLE_TTS_API_KEY}`);
 
   const segments = parseLanguageSegments(text);
   console.log(`🗣️ Parsed into ${segments.length} segments:`, segments.map(s => ({
@@ -232,32 +227,24 @@ export async function speakMultilingualText(text: string): Promise<void> {
     text: s.text.substring(0, 30) + (s.text.length > 30 ? '...' : '')
   })));
 
-  if (segments.length === 0) {
-    console.log('🗣️ No segments found, treating as plain English text');
-    segments.push({ text: text, langCode: 'en' });
-  }
+  if (segments.length === 0) return;
 
   const audioContents: string[] = [];
 
-  for (let i = 0; i < segments.length; i++) {
-    const segment = segments[i];
-    console.log(`🎵 Processing segment ${i + 1}/${segments.length}: "${segment.text.substring(0, 50)}..." (${segment.langCode})`);
-    
+  for (const segment of segments) {
     const audioContent = await synthesizeSegment(segment.text, segment.langCode);
     if (audioContent) {
-      console.log(`✅ Generated audio for segment ${i + 1}`);
       audioContents.push(audioContent);
     } else {
-      console.warn(`⚠️ Skipping failed TTS segment ${i + 1}: "${segment.text.substring(0, 30)}..."`);
+      console.warn(`⚠️ Skipping failed TTS segment: "${segment.text.substring(0, 30)}..."`);
     }
   }
 
   if (audioContents.length > 0) {
-    console.log(`🗣️ Playing ${audioContents.length} audio segments out of ${segments.length} total segments`);
+    console.log(`🗣️ Playing ${audioContents.length} audio segments`);
     await speechManager.playSequence(audioContents);
   } else {
-    console.error('❌ No audio content could be generated for any segment');
-    throw new Error('TTS failed for all segments');
+    console.error('❌ No audio content could be generated');
   }
 }
 
