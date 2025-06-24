@@ -51,6 +51,12 @@ interface LessonPlan {
   outroNarration: string;
 }
 
+CRITICAL LANGUAGE TAG REQUIREMENTS:
+- In ALL narration text (introNarration, text in narration segments, outroNarration), you MUST include foreign language words wrapped in language tags
+- Use this format: <lang code="es">hola</lang> for Spanish, <lang code="fr">bonjour</lang> for French, etc.
+- Support these languages: Spanish (es), French (fr), German (de), Italian (it), Chinese (zh), Japanese (ja), Korean (ko)
+- Example: "Welcome to our lesson on <lang code="es">comida</lang> which means food in Spanish. Let's learn about <lang code="fr">cuisine française</lang>."
+- Include at least 2-3 foreign language terms in each narration section when relevant to the topic
 - For video segments, provide a high-quality \`youtubeSearchQuery\`.
 - Ensure the lesson has a mix of narration and video segments.`;
 

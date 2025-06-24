@@ -3,7 +3,7 @@ import { LessonPlan, LessonSegment, SegmentType, VideoSegment, NarrationSegment,
 import { BookOpenIcon, FilmIcon, RefreshCwIcon, CheckCircleIcon, SpeakerPlayIcon, SpeakerStopIcon, ExternalLinkIcon } from '../constants';
 import { YouTubePlayerWrapper } from './YouTubePlayerWrapper';
 import ParsedText from './ParsedText';
-import { synthesizeSpeech, playTTSAudio } from '../services/googleTTSService';
+import { speakMultilingualText, stopSpeech, isSpeaking } from '../services/googleTTSService';
 import { generateSearchQueries, checkVideoRelevance, findVideoSegments } from '../services/geminiService';
 import { searchYouTube, getVideoTranscript, SearchedVideo } from '../services/videoSourcingService';
 
@@ -34,7 +34,7 @@ const SegmentItem: React.FC<{
   const commonClasses = "p-6 rounded-lg shadow-lg transition-all duration-300 ease-in-out border-2";
   const currentClasses = isCurrent ? "border-purple-500 bg-slate-700/70 scale-105" : "border-slate-700 bg-slate-800 hover:border-purple-700/50";
   const completeClasses = isComplete ? "opacity-70 border-green-500/50" : "";
-  const isSpeaking = speakingSegmentId === segment.id;
+  const isCurrentlySpeaking = speakingSegmentId === segment.id;
 
   const videoSeg = segment as VideoSegment;
   const displayTitle = videoFetchInfo?.videoTitle || (segment.type === SegmentType.VIDEO ? videoSeg.title : 'Narration');
@@ -57,11 +57,11 @@ const SegmentItem: React.FC<{
             {segment.type === SegmentType.NARRATION && (
               <button
                 onClick={() => onToggleSpeech(segment.id, (segment as NarrationSegment).text)}
-                className={`p-1.5 rounded-full transition-colors ${isSpeaking ? 'text-red-400 hover:bg-red-500/20' : 'text-purple-400 hover:bg-purple-500/20'}`}
-                aria-label={isSpeaking ? "Stop narration" : "Play narration"}
-                title={isSpeaking ? "Stop narration" : "Play narration"}
+                className={`p-1.5 rounded-full transition-colors ${isCurrentlySpeaking ? 'text-red-400 hover:bg-red-500/20' : 'text-purple-400 hover:bg-purple-500/20'}`}
+                aria-label={isCurrentlySpeaking ? "Stop narration" : "Play narration"}
+                title={isCurrentlySpeaking ? "Stop narration" : "Play narration"}
               >
-                {isSpeaking ? SpeakerStopIcon : SpeakerPlayIcon}
+                {isCurrentlySpeaking ? SpeakerStopIcon : SpeakerPlayIcon}
               </button>
             )}
           </div>
@@ -290,8 +290,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
 
 
   const handleNextSegment = useCallback(() => {
-    if (audioRef.current) audioRef.current.pause();
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    stopSpeech();
     setSpeakingSegmentId(null);
 
     if (currentSegmentIdx < allLessonParts.length - 1) {
@@ -301,8 +300,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
   }, [currentSegmentIdx, allLessonParts]);
 
   const handlePrevSegment = () => {
-    if (audioRef.current) audioRef.current.pause();
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    stopSpeech();
     setSpeakingSegmentId(null);
 
     if (currentSegmentIdx > 0) {
@@ -322,48 +320,16 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
 
   const handleToggleSpeech = useCallback(async (segmentId: string, rawText: string) => {
     // Stop any currently playing audio
-    if (speakingSegmentId === segmentId) {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
+    if (speakingSegmentId === segmentId || isSpeaking()) {
+      stopSpeech();
       setSpeakingSegmentId(null);
       return;
-    }
-
-    // Stop any other audio that might be playing
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
     }
 
     setSpeakingSegmentId(segmentId);
 
     try {
-      // Check if text contains language tags
-      const { parseLangText } = await import('./ParsedText');
-      const parsedSegments = parseLangText(rawText);
-      const hasLanguageTags = parsedSegments.some(seg => seg.type === 'lang');
-
-      if (hasLanguageTags) {
-        // Use multilingual TTS for language-tagged content
-        const { synthesizeMultilingualSpeech } = await import('../services/googleTTSService');
-        await synthesizeMultilingualSpeech(rawText);
-      } else {
-        // Use regular TTS for plain text
-        const audioContent = await synthesizeSpeech(rawText);
-        if (audioContent) {
-          await playTTSAudio(audioContent, audioRef, () => setSpeakingSegmentId(null));
-          return;
-        }
-      }
-      
+      await speakMultilingualText(rawText);
       setSpeakingSegmentId(null);
     } catch (error) {
       console.warn("TTS failed:", error);
