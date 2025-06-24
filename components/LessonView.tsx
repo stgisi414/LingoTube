@@ -311,10 +311,26 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
   // This effect triggers the video pipeline when a video segment becomes active.
   useEffect(() => {
     const currentSegment = allLessonParts[currentSegmentIdx];
+    console.log(`🔍 SEGMENT CHECK: Current segment index ${currentSegmentIdx}:`, {
+        segmentId: currentSegment?.id,
+        segmentType: currentSegment?.type,
+        isVideoSegment: currentSegment?.type === SegmentType.VIDEO,
+        fetchState: videoFetchState[currentSegment?.id],
+        allSegmentTypes: allLessonParts.map(s => ({ id: s.id, type: s.type }))
+    });
+    
     if (currentSegment.type === SegmentType.VIDEO) {
+        console.log(`🎬 VIDEO SEGMENT DETECTED: Checking if pipeline should start for "${currentSegment.id}"`, {
+            currentFetchState: videoFetchState[currentSegment.id],
+            shouldStartPipeline: !videoFetchState[currentSegment.id] || videoFetchState[currentSegment.id].status === 'idle'
+        });
+        
         if (!videoFetchState[currentSegment.id] || videoFetchState[currentSegment.id].status === 'idle') {
+            console.log(`🚀 TRIGGERING VIDEO PIPELINE for segment: ${currentSegment.id}`);
             setCurrentVideoTimeSegmentIndex(0); // Reset time segment index for new video
             orchestrateVideoSourcing(currentSegment as VideoSegment);
+        } else {
+            console.log(`⏭️ SKIPPING VIDEO PIPELINE: Already processed for segment ${currentSegment.id}`);
         }
     }
   }, [currentSegmentIdx, allLessonParts, videoFetchState, orchestrateVideoSourcing]);
