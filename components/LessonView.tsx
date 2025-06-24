@@ -321,32 +321,55 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
   }, [currentSegmentIdx, allLessonParts, videoFetchState, currentVideoTimeSegmentIndex, handleNextSegment]);
 
   const handleToggleSpeech = useCallback(async (segmentId: string, rawText: string) => {
+    // Stop any currently playing audio
     if (speakingSegmentId === segmentId) {
-      if (audioRef.current) audioRef.current.pause();
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
       setSpeakingSegmentId(null);
       return;
     }
 
-    setSpeakingSegmentId(segmentId);
-    try {
-      const audioContent = await synthesizeSpeech(rawText);
-      if (audioContent) {
-        await playTTSAudio(audioContent, audioRef, () => setSpeakingSegmentId(null));
-        return;
-      }
-    } catch (error) {
-      console.warn("Google TTS failed, falling back to browser TTS:", error);
+    // Stop any other audio that might be playing
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
     }
 
-    if (isSpeechSynthesisSupported) {
-        const utterance = new SpeechSynthesisUtterance(rawText);
-        utterance.onend = () => setSpeakingSegmentId(null);
-        window.speechSynthesis.speak(utterance);
-    } else {
-      setSpeakingSegmentId(null); // No TTS available
+    setSpeakingSegmentId(segmentId);
+
+    try {
+      // Check if text contains language tags
+      const { parseLangText } = await import('./ParsedText');
+      const parsedSegments = parseLangText(rawText);
+      const hasLanguageTags = parsedSegments.some(seg => seg.type === 'lang');
+
+      if (hasLanguageTags) {
+        // Use multilingual TTS for language-tagged content
+        const { synthesizeMultilingualSpeech } = await import('../services/googleTTSService');
+        await synthesizeMultilingualSpeech(rawText);
+      } else {
+        // Use regular TTS for plain text
+        const audioContent = await synthesizeSpeech(rawText);
+        if (audioContent) {
+          await playTTSAudio(audioContent, audioRef, () => setSpeakingSegmentId(null));
+          return;
+        }
+      }
+      
+      setSpeakingSegmentId(null);
+    } catch (error) {
+      console.warn("TTS failed:", error);
+      setSpeakingSegmentId(null);
     }
-  }, [speakingSegmentId, isSpeechSynthesisSupported]);
+  }, [speakingSegmentId]);
 
   useEffect(() => {
     const calculateHeight = () => {

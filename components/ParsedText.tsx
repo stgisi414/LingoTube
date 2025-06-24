@@ -15,6 +15,14 @@ interface ParsedTextProps {
   text: string;
 }
 
+// Clean text by removing parenthetical content for TTS
+const cleanTextForTTS = (text: string): string => {
+  return text
+    .replace(/\([^)]*\)/g, '') // Remove content in parentheses
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim();
+};
+
 // Exporting parseLangText for use elsewhere (e.g. TTS logic)
 export const parseLangText = (inputText: string): ParsedSegment[] => {
   const segments: ParsedSegment[] = [];
@@ -25,39 +33,50 @@ export const parseLangText = (inputText: string): ParsedSegment[] => {
 
   while ((match = regex.exec(inputText)) !== null) {
     if (match.index > lastIndex) {
-      segments.push({ type: 'plain', text: inputText.substring(lastIndex, match.index).trim() });
+      const plainText = cleanTextForTTS(inputText.substring(lastIndex, match.index));
+      if (plainText) {
+        segments.push({ type: 'plain', text: plainText });
+      }
     }
 
     const langCode1 = match[1];
-    const text1 = match[2].trim();
+    const text1 = cleanTextForTTS(match[2]);
     const langCode2 = match[3];
-    const text2 = match[4] ? match[4].trim() : undefined;
+    const text2 = match[4] ? cleanTextForTTS(match[4]) : undefined;
 
-    const langSegment: ParsedSegment = {
-      type: 'lang',
-      langCode: langCode1,
-      text: text1,
-    };
-
-    if (langCode2 && text2) {
-      langSegment.translation = {
-        langCode: langCode2,
-        text: text2,
+    if (text1) {
+      const langSegment: ParsedSegment = {
+        type: 'lang',
+        langCode: langCode1,
+        text: text1,
       };
+
+      if (langCode2 && text2) {
+        langSegment.translation = {
+          langCode: langCode2,
+          text: text2,
+        };
+      }
+      segments.push(langSegment);
     }
-    segments.push(langSegment);
     lastIndex = regex.lastIndex;
   }
 
   if (lastIndex < inputText.length) {
-    segments.push({ type: 'plain', text: inputText.substring(lastIndex).trim() });
+    const remainingText = cleanTextForTTS(inputText.substring(lastIndex));
+    if (remainingText) {
+      segments.push({ type: 'plain', text: remainingText });
+    }
   }
 
-  // Filter out empty plain segments that might result from trimming
+  // Filter out empty segments
   const nonEmptySegments = segments.filter(seg => seg.text.length > 0);
 
   if (nonEmptySegments.length === 0 && inputText.length > 0) {
-    return [{ type: 'plain', text: inputText.trim() }];
+    const cleanedText = cleanTextForTTS(inputText);
+    if (cleanedText) {
+      return [{ type: 'plain', text: cleanedText }];
+    }
   }
 
   return nonEmptySegments;

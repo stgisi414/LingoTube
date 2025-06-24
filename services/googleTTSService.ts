@@ -32,7 +32,25 @@ interface GoogleTTSResponse {
   audioContent: string; // Base64 encoded audio
 }
 
+// Language mappings for Google TTS
+const LANGUAGE_MAPPINGS: Record<string, string> = {
+  'es': 'es-ES',
+  'fr': 'fr-FR', 
+  'de': 'de-DE',
+  'it': 'it-IT',
+  'pt': 'pt-BR',
+  'ja': 'ja-JP',
+  'ko': 'ko-KR',
+  'zh': 'zh-CN',
+  'en': 'en-US'
+};
+
 export const synthesizeSpeech = async (text: string, options: Partial<TTSOptions> = {}): Promise<string | null> => {
+  if (!GOOGLE_TTS_API_KEY) {
+    console.warn("GOOGLE_TTS_API_KEY not configured. Cannot synthesize speech.");
+    return null;
+  }
+
   const fullOptions: TTSOptions = {
     text,
     languageCode: options.languageCode || 'en-US',
@@ -42,48 +60,19 @@ export const synthesizeSpeech = async (text: string, options: Partial<TTSOptions
     speakingRate: options.speakingRate || 1.0,
     pitch: options.pitch || 0.0
   };
-  if (!GOOGLE_TTS_API_KEY) {
-    console.warn("GOOGLE_TTS_API_KEY not configured. Cannot synthesize speech.");
-    return null;
-  }
-
-  // Parse the text to extract language information
-  const parsedSegments = parseLangText(fullOptions.text);
-  let textToSpeak = fullOptions.text;
-  let languageCode = fullOptions.languageCode || 'en-US';
-
-  // Use the first language segment if available
-  if (parsedSegments.length > 0) {
-    const firstLangSegment = parsedSegments.find(seg => seg.type === 'lang');
-    if (firstLangSegment && firstLangSegment.type === 'lang') {
-      textToSpeak = parsedSegments.map(seg => seg.text).join(' ');
-      // Convert language code to Google TTS format if needed
-      const langCode = firstLangSegment.langCode;
-      if (langCode === 'es') languageCode = 'es-ES';
-      else if (langCode === 'fr') languageCode = 'fr-FR';
-      else if (langCode === 'de') languageCode = 'de-DE';
-      else if (langCode === 'it') languageCode = 'it-IT';
-      else if (langCode === 'pt') languageCode = 'pt-BR';
-      else if (langCode === 'ja') languageCode = 'ja-JP';
-      else if (langCode === 'ko') languageCode = 'ko-KR';
-      else if (langCode === 'zh') languageCode = 'zh-CN';
-      else if (langCode.length === 2) languageCode = `${langCode}-US`;
-      else languageCode = langCode;
-    }
-  }
 
   const requestBody: GoogleTTSRequest = {
     input: {
-      text: textToSpeak
+      text: fullOptions.text
     },
     voice: {
-      languageCode: languageCode,
-      ssmlGender: fullOptions.ssmlGender || 'NEUTRAL'
+      languageCode: fullOptions.languageCode,
+      ssmlGender: fullOptions.ssmlGender
     },
     audioConfig: {
-      audioEncoding: fullOptions.audioEncoding || 'MP3',
-      speakingRate: fullOptions.speakingRate || 1.0,
-      pitch: fullOptions.pitch || 0.0
+      audioEncoding: fullOptions.audioEncoding,
+      speakingRate: fullOptions.speakingRate,
+      pitch: fullOptions.pitch
     }
   };
 
@@ -111,6 +100,41 @@ export const synthesizeSpeech = async (text: string, options: Partial<TTSOptions
   } catch (error) {
     console.error("Failed to synthesize speech with Google TTS:", error);
     return null;
+  }
+};
+
+// New function for multilingual TTS
+export const synthesizeMultilingualSpeech = async (text: string): Promise<void> => {
+  const parsedSegments = parseLangText(text);
+  
+  for (const segment of parsedSegments) {
+    if (segment.type === 'lang') {
+      // Get the appropriate language code
+      const langCode = LANGUAGE_MAPPINGS[segment.langCode] || 'en-US';
+      
+      // Synthesize speech for this language segment
+      const audioContent = await synthesizeSpeech(segment.text, {
+        languageCode: langCode
+      });
+      
+      if (audioContent) {
+        // Play this segment and wait for it to complete
+        await new Promise<void>((resolve, reject) => {
+          playTTSAudio(audioContent, undefined, resolve).catch(reject);
+        });
+      }
+    } else if (segment.type === 'plain') {
+      // For plain text, use default English
+      const audioContent = await synthesizeSpeech(segment.text, {
+        languageCode: 'en-US'
+      });
+      
+      if (audioContent) {
+        await new Promise<void>((resolve, reject) => {
+          playTTSAudio(audioContent, undefined, resolve).catch(reject);
+        });
+      }
+    }
   }
 };
 
