@@ -317,7 +317,7 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
                     <span className="ml-auto text-xs bg-purple-600 px-2 py-1 rounded">AUTO</span>
                   )}
                 </div>
-                <p className="text-slate-300 leading-relaxed text-lg">{currentSegment?.text}</p>
+                <ParsedText text={currentSegment?.text || ''} />
                 
                 {/* Show contextual images during narration */}
                 {currentSegment?.type === SegmentType.NARRATION && images.length > 0 && (
