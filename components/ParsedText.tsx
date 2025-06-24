@@ -101,3 +101,6 @@ export const ParsedText: React.FC<ParsedTextProps> = ({ text }) => {
     </div>
   );
 };
+
+// Default export for better bundler compatibility
+export default ParsedText;

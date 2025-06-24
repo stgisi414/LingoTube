@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { LessonPlan, LessonSegment, SegmentType, VideoSegment, NarrationSegment } from '../types';
 import { BookOpenIcon, FilmIcon, RefreshCwIcon, CheckCircleIcon, SpeakerPlayIcon, SpeakerStopIcon, ExternalLinkIcon } from '../constants';
 import { YouTubePlayerWrapper } from './YouTubePlayerWrapper';
-import { parseLangText, LangParsedSegment } from './ParsedText';
+import ParsedText, { parseLangText, ParsedSegment } from './ParsedText';
 import { synthesizeSpeech, playTTSAudio } from '../services/googleTTSService';
 import { fetchYouTubeVideoId } from '../services/customSearchService';
 import { fetchVideoMetadata, YouTubeVideoDetails } from '../services/youtubeDataService'; // Import new service
