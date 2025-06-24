@@ -66,7 +66,7 @@ const App: React.FC = () => {
           </h1>
         </div>
         <p className="mt-4 text-lg text-slate-400">
-          Craft dynamic learning journeys with AI-powered narration and curated video segments.
+          Craft dynamic educational journeys with AI-powered narration, illustrations, and curated video segments.
         </p>
       </header>
 

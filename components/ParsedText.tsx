@@ -1,7 +1,8 @@
-
 // components/ParsedText.tsx
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { SpeakerPlayIcon, SpeakerStopIcon } from '../constants';
+import { searchImages } from '../services/imageSearchService';
 
 export interface ParsedSegment {
   type: 'plain' | 'lang';
@@ -11,6 +12,9 @@ export interface ParsedSegment {
 
 interface ParsedTextProps {
   text: string;
+  onPlayAudio?: (text: string) => void;
+  onStopAudio?: () => void;
+  isPlaying?: boolean;
 }
 
 /**
@@ -22,9 +26,9 @@ export const parseLangText = (inputText: string): ParsedSegment[] => {
 
   // Remove content in parentheses first but preserve the original text structure for TTS
   let workingText = inputText.replace(/\([^)]*\)/g, '').trim();
-  
+
   const segments: ParsedSegment[] = [];
-  
+
   // Use the same regex pattern as the TTS service for consistency
   const langTagRegex = /<lang:(\w+)>(.*?)<\/lang:\1>/g;
   let lastIndex = 0;
@@ -65,31 +69,101 @@ export const parseLangText = (inputText: string): ParsedSegment[] => {
   return segments;
 };
 
-const ParsedText: React.FC<ParsedTextProps> = ({ text }) => {
+const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio, isPlaying = false }) => {
+  const [illustrationImage, setIllustrationImage] = useState<string | null>(null);
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
+
+  useEffect(() => {
+    const searchForIllustration = async () => {
+      if (text.length > 20) { // Only search for longer text segments
+        setIsLoadingImage(true);
+        try {
+          const searchQuery = text.slice(0, 100); // Use first 100 chars as search query
+          const images = await searchImages(searchQuery);
+          if (images.length > 0) {
+            setIllustrationImage(images[0].link);
+          }
+        } catch (error) {
+          console.error('Failed to search for illustration:', error);
+        } finally {
+          setIsLoadingImage(false);
+        }
+      }
+    };
+
+    searchForIllustration();
+  }, [text]);
+
   const parsedSegments = parseLangText(text);
 
-  // Fallback to prevent crashing if text is weird
-  if (!parsedSegments || parsedSegments.length === 0) {
-    return <>{text || ''}</>;
-  }
+  const renderParsedContent = (text: string) => {
+    const parsedSegments = parseLangText(text);
+
+    // Fallback to prevent crashing if text is weird
+    if (!parsedSegments || parsedSegments.length === 0) {
+      return <>{text || ''}</>;
+    }
+
+    return (
+      <>
+        {parsedSegments.map((segment, index) => {
+          if (segment.type === 'lang' && segment.text.trim()) {
+            // Render the language-specific text with special styling
+            return (
+              <span key={index} className="mx-1 font-semibold text-purple-300" lang={segment.langCode}>
+                {segment.text}
+              </span>
+            );
+          } else if (segment.type === 'plain' && segment.text.trim()) {
+            // Render plain text segments, preserving spaces
+            return <span key={index}>{segment.text}</span>;
+          }
+          return null; // Don't render empty segments
+        })}
+      </>
+    );
+  };
 
   return (
-    <>
-      {parsedSegments.map((segment, index) => {
-        if (segment.type === 'lang' && segment.text.trim()) {
-          // Render the language-specific text with special styling
-          return (
-            <span key={index} className="mx-1 font-semibold text-purple-300" lang={segment.langCode}>
-              {segment.text}
-            </span>
-          );
-        } else if (segment.type === 'plain' && segment.text.trim()) {
-           // Render plain text segments, preserving spaces
-           return <span key={index}>{segment.text}</span>;
-        }
-        return null; // Don't render empty segments
-      })}
-    </>
+    <div className="mb-4 p-4 bg-slate-800 rounded-lg border border-slate-700">
+      <div className="flex items-start space-x-3">
+        {onPlayAudio && (
+          <button
+            onClick={() => isPlaying ? onStopAudio?.() : onPlayAudio(text)}
+            className={`flex-shrink-0 p-2 rounded-full transition-colors ${
+              isPlaying 
+                ? 'bg-red-600 hover:bg-red-500 text-white' 
+                : 'bg-blue-600 hover:bg-blue-500 text-white'
+            }`}
+            aria-label={isPlaying ? 'Stop narration' : 'Play narration'}
+          >
+            {isPlaying ? SpeakerStopIcon : SpeakerPlayIcon}
+          </button>
+        )}
+        <div className="flex-1">
+          {illustrationImage && (
+            <div className="mb-3">
+              <img 
+                src={illustrationImage} 
+                alt="Illustration for narration" 
+                className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+          )}
+          {isLoadingImage && (
+            <div className="mb-3 w-full max-w-md h-48 bg-slate-700 rounded-lg border border-slate-600 flex items-center justify-center">
+              <span className="text-slate-400 text-sm">Loading illustration...</span>
+            </div>
+          )}
+          <div className="text-slate-200 leading-relaxed">
+            {renderParsedContent(text)}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

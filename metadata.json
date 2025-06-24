@@ -1,6 +1,6 @@
 {
   "name": "AILingo.Tube",
-  "description": "An AI-powered language learning application that crafts dynamic learning journeys with narration and curated video segments, now with speech-to-text input.",
+  "description": "An AI-powered multimedia learning platform that crafts dynamic educational journeys with narrated content, illustrations, and curated video segments, now with speech-to-text input.",
   "requestFramePermissions": [
     "microphone"
   ],

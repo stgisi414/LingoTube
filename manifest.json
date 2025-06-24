@@ -2,7 +2,7 @@
 {
   "name": "AILingo.Tube",
   "short_name": "AILingo",
-  "description": "An AI-powered language learning application that crafts dynamic learning journeys with narration and curated video segments",
+  "description": "An AI-powered multimedia learning platform that crafts dynamic educational journeys with narrated content, illustrations, and curated video segments",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f172a",
