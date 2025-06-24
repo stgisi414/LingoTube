@@ -6,6 +6,7 @@ import { synthesizeSpeech, playTTSAudio } from '../services/googleTTSService';
 import { generateQuiz, QuizQuestion } from '../services/quizService';
 import { searchImages, ImageSearchResult } from '../services/imageSearchService';
 import { YouTubePlayerWrapper } from './YouTubePlayerWrapper';
+import { ParsedText } from './ParsedText';
 
 interface PlayerModeProps {
   lessonPlan: LessonPlan;
