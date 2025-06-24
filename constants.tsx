@@ -103,9 +103,11 @@ export const GEMINI_IMAGE_MODEL_NAME = "imagen-3.0-generate-002"; // Though not 
 
 // For Google Custom Search API. Ensure these are set in your environment.
 export const GOOGLE_CUSTOM_SEARCH_API_KEY = process.env.GOOGLE_CUSTOM_SEARCH_API_KEY;
-export const YOUTUBE_CUSTOM_SEARCH_CX
- = process.env.YOUTUBE_CUSTOM_SEARCH_CX
-;
+export const YOUTUBE_CUSTOM_SEARCH_CX = process.env.YOUTUBE_CUSTOM_SEARCH_CX;
+export const GOOGLE_CUSTOM_SEARCH_CX = process.env.GOOGLE_CUSTOM_SEARCH_CX;
 
 // For YouTube Data API. Ensure this is set in your environment.
 export const YOUTUBE_DATA_API_KEY = process.env.YOUTUBE_DATA_API_KEY;
+
+// For Google Text-to-Speech API. Ensure this is set in your environment.
+export const GOOGLE_TTS_API_KEY = process.env.GOOGLE_TTS_API_KEY;

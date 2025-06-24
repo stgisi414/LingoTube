@@ -1,9 +1,9 @@
-
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { LessonPlan, LessonSegment, SegmentType, VideoSegment, NarrationSegment } from '../types';
 import { BookOpenIcon, FilmIcon, RefreshCwIcon, CheckCircleIcon, SpeakerPlayIcon, SpeakerStopIcon, ExternalLinkIcon } from '../constants';
 import { YouTubePlayerWrapper } from './YouTubePlayerWrapper';
-import { ParsedText, parseLangText, ParsedSegment as LangParsedSegment } from './ParsedText';
+import { parseLangText, LangParsedSegment } from './ParsedText';
+import { synthesizeSpeech, playTTSAudio } from '../services/googleTTSService';
 import { fetchYouTubeVideoId } from '../services/customSearchService';
 import { fetchVideoMetadata, YouTubeVideoDetails } from '../services/youtubeDataService'; // Import new service
 
@@ -162,10 +162,13 @@ export const LessonView: React.FC<LessonViewProps> = ({ lessonPlan, onReset }) =
   const [videoPlayerHeight, setVideoPlayerHeight] = useState('360'); 
   const [isSpeechSynthesisSupported, setIsSpeechSynthesisSupported] = useState(false);
   const [speakingSegmentId, setSpeakingSegmentId] = useState<string | null>(null);
-  const [fetchedVideoInfo, setFetchedVideoInfo] = useState<Record<string, VideoFetchState>>({});
-  
-  const mainContentRef = useRef<HTMLDivElement>(null);
+  const [isUsingGoogleTTS, setIsUsingGoogleTTS] = useState<boolean>(false);
   const speechUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [fetchedVideoInfo, setFetchedVideoInfo] = useState<Record<string, VideoFetchState>>({});
+
+  const mainContentRef = useRef<HTMLDivElement>(null);
+  
 
   const allLessonParts: LessonSegment[] = useMemo(() => [
     { type: SegmentType.NARRATION, id: 'intro-narration', text: lessonPlan.introNarration },
@@ -183,7 +186,7 @@ export const LessonView: React.FC<LessonViewProps> = ({ lessonPlan, onReset }) =
       speechUtteranceRef.current = null;
     };
   }, []);
-  
+
   useEffect(() => {
     setFetchedVideoInfo({});
     setCurrentSegmentIdx(0);
@@ -281,60 +284,86 @@ export const LessonView: React.FC<LessonViewProps> = ({ lessonPlan, onReset }) =
   }, [currentSegmentIdx, allLessonParts]); // lessonPlan.topic change handles full reset, this handles segment changes. fetchedVideoInfo removed to avoid loops, state updates manage flow.
 
 
-  const handleToggleSpeech = useCallback((segmentId: string, rawText: string) => {
-    if (!isSpeechSynthesisSupported || !rawText) return;
+  const handleToggleSpeech = useCallback(async (segmentId: string, rawText: string) => {
+    if (!isSpeechSynthesisSupported && !rawText) return;
 
-    if (speakingSegmentId === segmentId && window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
-      setSpeakingSegmentId(null);
-      speechUtteranceRef.current = null;
-      return;
-    }
-
-    if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
-    }
-
-    const parsedSegments = parseLangText(rawText);
-    let textToSpeak = "";
-    let langForSpeech: string | undefined = undefined;
-
-    if (parsedSegments.length > 0) {
-      textToSpeak = parsedSegments.map(seg => seg.text).join(' ');
-      const firstLangSegment = parsedSegments.find(seg => seg.type === 'lang') as LangParsedSegment | undefined;
-      if (firstLangSegment && firstLangSegment.langCode) {
-        langForSpeech = firstLangSegment.langCode;
-      }
-    } else {
-      textToSpeak = rawText; 
-    }
-    
-    if (!textToSpeak.trim()) return;
-
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    if (langForSpeech) {
-      utterance.lang = langForSpeech;
-    }
-    
-    speechUtteranceRef.current = utterance;
-
-    utterance.onend = () => {
-        if (speechUtteranceRef.current === utterance) {
-            setSpeakingSegmentId(null);
+    if (speakingSegmentId === segmentId) {
+        setSpeakingSegmentId(null);
+        if (isUsingGoogleTTS) {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
+        } else {
+            if (window.speechSynthesis && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+            }
             speechUtteranceRef.current = null;
         }
-    };
-    utterance.onerror = (event) => {
-      console.error('Speech synthesis error:', event);
-      if (speechUtteranceRef.current === utterance) {
-        setSpeakingSegmentId(null);
-        speechUtteranceRef.current = null;
-      }
-    };
+        return;
+    }
 
-    window.speechSynthesis.speak(utterance);
     setSpeakingSegmentId(segmentId);
-  }, [isSpeechSynthesisSupported, speakingSegmentId]);
+    if (isUsingGoogleTTS) {
+      try {
+        const audioContent = await synthesizeSpeech(rawText);
+            if (audioContent) {
+                playTTSAudio(audioContent, audioRef, () => {
+                    setSpeakingSegmentId(null);
+                });
+            } else {
+                setSpeakingSegmentId(null);
+                console.error("Failed to synthesize speech.");
+            }
+      } catch (error) {
+        console.error("Error synthesizing speech:", error);
+        setSpeakingSegmentId(null);
+      }
+    } else {
+        if (window.speechSynthesis && window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+        }
+
+        const parsedSegments = parseLangText(rawText);
+        let textToSpeak = "";
+        let langForSpeech: string | undefined = undefined;
+
+        if (parsedSegments.length > 0) {
+          textToSpeak = parsedSegments.map(seg => seg.text).join(' ');
+          const firstLangSegment = parsedSegments.find(seg => seg.type === 'lang') as LangParsedSegment | undefined;
+          if (firstLangSegment && firstLangSegment.langCode) {
+            langForSpeech = firstLangSegment.langCode;
+          }
+        } else {
+          textToSpeak = rawText; 
+        }
+
+        if (!textToSpeak.trim()) return;
+
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        if (langForSpeech) {
+          utterance.lang = langForSpeech;
+        }
+
+        speechUtteranceRef.current = utterance;
+
+        utterance.onend = () => {
+            if (speechUtteranceRef.current === utterance) {
+                setSpeakingSegmentId(null);
+                speechUtteranceRef.current = null;
+            }
+        };
+        utterance.onerror = (event) => {
+          console.error('Speech synthesis error:', event);
+          if (speechUtteranceRef.current === utterance) {
+            setSpeakingSegmentId(null);
+            speechUtteranceRef.current = null;
+          }
+        };
+
+        window.speechSynthesis.speak(utterance);
+    }
+  }, [isSpeechSynthesisSupported, speakingSegmentId, isUsingGoogleTTS]);
 
 
   const totalSteps = allLessonParts.length;
@@ -386,7 +415,7 @@ export const LessonView: React.FC<LessonViewProps> = ({ lessonPlan, onReset }) =
       setCurrentSegmentIdx(currentSegmentIdx - 1);
     }
   };
-  
+
   const isLessonComplete = currentSegmentIdx === allLessonParts.length - 1 && completedSegments.has(allLessonParts[currentSegmentIdx].id);
 
   return (
