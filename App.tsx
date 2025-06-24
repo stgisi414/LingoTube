@@ -1,0 +1,111 @@
+
+import React, { useState, useCallback, useEffect } from 'react';
+import { InputControls } from './components/InputControls';
+import { LessonView } from './components/LessonView';
+import { LoadingIndicator } from './components/LoadingIndicator';
+import { generateLessonPlan as callGeminiLessonPlan } from './services/geminiService';
+import { LessonPlan, AppStatus } from './types'; // Import AppStatus from types.ts
+import { AlertTriangle } from './constants';
+
+// AppStatus enum is now imported from types.ts
+
+const App: React.FC = () => {
+  const [appStatus, setAppStatus] = useState<AppStatus>(AppStatus.IDLE);
+  const [lessonPlan, setLessonPlan] = useState<LessonPlan | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [currentTopic, setCurrentTopic] = useState<string>("");
+
+  const handleGenerateLesson = useCallback(async (topic: string) => {
+    if (!topic.trim()) {
+      setError("Please enter a topic.");
+      setAppStatus(AppStatus.ERROR);
+      return;
+    }
+    setAppStatus(AppStatus.PROCESSING_INPUT);
+    setError(null);
+    setLessonPlan(null);
+    setCurrentTopic(topic);
+
+    try {
+      const plan = await callGeminiLessonPlan(topic);
+      if (plan) {
+        setLessonPlan(plan);
+        setAppStatus(AppStatus.DISPLAYING_LESSON);
+      } else {
+        throw new Error("Received an empty plan from the service.");
+      }
+    } catch (err) {
+      console.error("Error generating lesson plan:", err);
+      const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
+      setError(`Failed to generate lesson plan: ${errorMessage}. Please check your API key and network connection.`);
+      setAppStatus(AppStatus.ERROR);
+    }
+  }, []);
+
+  const resetApp = () => {
+    setAppStatus(AppStatus.IDLE);
+    setLessonPlan(null);
+    setError(null);
+    setCurrentTopic("");
+  };
+  
+  useEffect(() => {
+    if (error && (appStatus === AppStatus.IDLE || appStatus === AppStatus.RECOGNIZING_SPEECH)) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, appStatus]);
+
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-slate-100 flex flex-col items-center p-4 selection:bg-purple-500 selection:text-white">
+      <header className="w-full max-w-4xl text-center my-8">
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
+          Multimedia Lesson Planner
+        </h1>
+        <p className="mt-4 text-lg text-slate-400">
+          Craft dynamic learning journeys with AI-powered narration and curated video segments.
+        </p>
+      </header>
+
+      <main className="w-full max-w-4xl flex-grow">
+        {appStatus !== AppStatus.DISPLAYING_LESSON && (
+          <InputControls
+            onSubmit={handleGenerateLesson}
+            isProcessing={appStatus === AppStatus.PROCESSING_INPUT || appStatus === AppStatus.RECOGNIZING_SPEECH}
+            setAppStatus={setAppStatus}
+          />
+        )}
+
+        {appStatus === AppStatus.PROCESSING_INPUT && <LoadingIndicator message={`Generating lesson for "${currentTopic}"...`} />}
+        
+        {error && appStatus === AppStatus.ERROR && (
+          <div 
+            className="mt-6 p-4 bg-red-700/30 border border-red-500 rounded-lg text-red-300 flex items-center space-x-3"
+            role="alert" // Added for accessibility
+          >
+            {AlertTriangle}
+            <span>{error}</span>
+            <button
+              onClick={resetApp}
+              className="ml-auto bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded-md text-sm"
+              aria-label="Try generating lesson again"
+            >
+              Try Again
+            </button>
+          </div>
+        )}
+
+        {appStatus === AppStatus.DISPLAYING_LESSON && lessonPlan && (
+          <LessonView lessonPlan={lessonPlan} onReset={resetApp} />
+        )}
+      </main>
+
+      <footer className="w-full max-w-4xl text-center py-8 text-slate-500 text-sm">
+        <p>&copy; {new Date().getFullYear()} AI Lesson Planner. Powered by Gemini.</p>
+      </footer>
+    </div>
+  );
+};
+
+export default App;

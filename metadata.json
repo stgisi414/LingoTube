@@ -1,0 +1,8 @@
+{
+  "name": "Multimedia Lesson Planner",
+  "description": "An AI-powered application to craft dynamic learning journeys with narration and curated video segments, now with speech-to-text input.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "prompt": ""
+}
