@@ -92,7 +92,14 @@ interface LessonPlan {
  * Generates search queries for a given learning point.
  */
 export const generateSearchQueries = async (learningPoint: string, mainTopic: string): Promise<string[]> => {
-    return [`${learningPoint} explained`, `${mainTopic} ${learningPoint} tutorial`];
+    // This logic from your original pipeline is simple and effective.
+    const uniqueQueries = [...new Set([
+        `${learningPoint}`,
+        `${mainTopic} ${learningPoint}`,
+        `${learningPoint} tutorial`,
+        `${learningPoint} explained`
+    ])];
+    return uniqueQueries;
 };
 
 /**
@@ -100,38 +107,70 @@ export const generateSearchQueries = async (learningPoint: string, mainTopic: st
  */
 export const findVideoSegments = async (videoTitle: string, learningPoint: string, transcript: string | null): Promise<VideoTimeSegment[]> => {
     const genAI = getAiClient(); // Use the getter
-    let prompt = `For YouTube video "${videoTitle}", find the most relevant 1-3 segments for the topic: "${learningPoint}".`;
+    let prompt = `You are a video analyst. For the YouTube video titled "${videoTitle}", find the 1-3 most relevant segments for the learning topic: "${learningPoint}".`;
     if (transcript) {
-        prompt += `\nUse this transcript: "${transcript.substring(0, 4000)}..."`;
+        prompt += `\n\nUse this transcript to find exact timings:\n"${transcript.substring(0, 5000)}..."`;
+    } else {
+        prompt += `\n(No transcript available, use general heuristics for a standard educational video structure).`;
     }
-    prompt += `\nReturn ONLY a valid JSON array like this: [{"startTime": 45, "endTime": 135, "reason": "Explains core concepts"}].`;
+    prompt += `\n\nCRITICAL: Return ONLY a valid JSON array matching this TypeScript interface: VideoTimeSegment[].
+interface VideoTimeSegment { startTime: number; endTime: number; reason: string; }
+Example: [{"startTime": 45, "endTime": 135, "reason": "Explains the core concept of X"}]
+If you cannot find specific segments, return a single, broader segment like [{"startTime": 30, "endTime": 210, "reason": "Main educational content"}].`;
 
     try {
         const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
         const result = await model.generateContent({
             contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: "application/json" }
+            generationConfig: { responseMimeType: "application/json", temperature: 0.3 }
         });
         const segments = parseJsonResponse(result.response.text());
+        // Basic validation of the parsed response
         if (Array.isArray(segments) && segments.length > 0 && typeof segments[0].startTime === 'number') {
             return segments;
         }
     } catch (error) {
-        console.error("Error finding video segments:", error);
+        console.error("Error finding video segments with AI:", error);
     }
-    // Fallback if AI fails
+    // Fallback if AI fails or returns invalid data
     return [{ startTime: 30, endTime: 180, reason: "Main educational content" }];
 };
 
 /**
- * A non-AI function to check video relevance based on keywords.
+ * [UPGRADED] Uses AI to check for video relevance, mirroring the proven logic.
  */
-export const checkVideoRelevance = (videoTitle: string, learningPoint: string, mainTopic: string): { relevant: boolean } => {
-    const title = videoTitle.toLowerCase();
-    const topic = mainTopic.toLowerCase();
-    const point = learningPoint.toLowerCase();
-    if (title.includes(topic) || title.includes(point)) {
-        return { relevant: true };
+export const checkVideoRelevance = async (videoTitle: string, learningPoint: string, mainTopic: string, transcript: string | null): Promise<{ relevant: boolean; reason: string; confidence: number; }> => {
+    const genAI = getAiClient();
+    const prompt = `
+Analyze if this YouTube video is relevant for a lesson.
+
+- Main Lesson Topic: "${mainTopic}"
+- Current Learning Point: "${learningPoint}"
+- Video Title: "${videoTitle}"
+${transcript ? `- Video Transcript Snippet: "${transcript.substring(0, 1000)}..."` : ''}
+
+CRITERIA:
+1.  **Topic Match**: Is the video about the learning point?
+2.  **Educational Tone**: Is it a tutorial, explanation, or documentary? Avoid vlogs, music videos, or unrelated content.
+3.  **No Sales Pitches**: The video should not primarily be an ad for a product or service.
+
+Return ONLY a valid JSON object matching this interface:
+{ "relevant": boolean, "reason": "A brief justification for your decision.", "confidence": number }`;
+
+    try {
+        const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
+        const result = await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
+        });
+        const relevanceResult = parseJsonResponse(result.response.text());
+        if (relevanceResult && typeof relevanceResult.relevant === 'boolean') {
+            return relevanceResult;
+        }
+        // Fallback if parsing fails
+        return { relevant: false, reason: "AI response was not valid.", confidence: 0 };
+    } catch (error) {
+        console.error("Error in checkVideoRelevance:", error);
+        return { relevant: false, reason: "An error occurred during relevance check.", confidence: 0 };
     }
-    return { relevant: false };
 };

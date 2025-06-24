@@ -6,7 +6,6 @@ import ParsedText from './ParsedText';
 import { synthesizeSpeech, playTTSAudio } from '../services/googleTTSService';
 import { generateSearchQueries, checkVideoRelevance, findVideoSegments } from '../services/geminiService';
 import { searchYouTube, getVideoTranscript, SearchedVideo } from '../services/videoSourcingService';
-import { PlayerMode } from './PlayerMode';
 
 // This interface defines the state for the entire video fetching pipeline for one segment.
 interface VideoFetchState {
@@ -108,7 +107,6 @@ const SegmentItem: React.FC<{
 
 // This is the main component that renders the lesson.
 export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void; }> = ({ lessonPlan, onReset }) => {
-  const [viewMode, setViewMode] = useState<'list' | 'player'>('list');
   const [currentSegmentIdx, setCurrentSegmentIdx] = useState(0);
   const [completedSegments, setCompletedSegments] = useState<Set<string>>(new Set());
   const [videoPlayerHeight, setVideoPlayerHeight] = useState('360');
@@ -126,74 +124,94 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
     { type: SegmentType.NARRATION, id: 'outro-narration', text: lessonPlan.outroNarration },
   ], [lessonPlan]);
 
-  // This is the full video sourcing pipeline, ported from your working vanilla JS code.
   const orchestrateVideoSourcing = useCallback(async (segment: VideoSegment) => {
     const segmentId = segment.id;
     const updateState = (status: VideoFetchState['status'], message: string, data: Partial<VideoFetchState> = {}) => {
-      setVideoFetchState(prev => ({ ...prev, [segmentId]: { status, message, ...prev[segmentId], ...data } }));
+        setVideoFetchState(prev => ({
+            ...prev,
+            [segmentId]: {
+                ...prev[segmentId],
+                status,
+                message,
+                ...data,
+            }
+        }));
     };
 
     try {
-      updateState('loading', 'Step 1/5: Generating search queries...', { videoId: null, videoTitle: null, timeSegments: null });
-      const queries = await generateSearchQueries(segment.title, lessonPlan.topic);
+        updateState('loading', 'Step 1/5: Generating search queries...', { videoId: null, videoTitle: null, timeSegments: null });
+        const queries = await generateSearchQueries(segment.title, lessonPlan.topic);
 
-      updateState('loading', 'Step 2/5: Searching YouTube...');
-      const videoCandidates = (await Promise.all(queries.map(q => searchYouTube(q)))).flat();
-      const uniqueVideos = [...new Map(videoCandidates.map(v => [v.youtubeId, v])).values()]
-          .sort((a, b) => b.educationalScore - a.educationalScore);
+        updateState('loading', 'Step 2/5: Searching YouTube for candidates...');
+        const videoCandidates = (await Promise.all(queries.map(q => searchYouTube(q)))).flat();
+        const uniqueVideos = [...new Map(videoCandidates.map(v => [v.youtubeId, v])).values()]
+            .sort((a, b) => b.educationalScore - a.educationalScore);
 
-      if (uniqueVideos.length === 0) throw new Error("No videos found from search.");
+        if (uniqueVideos.length === 0) throw new Error("No videos found from any search query.");
 
-      updateState('loading', `Step 3/5: Analyzing top ${Math.min(5, uniqueVideos.length)} videos...`);
-      const relevantVideos = uniqueVideos.slice(0, 5).filter(video =>
-        checkVideoRelevance(video.title, segment.title, lessonPlan.topic).relevant
-      );
-      if (relevantVideos.length === 0) throw new Error("No relevant videos found after filtering.");
+        updateState('loading', `Step 3/5: Checking top ${Math.min(5, uniqueVideos.length)} videos for relevance...`);
+        const relevancePromises = uniqueVideos.slice(0, 5).map(async video => {
+            const transcript = await getVideoTranscript(video.youtubeId);
+            video.transcript = transcript; // Attach transcript for later use
+            const relevanceResult = await checkVideoRelevance(video.title, segment.title, lessonPlan.topic, transcript);
+            return { ...video, ...relevanceResult };
+        });
 
-      updateState('loading', `Step 4/5: Fetching transcripts for ${relevantVideos.length} candidates...`);
-      let bestVideo: SearchedVideo | null = null;
-      for (const video of relevantVideos) {
-          const transcript = await getVideoTranscript(video.youtubeId);
-          if (transcript) {
-            video.transcript = transcript;
-            bestVideo = video;
-            break; // Prioritize the first video with a transcript
-          }
-      }
-      if (!bestVideo) bestVideo = relevantVideos[0]; // Fallback to top result if no transcripts found
+        const relevanceResults = await Promise.all(relevancePromises);
+        const relevantVideos = relevanceResults.filter(v => v.relevant);
 
-      updateState('loading', `Step 5/5: Segmenting video: "${bestVideo.title}"`);
-      const timeSegments = await findVideoSegments(bestVideo.title, segment.title, bestVideo.transcript || null);
+        if (relevantVideos.length === 0) throw new Error("No relevant videos found after AI analysis.");
 
-      updateState('success', 'Video ready!', { videoId: bestVideo.youtubeId, videoTitle: bestVideo.title, timeSegments });
+        // Sort by confidence, then by original educational score
+        relevantVideos.sort((a, b) => (b.confidence - a.confidence) || (b.educationalScore - a.educationalScore));
+        const bestVideo = relevantVideos[0];
+
+        updateState('loading', `Step 4/5: Best video found: "${bestVideo.title}"`);
+
+        updateState('loading', `Step 5/5: Identifying key segments in the video...`);
+        const timeSegments = await findVideoSegments(bestVideo.title, segment.title, bestVideo.transcript || null);
+
+        if (!timeSegments || timeSegments.length === 0) throw new Error("Could not identify any relevant time segments in the selected video.");
+
+        updateState('success', 'Video ready!', { videoId: bestVideo.youtubeId, videoTitle: bestVideo.title, timeSegments });
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
-      updateState('error', `Pipeline Failed: ${errorMessage}`);
+        const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during video sourcing.";
+        console.error("Video Sourcing Pipeline Error:", errorMessage);
+        updateState('error', `Video sourcing failed: ${errorMessage}`);
     }
   }, [lessonPlan.topic]);
+
 
   // This effect triggers the video pipeline when a video segment becomes active.
   useEffect(() => {
     const currentSegment = allLessonParts[currentSegmentIdx];
     if (currentSegment.type === SegmentType.VIDEO) {
-      if (!videoFetchState[currentSegment.id] || videoFetchState[currentSegment.id].status === 'idle') {
-        setCurrentVideoTimeSegmentIndex(0);
-        orchestrateVideoSourcing(currentSegment as VideoSegment);
-      }
+        // Only run the pipeline if it hasn't been run for this segment yet
+        if (!videoFetchState[currentSegment.id] || videoFetchState[currentSegment.id].status === 'idle') {
+            setCurrentVideoTimeSegmentIndex(0); // Reset time segment index for new video
+            orchestrateVideoSourcing(currentSegment as VideoSegment);
+        }
     }
   }, [currentSegmentIdx, allLessonParts, videoFetchState, orchestrateVideoSourcing]);
 
-  // --- Navigation and Playback Handlers ---
 
   const handleNextSegment = useCallback(() => {
+    if (audioRef.current) audioRef.current.pause();
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    setSpeakingSegmentId(null);
+
     if (currentSegmentIdx < allLessonParts.length - 1) {
-      setCompletedSegments(prev => new Set(prev).add(allLessonParts[currentSegmentIdx].id));
-      setCurrentSegmentIdx(prev => prev + 1);
+        setCompletedSegments(prev => new Set(prev).add(allLessonParts[currentSegmentIdx].id));
+        setCurrentSegmentIdx(prev => prev + 1);
     }
   }, [currentSegmentIdx, allLessonParts]);
 
   const handlePrevSegment = () => {
+    if (audioRef.current) audioRef.current.pause();
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    setSpeakingSegmentId(null);
+
     if (currentSegmentIdx > 0) {
       setCurrentSegmentIdx(prev => prev - 1);
     }
@@ -211,11 +229,12 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
 
   const handleToggleSpeech = useCallback(async (segmentId: string, rawText: string) => {
     if (speakingSegmentId === segmentId) {
+      if (audioRef.current) audioRef.current.pause();
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
       setSpeakingSegmentId(null);
-      audioRef.current?.pause();
-      if (window.speechSynthesis.speaking) window.speechSynthesis.cancel();
       return;
     }
+
     setSpeakingSegmentId(segmentId);
     try {
       const audioContent = await synthesizeSpeech(rawText);
@@ -226,14 +245,15 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
     } catch (error) {
       console.warn("Google TTS failed, falling back to browser TTS:", error);
     }
+
     if (isSpeechSynthesisSupported) {
         const utterance = new SpeechSynthesisUtterance(rawText);
         utterance.onend = () => setSpeakingSegmentId(null);
         window.speechSynthesis.speak(utterance);
+    } else {
+      setSpeakingSegmentId(null); // No TTS available
     }
   }, [speakingSegmentId, isSpeechSynthesisSupported]);
-
-  // --- UI Effects ---
 
   useEffect(() => {
     const calculateHeight = () => {
@@ -254,9 +274,6 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
             <div className="flex justify-between items-center mb-2">
                 <h2 className="text-2xl font-bold text-purple-300 truncate" title={lessonPlan.topic}>{lessonPlan.topic}</h2>
                 <div className="flex items-center space-x-2">
-                    <button onClick={() => setViewMode(viewMode === 'list' ? 'player' : 'list')} className="flex items-center text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md">
-                        {viewMode === 'list' ? '▶️ Player' : '📋 List'}
-                    </button>
                     <button onClick={onReset} className="flex items-center text-sm bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md">
                         {RefreshCwIcon} <span className="ml-2 hidden sm:inline">New Lesson</span>
                     </button>
