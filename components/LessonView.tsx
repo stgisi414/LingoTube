@@ -165,13 +165,13 @@ export const LessonView: React.FC<LessonViewProps> = ({ lessonPlan, onReset }) =
   const [videoPlayerHeight, setVideoPlayerHeight] = useState('360'); 
   const [isSpeechSynthesisSupported, setIsSpeechSynthesisSupported] = useState(false);
   const [speakingSegmentId, setSpeakingSegmentId] = useState<string | null>(null);
-  
-  const speechUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const [isUsingGoogleTTS, setIsUsingGoogleTTS] = useState<boolean>(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const speechUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const [fetchedVideoInfo, setFetchedVideoInfo] = useState<Record<string, VideoFetchState>>({});
 
   const mainContentRef = useRef<HTMLDivElement>(null);
-  
+
 
   const allLessonParts: LessonSegment[] = useMemo(() => [
     { type: SegmentType.NARRATION, id: 'intro-narration', text: lessonPlan.introNarration },
@@ -304,7 +304,7 @@ export const LessonView: React.FC<LessonViewProps> = ({ lessonPlan, onReset }) =
     }
 
     setSpeakingSegmentId(segmentId);
-    
+
     // Always try Google TTS first
     try {
         const audioContent = await synthesizeSpeech(rawText);
