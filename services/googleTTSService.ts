@@ -33,16 +33,16 @@ interface GoogleTTSResponse {
 }
 
 // Language mappings for Google TTS
-const LANGUAGE_MAPPINGS: Record<string, string> = {
-  'es': 'es-ES',
-  'fr': 'fr-FR', 
-  'de': 'de-DE',
-  'it': 'it-IT',
-  'pt': 'pt-BR',
-  'ja': 'ja-JP',
-  'ko': 'ko-KR',
-  'zh': 'zh-CN',
-  'en': 'en-US'
+const LANGUAGE_MAPPINGS: Record<string, { languageCode: string; voiceName: string }> = {
+  'es': { languageCode: 'es-ES', voiceName: 'es-ES-Standard-A' },
+  'fr': { languageCode: 'fr-FR', voiceName: 'fr-FR-Standard-A' },
+  'de': { languageCode: 'de-DE', voiceName: 'de-DE-Standard-A' },
+  'it': { languageCode: 'it-IT', voiceName: 'it-IT-Standard-A' },
+  'pt': { languageCode: 'pt-BR', voiceName: 'pt-BR-Standard-A' },
+  'ja': { languageCode: 'ja-JP', voiceName: 'ja-JP-Standard-A' },
+  'ko': { languageCode: 'ko-KR', voiceName: 'ko-KR-Standard-A' },
+  'zh': { languageCode: 'zh-CN', voiceName: 'zh-CN-Standard-A' },
+  'en': { languageCode: 'en-US', voiceName: 'en-US-Standard-A' }
 };
 
 export const synthesizeSpeech = async (text: string, options: Partial<TTSOptions> = {}): Promise<string | null> => {
@@ -109,12 +109,15 @@ export const synthesizeMultilingualSpeech = async (text: string): Promise<void> 
   
   for (const segment of parsedSegments) {
     if (segment.type === 'lang') {
-      // Get the appropriate language code
-      const langCode = LANGUAGE_MAPPINGS[segment.langCode] || 'en-US';
+      // Get the appropriate language config
+      const langConfig = LANGUAGE_MAPPINGS[segment.langCode] || LANGUAGE_MAPPINGS['en'];
       
-      // Synthesize speech for this language segment
+      console.log(`🎵 TTS: Synthesizing "${segment.text}" with voice ${langConfig.voiceName}`);
+      
+      // Synthesize speech for this language segment with specific voice
       const audioContent = await synthesizeSpeech(segment.text, {
-        languageCode: langCode
+        languageCode: langConfig.languageCode,
+        voiceName: langConfig.voiceName
       });
       
       if (audioContent) {
@@ -125,8 +128,10 @@ export const synthesizeMultilingualSpeech = async (text: string): Promise<void> 
       }
     } else if (segment.type === 'plain') {
       // For plain text, use default English
+      const englishConfig = LANGUAGE_MAPPINGS['en'];
       const audioContent = await synthesizeSpeech(segment.text, {
-        languageCode: 'en-US'
+        languageCode: englishConfig.languageCode,
+        voiceName: englishConfig.voiceName
       });
       
       if (audioContent) {
