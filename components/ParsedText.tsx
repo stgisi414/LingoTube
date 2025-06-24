@@ -19,40 +19,49 @@ interface ParsedTextProps {
 export const parseLangText = (inputText: string): ParsedSegment[] => {
   if (!inputText || typeof inputText !== 'string') return [];
 
-  // Regex to split the text by any potential lang tag, keeping the tags in the result array
-  const splitter = /(<\/?lang:\w{2,3}>)/g;
-  const parts = inputText.replace(/\([^)]*\)/g, '').trim().split(splitter);
+  // Remove content in parentheses first and clean the text
+  let cleanText = inputText.replace(/\([^)]*\)/g, '').trim();
+  
+  // Remove orphaned closing tags that don't have matching opening tags
+  cleanText = cleanText.replace(/<\/lang:\w{2,3}>\s*/g, '');
 
   const segments: ParsedSegment[] = [];
-  let isInsideLangTag = false;
-  let currentLangCode: string | undefined = undefined;
+  
+  // Use a more sophisticated regex to find properly paired language tags
+  const langTagRegex = /<lang:(\w{2,3})>(.*?)(?=<lang:\w{2,3}>|$)/g;
+  let lastIndex = 0;
+  let match;
 
-  for (const part of parts) {
-    if (!part) continue;
-
-    const openTagMatch = part.match(/<lang:(\w{2,3})>/);
-    const isCloseTag = part.startsWith('</lang:');
-
-    if (openTagMatch) {
-      isInsideLangTag = true;
-      currentLangCode = openTagMatch[1];
-    } else if (isCloseTag) {
-      isInsideLangTag = false;
-      currentLangCode = undefined;
-    } else {
-      // This part is actual text content
-      if (isInsideLangTag && currentLangCode) {
-        segments.push({ type: 'lang', text: part, langCode: currentLangCode });
-      } else {
-        segments.push({ type: 'plain', text: part });
+  while ((match = langTagRegex.exec(cleanText)) !== null) {
+    // Add any English text before this tag
+    if (match.index > lastIndex) {
+      const englishText = cleanText.slice(lastIndex, match.index).trim();
+      if (englishText) {
+        segments.push({ type: 'plain', text: englishText });
       }
+    }
+
+    // Add the foreign language segment
+    const langCode = match[1];
+    const langText = match[2].trim();
+    if (langText) {
+      segments.push({ type: 'lang', text: langText, langCode });
+    }
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Add any remaining English text
+  if (lastIndex < cleanText.length) {
+    const remainingText = cleanText.slice(lastIndex).trim();
+    if (remainingText) {
+      segments.push({ type: 'plain', text: remainingText });
     }
   }
 
-  // If no segments were produced, it means there were no tags.
-  // Return the original text as a single plain segment.
-  if (segments.length === 0 && inputText) {
-      return [{type: 'plain', text: inputText}]
+  // If no language tags were found, return the original cleaned text as plain
+  if (segments.length === 0 && cleanText) {
+    return [{ type: 'plain', text: cleanText }];
   }
 
   return segments;

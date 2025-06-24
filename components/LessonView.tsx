@@ -318,7 +318,9 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
       <div className="sticky top-0 bg-slate-900/80 backdrop-blur-md py-4 z-10 rounded-b-lg shadow-lg">
         <div className="max-w-3xl mx-auto px-4">
             <div className="flex justify-between items-center mb-2">
-                <h2 className="text-2xl font-bold text-purple-300 truncate" title={lessonPlan.topic}>{lessonPlan.topic}</h2>
+                <h2 className="text-2xl font-bold text-purple-300 truncate" title={lessonPlan.topic}>
+                  <ParsedText text={lessonPlan.topic} />
+                </h2>
                 <div className="flex items-center space-x-2">
                     <button onClick={onReset} className="flex items-center text-sm bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md">
                         {RefreshCwIcon} <span className="ml-2 hidden sm:inline">New Lesson</span>
