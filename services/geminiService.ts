@@ -21,6 +21,25 @@ const parseJsonResponse = (responseText: string): any => {
   }
 };
 
+const safetySettings = [
+  {
+    category: 'HARM_CATEGORY_HARASSMENT',
+    threshold: 'BLOCK_NONE',
+  },
+  {
+    category: 'HARM_CATEGORY_HATE_SPEECH',
+    threshold: 'BLOCK_NONE',
+  },
+  {
+    category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+    threshold: 'BLOCK_NONE',
+  },
+  {
+    category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
+    threshold: 'BLOCK_NONE',
+  },
+];
+
 /**
  * Generate a complete lesson plan with multilingual narration tags
  */
@@ -28,7 +47,10 @@ export const generateLessonPlan = async (topic: string): Promise<LessonPlan> => 
   console.log(`🎓 Generating lesson plan for topic: "${topic}"`);
 
   const genAI = getAiClient();
-  const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
+  const model = genAI.getGenerativeModel({ 
+    model: GEMINI_MODEL_NAME,
+    safetySettings 
+  });
 
   const prompt = `Create a detailed lesson plan for: "${topic}"
 
@@ -116,7 +138,10 @@ export const checkVideoRelevance = async (
   transcript: string | null
 ): Promise<{ relevant: boolean; reason: string; confidence: number }> => {
   const genAI = getAiClient();
-  const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
+  const model = genAI.getGenerativeModel({ 
+    model: GEMINI_MODEL_NAME,
+    safetySettings 
+  });
 
   const prompt = `Analyze if this YouTube video is relevant for education:
 
@@ -167,7 +192,10 @@ export const findVideoSegments = async (
   }
 
   const genAI = getAiClient();
-  const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
+  const model = genAI.getGenerativeModel({ 
+    model: GEMINI_MODEL_NAME,
+    safetySettings 
+  });
 
   const prompt = `Find 2-3 relevant time segments in this video transcript:
 
