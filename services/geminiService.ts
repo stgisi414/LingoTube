@@ -1,15 +1,15 @@
-import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { LessonPlan, VideoTimeSegment } from '../types';
 import { GEMINI_API_KEY, GEMINI_MODEL_NAME } from '../constants';
 
 // This will hold the initialized client. It starts as null.
-let aiClient: GoogleGenAI | null = null;
+let aiClient: GoogleGenerativeAI | null = null;
 
 /**
- * This function initializes the GoogleGenAI client only when it's first called.
+ * This function initializes the GoogleGenerativeAI client only when it's first called.
  * This solves the "API Key must be set" error by ensuring the environment is ready.
  */
-const getAiClient = (): GoogleGenAI => {
+const getAiClient = (): GoogleGenerativeAI => {
     if (!aiClient) {
         if (!GEMINI_API_KEY) {
             // This will give a much clearer error if the key is truly missing from the .env file.
@@ -18,7 +18,7 @@ const getAiClient = (): GoogleGenAI => {
             throw new Error(errorMsg);
         }
         // Create the client, now that we know the key exists.
-        aiClient = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+        aiClient = new GoogleGenerativeAI(GEMINI_API_KEY);
     }
     return aiClient;
 };
