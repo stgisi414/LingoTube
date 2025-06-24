@@ -92,13 +92,28 @@ interface LessonPlan {
  * Generates search queries for a given learning point.
  */
 export const generateSearchQueries = async (learningPoint: string, mainTopic: string): Promise<string[]> => {
+    console.log(`🔍 SEARCH QUERIES: Generating search queries for learning point: "${learningPoint}"`);
+    console.log(`🔍 SEARCH QUERIES: Main topic context: "${mainTopic}"`);
+    console.log(`🔍 SEARCH QUERIES: Timestamp: ${new Date().toISOString()}`);
+    
     // This logic from your original pipeline is simple and effective.
-    const uniqueQueries = [...new Set([
+    const baseQueries = [
         `${learningPoint}`,
         `${mainTopic} ${learningPoint}`,
         `${learningPoint} tutorial`,
         `${learningPoint} explained`
-    ])];
+    ];
+    
+    const uniqueQueries = [...new Set(baseQueries)];
+    
+    console.log(`🔍 SEARCH QUERIES: Generated queries:`, {
+        learningPoint,
+        mainTopic,
+        baseQueries,
+        uniqueQueries,
+        totalQueries: uniqueQueries.length
+    });
+    
     return uniqueQueries;
 };
 
@@ -106,40 +121,101 @@ export const generateSearchQueries = async (learningPoint: string, mainTopic: st
  * Uses AI to find the most relevant time segments in a video.
  */
 export const findVideoSegments = async (videoTitle: string, learningPoint: string, transcript: string | null): Promise<VideoTimeSegment[]> => {
-    const genAI = getAiClient(); // Use the getter
+    console.log(`🎬 VIDEO SEGMENTS: Starting segment analysis for video: "${videoTitle}"`);
+    console.log(`🎬 VIDEO SEGMENTS: Analysis parameters:`, {
+        videoTitle,
+        learningPoint,
+        hasTranscript: !!transcript,
+        transcriptLength: transcript?.length || 0,
+        timestamp: new Date().toISOString()
+    });
+
+    const genAI = getAiClient();
     let prompt = `You are a video analyst. For the YouTube video titled "${videoTitle}", find the 1-3 most relevant segments for the learning topic: "${learningPoint}".`;
     if (transcript) {
         prompt += `\n\nUse this transcript to find exact timings:\n"${transcript.substring(0, 5000)}..."`;
+        console.log(`🎬 VIDEO SEGMENTS: Using transcript for precise timing (${transcript.length} chars, truncated to 5000)`);
     } else {
         prompt += `\n(No transcript available, use general heuristics for a standard educational video structure).`;
+        console.log(`🎬 VIDEO SEGMENTS: No transcript available - using heuristic approach`);
     }
     prompt += `\n\nCRITICAL: Return ONLY a valid JSON array matching this TypeScript interface: VideoTimeSegment[].
 interface VideoTimeSegment { startTime: number; endTime: number; reason: string; }
 Example: [{"startTime": 45, "endTime": 135, "reason": "Explains the core concept of X"}]
 If you cannot find specific segments, return a single, broader segment like [{"startTime": 30, "endTime": 210, "reason": "Main educational content"}].`;
 
+    console.log(`🎬 VIDEO SEGMENTS: Sending analysis request to Gemini AI...`);
+    console.log(`🎬 VIDEO SEGMENTS: Prompt length: ${prompt.length} characters`);
+
     try {
+        const startTime = performance.now();
         const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
         const result = await model.generateContent({
             contents: [{ role: "user", parts: [{ text: prompt }] }],
             generationConfig: { responseMimeType: "application/json", temperature: 0.3 }
         });
+        const endTime = performance.now();
+
+        console.log(`🎬 VIDEO SEGMENTS: AI response received:`, {
+            videoTitle,
+            responseTime: `${(endTime - startTime).toFixed(2)}ms`,
+            rawResponseLength: result.response.text()?.length || 0
+        });
+
         const segments = parseJsonResponse(result.response.text());
+        console.log(`🎬 VIDEO SEGMENTS: Parsed AI response:`, {
+            videoTitle,
+            segments,
+            isValidArray: Array.isArray(segments),
+            segmentCount: Array.isArray(segments) ? segments.length : 0,
+            hasValidStructure: Array.isArray(segments) && segments.length > 0 && typeof segments[0]?.startTime === 'number'
+        });
+
         // Basic validation of the parsed response
         if (Array.isArray(segments) && segments.length > 0 && typeof segments[0].startTime === 'number') {
+            console.log(`✅ VIDEO SEGMENTS: Successfully found ${segments.length} segments for "${videoTitle}":`, 
+                segments.map((seg, i) => ({
+                    segment: i + 1,
+                    startTime: seg.startTime,
+                    endTime: seg.endTime,
+                    duration: seg.endTime - seg.startTime,
+                    reason: seg.reason
+                }))
+            );
             return segments;
         }
+        
+        console.warn(`⚠️ VIDEO SEGMENTS: Invalid AI response format for "${videoTitle}" - using fallback`);
     } catch (error) {
-        console.error("Error finding video segments with AI:", error);
+        console.error(`❌ VIDEO SEGMENTS: Error analyzing "${videoTitle}":`, {
+            videoTitle,
+            error: error.message,
+            name: error.name,
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+        });
     }
+    
     // Fallback if AI fails or returns invalid data
-    return [{ startTime: 30, endTime: 180, reason: "Main educational content" }];
+    const fallbackSegment = { startTime: 30, endTime: 180, reason: "Main educational content" };
+    console.log(`🔄 VIDEO SEGMENTS: Using fallback segment for "${videoTitle}":`, fallbackSegment);
+    return [fallbackSegment];
 };
 
 /**
  * [UPGRADED] Uses AI to check for video relevance, mirroring the proven logic.
  */
 export const checkVideoRelevance = async (videoTitle: string, learningPoint: string, mainTopic: string, transcript: string | null): Promise<{ relevant: boolean; reason: string; confidence: number; }> => {
+    console.log(`🤖 RELEVANCE CHECK: Starting AI relevance analysis`);
+    console.log(`🤖 RELEVANCE CHECK: Input parameters:`, {
+        videoTitle,
+        learningPoint,
+        mainTopic,
+        hasTranscript: !!transcript,
+        transcriptLength: transcript?.length || 0,
+        timestamp: new Date().toISOString()
+    });
+
     const genAI = getAiClient();
     const prompt = `
 Analyze if this YouTube video is relevant for a lesson.
@@ -157,20 +233,49 @@ CRITERIA:
 Return ONLY a valid JSON object matching this interface:
 { "relevant": boolean, "reason": "A brief justification for your decision.", "confidence": number }`;
 
+    console.log(`🤖 RELEVANCE CHECK: Sending request to Gemini AI...`);
+    console.log(`🤖 RELEVANCE CHECK: Prompt length: ${prompt.length} characters`);
+
     try {
+        const startTime = performance.now();
         const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
         const result = await model.generateContent({
             contents: [{ role: "user", parts: [{ text: prompt }] }],
             generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
         });
+        const endTime = performance.now();
+
+        console.log(`🤖 RELEVANCE CHECK: AI response received:`, {
+            responseTime: `${(endTime - startTime).toFixed(2)}ms`,
+            rawResponseLength: result.response.text()?.length || 0
+        });
+
         const relevanceResult = parseJsonResponse(result.response.text());
+        console.log(`🤖 RELEVANCE CHECK: Parsed AI response:`, {
+            videoTitle,
+            relevanceResult,
+            isValid: relevanceResult && typeof relevanceResult.relevant === 'boolean'
+        });
+
         if (relevanceResult && typeof relevanceResult.relevant === 'boolean') {
+            console.log(`✅ RELEVANCE CHECK: Successfully analyzed video "${videoTitle}":`, {
+                relevant: relevanceResult.relevant,
+                confidence: relevanceResult.confidence,
+                reason: relevanceResult.reason
+            });
             return relevanceResult;
         }
-        // Fallback if parsing fails
+        
+        console.warn(`⚠️ RELEVANCE CHECK: Invalid AI response format for "${videoTitle}"`);
         return { relevant: false, reason: "AI response was not valid.", confidence: 0 };
     } catch (error) {
-        console.error("Error in checkVideoRelevance:", error);
+        console.error(`❌ RELEVANCE CHECK: Error analyzing "${videoTitle}":`, {
+            videoTitle,
+            error: error.message,
+            name: error.name,
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+        });
         return { relevant: false, reason: "An error occurred during relevance check.", confidence: 0 };
     }
 };

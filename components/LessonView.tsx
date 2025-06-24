@@ -126,7 +126,17 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
 
   const orchestrateVideoSourcing = useCallback(async (segment: VideoSegment) => {
     const segmentId = segment.id;
+    console.log(`🚀 PIPELINE: Starting video sourcing orchestration for segment: "${segment.title}"`);
+    console.log(`🚀 PIPELINE: Segment details:`, {
+        segmentId,
+        title: segment.title,
+        description: segment.segmentDescription,
+        searchQuery: segment.youtubeSearchQuery,
+        timestamp: new Date().toISOString()
+    });
+
     const updateState = (status: VideoFetchState['status'], message: string, data: Partial<VideoFetchState> = {}) => {
+        console.log(`📊 PIPELINE STATE: ${segmentId} -> ${status}: ${message}`, data);
         setVideoFetchState(prev => ({
             ...prev,
             [segmentId]: {
@@ -139,45 +149,128 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
     };
 
     try {
+        console.log(`🔍 PIPELINE STEP 1: Generating search queries for "${segment.title}"`);
         updateState('loading', 'Step 1/5: Generating search queries...', { videoId: null, videoTitle: null, timeSegments: null });
         const queries = await generateSearchQueries(segment.title, lessonPlan.topic);
+        console.log(`✅ PIPELINE STEP 1: Generated ${queries.length} search queries:`, queries);
 
+        console.log(`🔎 PIPELINE STEP 2: Searching YouTube with ${queries.length} queries`);
         updateState('loading', 'Step 2/5: Searching YouTube for candidates...');
-        const videoCandidates = (await Promise.all(queries.map(q => searchYouTube(q)))).flat();
+        const searchPromises = queries.map(async (q, index) => {
+            console.log(`🔎 PIPELINE: Searching with query ${index + 1}/${queries.length}: "${q}"`);
+            const results = await searchYouTube(q);
+            console.log(`🔎 PIPELINE: Query ${index + 1} returned ${results.length} results`);
+            return results;
+        });
+        
+        const videoCandidates = (await Promise.all(searchPromises)).flat();
+        console.log(`🔎 PIPELINE STEP 2: Total raw candidates found: ${videoCandidates.length}`);
+        
         const uniqueVideos = [...new Map(videoCandidates.map(v => [v.youtubeId, v])).values()]
             .sort((a, b) => b.educationalScore - a.educationalScore);
+        
+        console.log(`🔎 PIPELINE STEP 2: Unique videos after deduplication: ${uniqueVideos.length}`);
+        console.log(`🔎 PIPELINE STEP 2: Top candidates:`, uniqueVideos.slice(0, 5).map((v, i) => ({
+            rank: i + 1,
+            youtubeId: v.youtubeId,
+            title: v.title,
+            educationalScore: v.educationalScore
+        })));
 
-        if (uniqueVideos.length === 0) throw new Error("No videos found from any search query.");
+        if (uniqueVideos.length === 0) {
+            console.error(`❌ PIPELINE STEP 2: No videos found from any search query`);
+            throw new Error("No videos found from any search query.");
+        }
 
-        updateState('loading', `Step 3/5: Checking top ${Math.min(5, uniqueVideos.length)} videos for relevance...`);
-        const relevancePromises = uniqueVideos.slice(0, 5).map(async video => {
+        const candidateCount = Math.min(5, uniqueVideos.length);
+        console.log(`🤖 PIPELINE STEP 3: Checking top ${candidateCount} videos for relevance`);
+        updateState('loading', `Step 3/5: Checking top ${candidateCount} videos for relevance...`);
+        
+        const relevancePromises = uniqueVideos.slice(0, 5).map(async (video, index) => {
+            console.log(`🤖 PIPELINE: Analyzing candidate ${index + 1}/${candidateCount}: "${video.title}"`);
             const transcript = await getVideoTranscript(video.youtubeId);
             video.transcript = transcript; // Attach transcript for later use
+            console.log(`🤖 PIPELINE: Transcript obtained for "${video.title}": ${transcript ? `${transcript.length} chars` : 'none'}`);
+            
             const relevanceResult = await checkVideoRelevance(video.title, segment.title, lessonPlan.topic, transcript);
+            console.log(`🤖 PIPELINE: Relevance result for "${video.title}":`, relevanceResult);
+            
             return { ...video, ...relevanceResult };
         });
 
         const relevanceResults = await Promise.all(relevancePromises);
         const relevantVideos = relevanceResults.filter(v => v.relevant);
+        
+        console.log(`🤖 PIPELINE STEP 3: Relevance analysis complete:`, {
+            totalAnalyzed: relevanceResults.length,
+            relevantCount: relevantVideos.length,
+            rejectedCount: relevanceResults.length - relevantVideos.length
+        });
+        
+        console.log(`🤖 PIPELINE STEP 3: Relevant videos found:`, relevantVideos.map((v, i) => ({
+            rank: i + 1,
+            youtubeId: v.youtubeId,
+            title: v.title,
+            confidence: v.confidence,
+            reason: v.reason
+        })));
 
-        if (relevantVideos.length === 0) throw new Error("No relevant videos found after AI analysis.");
+        if (relevantVideos.length === 0) {
+            console.error(`❌ PIPELINE STEP 3: No relevant videos found after AI analysis`);
+            throw new Error("No relevant videos found after AI analysis.");
+        }
 
         // Sort by confidence, then by original educational score
         relevantVideos.sort((a, b) => (b.confidence - a.confidence) || (b.educationalScore - a.educationalScore));
         const bestVideo = relevantVideos[0];
+        
+        console.log(`🏆 PIPELINE STEP 4: Selected best video:`, {
+            youtubeId: bestVideo.youtubeId,
+            title: bestVideo.title,
+            confidence: bestVideo.confidence,
+            educationalScore: bestVideo.educationalScore,
+            hasTranscript: !!bestVideo.transcript
+        });
 
         updateState('loading', `Step 4/5: Best video found: "${bestVideo.title}"`);
 
+        console.log(`🎬 PIPELINE STEP 5: Finding time segments in "${bestVideo.title}"`);
         updateState('loading', `Step 5/5: Identifying key segments in the video...`);
         const timeSegments = await findVideoSegments(bestVideo.title, segment.title, bestVideo.transcript || null);
+        
+        console.log(`🎬 PIPELINE STEP 5: Time segments found:`, {
+            videoTitle: bestVideo.title,
+            segmentCount: timeSegments?.length || 0,
+            segments: timeSegments
+        });
 
-        if (!timeSegments || timeSegments.length === 0) throw new Error("Could not identify any relevant time segments in the selected video.");
+        if (!timeSegments || timeSegments.length === 0) {
+            console.error(`❌ PIPELINE STEP 5: Could not identify any relevant time segments`);
+            throw new Error("Could not identify any relevant time segments in the selected video.");
+        }
+
+        console.log(`✅ PIPELINE COMPLETE: Successfully sourced video for "${segment.title}"`);
+        console.log(`✅ PIPELINE COMPLETE: Final result:`, {
+            segmentTitle: segment.title,
+            selectedVideo: {
+                youtubeId: bestVideo.youtubeId,
+                title: bestVideo.title
+            },
+            timeSegmentCount: timeSegments.length,
+            totalDuration: timeSegments.reduce((sum, seg) => sum + (seg.endTime - seg.startTime), 0)
+        });
 
         updateState('success', 'Video ready!', { videoId: bestVideo.youtubeId, videoTitle: bestVideo.title, timeSegments });
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during video sourcing.";
-        console.error("Video Sourcing Pipeline Error:", errorMessage);
+        console.error(`❌ PIPELINE ERROR: Video sourcing failed for "${segment.title}":`, {
+            segmentId,
+            segmentTitle: segment.title,
+            error: errorMessage,
+            fullError: error,
+            timestamp: new Date().toISOString()
+        });
         updateState('error', `Video sourcing failed: ${errorMessage}`);
     }
   }, [lessonPlan.topic]);
