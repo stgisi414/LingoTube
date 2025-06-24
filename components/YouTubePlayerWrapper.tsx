@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import YouTube, { YouTubeProps, YouTubePlayer } from 'react-youtube'; // Corrected import
+import YouTube, { YouTubeProps, YouTubePlayer } from 'react-youtube';
 
 interface YouTubePlayerWrapperProps {
   videoId: string;
@@ -8,59 +7,55 @@ interface YouTubePlayerWrapperProps {
   endSeconds?: number | null;
   height?: string;
   width?: string;
+  onEnd?: () => void;
 }
 
 export const YouTubePlayerWrapper: React.FC<YouTubePlayerWrapperProps> = ({
   videoId,
   startSeconds,
   endSeconds,
-  height = '360', // Default height
-  width = '100%',  // Default width
+  height = '360',
+  width = '100%',
+  onEnd,
 }) => {
-  const [player, setPlayer] = useState<YouTubePlayer | null>(null); // Correct type for player
   const [error, setError] = useState<string | null>(null);
 
   const opts: YouTubeProps['opts'] = {
     height: height,
     width: width,
     playerVars: {
-      autoplay: 0, // Autoplay disabled initially
+      autoplay: 1,
       start: startSeconds ?? undefined,
       end: endSeconds ?? undefined,
       modestbranding: 1,
-      rel: 0, // Do not show related videos at the end
-      iv_load_policy: 3, // Do not show video annotations
-      controls: 1, // Show player controls
+      rel: 0,
+      iv_load_policy: 3,
+      controls: 1,
     },
   };
 
   const onReady: YouTubeProps['onReady'] = (event) => {
-    setPlayer(event.target);
     setError(null);
-    // You could autoplay here if desired: event.target.playVideo();
+    event.target.playVideo();
   };
 
   const onError: YouTubeProps['onError'] = (event) => {
-    console.error('YouTube Player Error:', event.data, videoId);
     let message = 'An error occurred with the YouTube player.';
-    switch (event.data) {
-      case 2: // Invalid parameter
-        message = `The video ID (${videoId}) might be invalid or the video is private.`;
-        break;
-      case 5: // HTML5 player error
-        message = 'There was an issue with the HTML5 player loading this video.';
-        break;
-      case 100: // Video not found
-        message = `Video not found. It might have been removed or set to private. (ID: ${videoId})`;
-        break;
-      case 101: // Not allowed to play in embedded players
-      case 150:
-        message = `This video cannot be played in an embedded player. (ID: ${videoId})`;
-        break;
-      default:
-        message = `YouTube player error code: ${event.data}. (ID: ${videoId})`;
+     switch (event.data) {
+      case 2: message = `The video ID (${videoId}) may be invalid or the video is private.`; break;
+      case 5: message = 'There was an issue with the HTML5 player loading this video.'; break;
+      case 100: message = `Video not found. It may have been removed or set to private.`; break;
+      case 101: case 150: message = `This video cannot be played in an embedded player.`; break;
+      default: message = `Youtubeer error code: ${event.data}.`;
     }
     setError(message);
+    if(onEnd) onEnd(); // If player errors, treat it as the end of the segment to move on
+  };
+
+  const handleEnd = () => {
+    if (onEnd) {
+      onEnd();
+    }
   };
 
   return (
@@ -68,17 +63,9 @@ export const YouTubePlayerWrapper: React.FC<YouTubePlayerWrapperProps> = ({
       {error ? (
         <div className="w-full h-full flex flex-col items-center justify-center bg-slate-700 p-4">
           <p className="text-red-400 text-center">{error}</p>
-          <a
-            href={`https://www.youtube.com/watch?v=${videoId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 text-sm text-purple-400 hover:text-purple-300 underline"
-          >
-            Try watching on YouTube directly
-          </a>
         </div>
       ) : (
-        <YouTube videoId={videoId} opts={opts} onReady={onReady} onError={onError} className="w-full h-full" />
+        <YouTube videoId={videoId} opts={opts} onReady={onReady} onError={onError} onEnd={handleEnd} className="w-full h-full" />
       )}
     </div>
   );

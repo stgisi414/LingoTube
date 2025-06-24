@@ -9,6 +9,12 @@ export interface NarrationSegment {
   text: string;
 }
 
+export interface VideoTimeSegment {
+  startTime: number;
+  endTime: number;
+  reason: string;
+}
+
 export interface VideoSegment {
   type: SegmentType.VIDEO;
   id: string;
@@ -16,8 +22,8 @@ export interface VideoSegment {
   youtubeVideoId?: string | null;
   youtubeSearchQuery: string;
   segmentDescription: string;
-  estimatedStartSeconds?: number | null;
-  estimatedEndSeconds?: number | null;
+  // This will be populated by the pipeline
+  videoSegments?: VideoTimeSegment[];
 }
 
 export type LessonSegment = NarrationSegment | VideoSegment;
@@ -29,7 +35,6 @@ export interface LessonPlan {
   outroNarration: string;
 }
 
-// Moved AppStatus enum here for global availability
 export enum AppStatus {
   IDLE = 'idle',
   RECOGNIZING_SPEECH = 'recognizingSpeech',
@@ -38,10 +43,7 @@ export enum AppStatus {
   ERROR = 'error',
 }
 
-
 // --- Speech Recognition API Types ---
-// Based on MDN and common usage for Web Speech API (webkitSpeechRecognition)
-
 export interface SpeechRecognitionAlternative {
   readonly transcript: string;
   readonly confidence: number;
@@ -63,13 +65,11 @@ export interface SpeechRecognitionResultList {
 export interface SpeechRecognitionEvent extends Event {
   readonly resultIndex: number;
   readonly results: SpeechRecognitionResultList;
-  // readonly interpretation: any; // Deprecated or specific to certain implementations
-  // readonly emma: Document | null; // Deprecated or specific to certain implementations
 }
 
-export interface SpeechRecognitionErrorEvent extends Event { // Changed from ErrorEvent for more specific typing if possible, fallback to Event
-  readonly error: string; // SpeechRecognitionErrorCode (e.g., 'no-speech', 'audio-capture', 'not-allowed')
-  readonly message: string; // Optional: a human-readable message
+export interface SpeechRecognitionErrorEvent extends Event {
+  readonly error: string;
+  readonly message: string;
 }
 
 export interface SpeechRecognitionStatic {
@@ -77,12 +77,12 @@ export interface SpeechRecognitionStatic {
 }
 
 export interface SpeechRecognition extends EventTarget {
-  grammars: any; // Actually SpeechGrammarList, but 'any' for simplicity if not deeply used
+  grammars: any;
   lang: string;
   continuous: boolean;
   interimResults: boolean;
   maxAlternatives: number;
-  serviceURI?: string; // Optional
+  serviceURI?: string;
 
   onaudiostart: ((this: SpeechRecognition, ev: Event) => any) | null;
   onaudioend: ((this: SpeechRecognition, ev: Event) => any) | null;

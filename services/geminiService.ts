@@ -1,129 +1,137 @@
-
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { LessonPlan } from '../types';
-import { GEMINI_MODEL_NAME } from '../constants';
+import { LessonPlan, VideoTimeSegment } from '../types';
+import { GEMINI_API_KEY, GEMINI_MODEL_NAME } from '../constants';
 
-const API_KEY = process.env.API_KEY;
+// This will hold the initialized client. It starts as null.
+let aiClient: GoogleGenAI | null = null;
 
-if (!API_KEY) {
-  console.warn("API_KEY environment variable not set. Gemini API calls will likely fail. Ensure it is configured in your environment.");
-  // For a production app, you might throw an error here or have a more robust configuration check.
-  // throw new Error("API_KEY for Gemini is not configured.");
-}
+/**
+ * This function initializes the GoogleGenAI client only when it's first called.
+ * This solves the "API Key must be set" error by ensuring the environment is ready.
+ */
+const getAiClient = (): GoogleGenAI => {
+    if (!aiClient) {
+        if (!GEMINI_API_KEY) {
+            // This will give a much clearer error if the key is truly missing from the .env file.
+            const errorMsg = "FATAL ERROR: VITE_GEMINI_API_KEY is not set in your .env.local file. Please set it and restart the server.";
+            alert(errorMsg); // Use an alert to make it impossible to miss.
+            throw new Error(errorMsg);
+        }
+        // Create the client, now that we know the key exists.
+        aiClient = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+    }
+    return aiClient;
+};
 
-// Initialize AI client. If API_KEY is undefined, this will likely cause issues at runtime.
-// The non-null assertion assumes the environment provides the key as per project guidelines.
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+// Helper function to safely parse JSON from the AI's response.
+const parseJsonResponse = (jsonStr: string) => {
+    try {
+        const fenceRegex = /^```(?:json)?\s*\n?(.*?)\n?\s*```$/si;
+        const match = jsonStr.match(fenceRegex);
+        const cleanStr = match ? match[1].trim() : jsonStr.trim();
+        return JSON.parse(cleanStr);
+    } catch (error) {
+        console.error("Failed to parse JSON from Gemini response:", error, "\nRaw response:\n", jsonStr);
+        return null;
+    }
+};
 
-
+/**
+ * Generates the initial lesson plan.
+ */
 export const generateLessonPlan = async (topic: string): Promise<LessonPlan> => {
-  const prompt = `
-You are an expert instructional designer creating engaging multimedia lesson plans.
-The user wants to learn about: "${topic}".
+    const prompt = `
+You are an expert instructional designer. Your task is to generate a comprehensive lesson plan for the topic: "${topic}".
+The JSON object you return MUST directly match this TypeScript interface. DO NOT wrap it in a parent object.
 
-Your task is to generate a comprehensive lesson plan structured as a single JSON object.
-The lesson plan should include:
-1.  An introductory narration.
-2.  A sequence of learning segments. Each segment can be either:
-    a.  A narration: Text to be read out, providing information or transitioning between topics.
-    b.  A YouTube video segment: A pointer to a relevant part of a YouTube video.
-3.  A concluding outro narration.
-
-For each segment, provide a unique \`id\` string (e.g., "seg-intro", "seg-video-1", "seg-narration-2").
-
-For narration segments, use the format:
-{
-  "type": "narration",
-  "id": "unique-segment-id",
-  "text": "The narration content here."
-}
-
-For YouTube video segments, use the format:
-{
-  "type": "video",
-  "id": "unique-segment-id",
-  "title": "Descriptive title for the video segment (e.g., 'Understanding Photosynthesis Basics')",
-  "youtubeVideoId": "YOUTUBE_VIDEO_ID", // (STRONGLY PREFERRED) The 11-character YouTube video ID (e.g., "Zy2PjaVKsB0"). If you are highly confident about a specific, excellent public video, provide its ID. Otherwise, set to null.
-  "youtubeSearchQuery": "concise YouTube search query", // (MANDATORY) A query to find relevant videos (e.g., "photosynthesis explained for beginners").
-  "segmentDescription": "Guidance on what to watch", // (MANDATORY) E.g., "Focus on the first 2 minutes explaining the overall equation and importance." or "Watch the section demonstrating the experiment from 3:15 to 5:00."
-  "estimatedStartSeconds": null, // (Optional) Estimated start time in seconds (e.g., 120). Set to null if unknown.
-  "estimatedEndSeconds": null // (Optional) Estimated end time in seconds (e.g., 240). Set to null if unknown.
-}
-
-The overall JSON structure MUST adhere to this TypeScript interface:
 interface LessonPlan {
-  topic: string; // The original topic provided by the user.
-  introNarration: string; // The main introductory text for the lesson.
-  segments: Array<{
-    type: 'narration' | 'video';
-    id: string;
-    // Plus other fields specific to narration or video
-    text?: string; // For narration
-    title?: string; // For video
-    youtubeVideoId?: string | null;
-    youtubeSearchQuery?: string;
-    segmentDescription?: string;
-    estimatedStartSeconds?: number | null;
-    estimatedEndSeconds?: number | null;
-  }>;
-  outroNarration: string; // The main concluding text for the lesson.
+  topic: string;
+  introNarration: string;
+  segments: Array<({ type: 'narration'; id: string; text: string; } | { type: 'video'; id: string; title: string; youtubeSearchQuery: string; segmentDescription: string; })>;
+  outroNarration: string;
 }
 
-Ensure the 'segments' array contains all intermediate narrations and video parts in a logical learning order.
-The 'introNarration' and 'outroNarration' fields are for the overall lesson introduction and conclusion, respectively.
-Please generate a lesson plan for the topic: "${topic}".
-The entire response MUST be a single, valid JSON object. Do not wrap it in markdown backticks.
-`;
+- For video segments, provide a high-quality \`youtubeSearchQuery\`.
+- Ensure the lesson has a mix of narration and video segments.`;
 
-  try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
-      model: GEMINI_MODEL_NAME,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        // temperature: 0.7, // Adjust creativity/determinism if needed
-      }
-    });
+    try {
+        const genAI = getAiClient(); // Use the getter to ensure the client is ready.
+        const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
+        const result = await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: {
+                responseMimeType: "application/json",
+                temperature: 0.7,
+                maxOutputTokens: 8192,
+            }
+        });
 
-    let jsonStr = response.text.trim();
-    // Gemini might still sometimes wrap in ```json ... ``` despite instructions.
-    const fenceRegex = /^```(?:json)?\s*\n?(.*?)\n?\s*```$/si; // Made regex case-insensitive for 'json' and more robust
-    const match = jsonStr.match(fenceRegex);
-    if (match && match[1]) {
-      jsonStr = match[1].trim();
+        const textResponse = result.response.text();
+        let parsedData = parseJsonResponse(textResponse);
+
+        if (!parsedData) throw new Error("Response was not valid JSON.");
+
+        // Defensive parsing to handle small variations from the AI
+        if (parsedData.lessonPlan) parsedData = parsedData.lessonPlan;
+        if (parsedData.title && !parsedData.topic) parsedData.topic = parsedData.title;
+        if (parsedData.introduction?.text) parsedData.introNarration = parsedData.introduction.text;
+        if (parsedData.conclusion?.text) parsedData.outroNarration = parsedData.conclusion.text;
+
+        if (parsedData.topic && parsedData.introNarration && parsedData.segments) {
+            return parsedData as LessonPlan;
+        } else {
+            throw new Error("Parsed JSON does not match the required LessonPlan structure.");
+        }
+    } catch (error) {
+        console.error("Error in generateLessonPlan:", error);
+        throw error;
     }
-    
-    // Attempt to parse, even if it looks like plain JSON already
-    const parsedData = JSON.parse(jsonStr);
+};
 
-    // Basic validation of the parsed structure
-    if (
-      parsedData &&
-      typeof parsedData.topic === 'string' &&
-      typeof parsedData.introNarration === 'string' &&
-      Array.isArray(parsedData.segments) &&
-      typeof parsedData.outroNarration === 'string'
-    ) {
-      // Further validation for each segment can be added here if necessary
-      // For example, ensuring IDs are unique, required fields are present per type
-      parsedData.segments = parsedData.segments.map((segment: any, index: number) => ({
-        ...segment,
-        id: segment.id || `gen-segment-${index}-${Date.now()}` // Fallback ID
-      }));
-      return parsedData as LessonPlan;
-    } else {
-      console.error("Parsed JSON does not match expected LessonPlan structure:", parsedData);
-      throw new Error("Invalid lesson plan structure received from API. The response format was not as expected.");
-    }
+/**
+ * Generates search queries for a given learning point.
+ */
+export const generateSearchQueries = async (learningPoint: string, mainTopic: string): Promise<string[]> => {
+    return [`${learningPoint} explained`, `${mainTopic} ${learningPoint} tutorial`];
+};
 
-  } catch (error) {
-    console.error("Error generating lesson plan from Gemini:", error);
-    if (error instanceof SyntaxError) {
-        throw new Error(`Failed to parse lesson plan JSON from API response. Please try again. Raw response: ${error.message}`);
-    } else if (error instanceof Error) {
-        // Potentially check for specific Gemini error types if available/needed
-        throw new Error(`Gemini API error: ${error.message}`);
+/**
+ * Uses AI to find the most relevant time segments in a video.
+ */
+export const findVideoSegments = async (videoTitle: string, learningPoint: string, transcript: string | null): Promise<VideoTimeSegment[]> => {
+    const genAI = getAiClient(); // Use the getter
+    let prompt = `For YouTube video "${videoTitle}", find the most relevant 1-3 segments for the topic: "${learningPoint}".`;
+    if (transcript) {
+        prompt += `\nUse this transcript: "${transcript.substring(0, 4000)}..."`;
     }
-    throw new Error("An unknown error occurred while generating the lesson plan.");
-  }
+    prompt += `\nReturn ONLY a valid JSON array like this: [{"startTime": 45, "endTime": 135, "reason": "Explains core concepts"}].`;
+
+    try {
+        const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
+        const result = await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json" }
+        });
+        const segments = parseJsonResponse(result.response.text());
+        if (Array.isArray(segments) && segments.length > 0 && typeof segments[0].startTime === 'number') {
+            return segments;
+        }
+    } catch (error) {
+        console.error("Error finding video segments:", error);
+    }
+    // Fallback if AI fails
+    return [{ startTime: 30, endTime: 180, reason: "Main educational content" }];
+};
+
+/**
+ * A non-AI function to check video relevance based on keywords.
+ */
+export const checkVideoRelevance = (videoTitle: string, learningPoint: string, mainTopic: string): { relevant: boolean } => {
+    const title = videoTitle.toLowerCase();
+    const topic = mainTopic.toLowerCase();
+    const point = learningPoint.toLowerCase();
+    if (title.includes(topic) || title.includes(point)) {
+        return { relevant: true };
+    }
+    return { relevant: false };
 };

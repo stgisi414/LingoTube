@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export const MicIcon: React.ReactNode = (
@@ -97,20 +96,12 @@ export const SpeakerStopIcon: React.ReactNode = (
   </svg>
 );
 
+export const GEMINI_MODEL_NAME = "gemini-1.5-flash-latest";
 
-export const GEMINI_MODEL_NAME = "gemini-2.5-flash-preview-04-17";
-export const GEMINI_IMAGE_MODEL_NAME = "imagen-3.0-generate-002"; // Though not used in this app
-
-// For Google Custom Search API. Ensure these are set in your environment.
-export const GOOGLE_CUSTOM_SEARCH_API_KEY = process.env.GOOGLE_CUSTOM_SEARCH_API_KEY;
-export const YOUTUBE_CUSTOM_SEARCH_CX = process.env.YOUTUBE_CUSTOM_SEARCH_CX;
-export const GOOGLE_CUSTOM_SEARCH_CX = process.env.GOOGLE_CUSTOM_SEARCH_CX;
-
-// For YouTube Data API. Ensure this is set in your environment.
-export const YOUTUBE_DATA_API_KEY = process.env.YOUTUBE_DATA_API_KEY;
-
-// For Google Text-to-Speech API. Ensure this is set in your environment.
-export const GOOGLE_TTS_API_KEY = process.env.GOOGLE_TTS_API_KEY;
-
-// For Image Search API. Ensure this is set in your environment.
-export const IMAGE_CUSTOM_SEARCH_CX = process.env.IMAGE_CUSTOM_SEARCH_CX;
+export const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+export const GOOGLE_CUSTOM_SEARCH_API_KEY = import.meta.env.VITE_GOOGLE_CUSTOM_SEARCH_API_KEY;
+export const YOUTUBE_DATA_API_KEY = import.meta.env.VITE_YOUTUBE_DATA_API_KEY;
+export const GOOGLE_TTS_API_KEY = import.meta.env.VITE_GOOGLE_TTS_API_KEY;
+export const YOUTUBE_CUSTOM_SEARCH_CX = import.meta.env.VITE_YOUTUBE_CUSTOM_SEARCH_CX;
+export const IMAGE_CUSTOM_SEARCH_CX = import.meta.env.VITE_IMAGE_CUSTOM_SEARCH_CX;
+export const SUPADATA_API_KEY = import.meta.env.VITE_SUPADATA_API_KEY;

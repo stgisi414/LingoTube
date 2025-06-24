@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { LessonPlan, LessonSegment, SegmentType } from '../types';
 import { PlayIcon, StopCircleIcon, CheckCircleIcon } from '../constants';
 import { synthesizeSpeech, playTTSAudio } from '../services/googleTTSService';
@@ -24,11 +23,14 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
   const [showingFinalSummary, setShowingFinalSummary] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  const allSegments: LessonSegment[] = [
+  const quizAnsweredRef = useRef(quizAnswered);
+  quizAnsweredRef.current = quizAnswered;
+
+  const allSegments: LessonSegment[] = useMemo(() => [
     { type: SegmentType.NARRATION, id: 'intro', text: lessonPlan.introNarration },
     ...lessonPlan.segments,
     { type: SegmentType.NARRATION, id: 'outro', text: lessonPlan.outroNarration }
-  ];
+  ], [lessonPlan]);
 
   const currentSegment = allSegments[currentSegmentIndex];
 
@@ -41,6 +43,67 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
       return () => clearInterval(interval);
     }
   }, [currentSegment?.type, images.length, isPlaying]);
+
+    const proceedToNext = useCallback(() => {
+    if (currentSegmentIndex < allSegments.length - 1) {
+      setCurrentSegmentIndex(prev => prev + 1);
+      setCurrentQuiz(null);
+      setQuizAnswered(false);
+    }
+  }, [currentSegmentIndex, allSegments.length]);
+
+  const generateFinalSummary = useCallback(async () => {
+    setShowingFinalSummary(true);
+    const summaryText = `Congratulations! You've completed the lesson on ${lessonPlan.topic}. Let's recap what we've learned: ${lessonPlan.introNarration.substring(0, 200)}... This concludes our comprehensive exploration of ${lessonPlan.topic}. Great job on completing this learning journey!`;
+
+    // Play final summary with TTS
+    try {
+      const audioContent = await synthesizeSpeech(summaryText);
+      if (audioContent) {
+        setIsPlaying(true);
+        await playTTSAudio(audioContent, undefined, () => {
+          setIsPlaying(false);
+        });
+      }
+    } catch (error) {
+      console.error("Final summary TTS error:", error);
+    }
+  }, [lessonPlan.topic, lessonPlan.introNarration]);
+
+  const handleSegmentComplete = useCallback(() => {
+    setCompletedSegments(prev => new Set(prev).add(currentSegmentIndex));
+
+    // Check if this is the last segment
+    if (currentSegmentIndex === allSegments.length - 1) {
+      generateFinalSummary();
+      return;
+    }
+
+    // Generate quiz for video segments
+    if (currentSegment?.type === SegmentType.VIDEO && autoTransitionEnabled) {
+      generateQuiz(lessonPlan.topic, currentSegment.segmentDescription || currentSegment.title || '')
+        .then(quiz => {
+          if (quiz) {
+            setCurrentQuiz(quiz);
+            setQuizAnswered(false);
+            // Auto-advance after 15 seconds if no answer
+            setTimeout(() => {
+              if (!quizAnsweredRef.current) {
+                setCurrentQuiz(null);
+                proceedToNext();
+              }
+            }, 15000);
+          } else {
+            proceedToNext();
+          }
+        });
+    } else if (autoTransitionEnabled) {
+      // Auto-advance after a short delay for narration segments
+      setTimeout(() => {
+        proceedToNext();
+      }, 2000);
+    }
+  }, [currentSegmentIndex, currentSegment, lessonPlan.topic, autoTransitionEnabled, allSegments, generateFinalSummary, proceedToNext]);
 
   const playNarration = useCallback(async (text: string) => {
     setIsPlaying(true);
@@ -60,73 +123,12 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
       setIsPlaying(false);
       handleSegmentComplete();
     }
-  }, []);
-
-  const handleSegmentComplete = useCallback(() => {
-    setCompletedSegments(prev => new Set(prev).add(currentSegmentIndex));
-    
-    // Check if this is the last segment
-    if (currentSegmentIndex === allSegments.length - 1) {
-      generateFinalSummary();
-      return;
-    }
-    
-    // Generate quiz for video segments
-    if (currentSegment?.type === SegmentType.VIDEO && autoTransitionEnabled) {
-      generateQuiz(lessonPlan.topic, currentSegment.segmentDescription || currentSegment.title || '')
-        .then(quiz => {
-          if (quiz) {
-            setCurrentQuiz(quiz);
-            setQuizAnswered(false);
-            // Auto-advance after 15 seconds if no answer
-            setTimeout(() => {
-              if (!quizAnswered) {
-                setCurrentQuiz(null);
-                proceedToNext();
-              }
-            }, 15000);
-          } else {
-            proceedToNext();
-          }
-        });
-    } else if (autoTransitionEnabled) {
-      // Auto-advance after a short delay for narration segments
-      setTimeout(() => {
-        proceedToNext();
-      }, 2000);
-    }
-  }, [currentSegmentIndex, currentSegment, lessonPlan.topic, autoTransitionEnabled, quizAnswered]);
-
-  const generateFinalSummary = useCallback(async () => {
-    setShowingFinalSummary(true);
-    const summaryText = `Congratulations! You've completed the lesson on ${lessonPlan.topic}. Let's recap what we've learned: ${lessonPlan.introNarration.substring(0, 200)}... This concludes our comprehensive exploration of ${lessonPlan.topic}. Great job on completing this learning journey!`;
-    
-    // Play final summary with TTS
-    try {
-      const audioContent = await synthesizeSpeech(summaryText);
-      if (audioContent) {
-        setIsPlaying(true);
-        await playTTSAudio(audioContent, undefined, () => {
-          setIsPlaying(false);
-        });
-      }
-    } catch (error) {
-      console.error("Final summary TTS error:", error);
-    }
-  }, [lessonPlan.topic, lessonPlan.introNarration]);
-
-  const proceedToNext = useCallback(() => {
-    if (currentSegmentIndex < allSegments.length - 1) {
-      setCurrentSegmentIndex(prev => prev + 1);
-      setCurrentQuiz(null);
-      setQuizAnswered(false);
-    }
-  }, [currentSegmentIndex, allSegments.length]);
+  }, [handleSegmentComplete]);
 
   const handleQuizAnswer = useCallback((answerIndex: number) => {
     setQuizAnswered(true);
     const isCorrect = currentQuiz && answerIndex === currentQuiz.correct;
-    
+
     // Show feedback briefly
     setTimeout(() => {
       setCurrentQuiz(null);
@@ -318,7 +320,7 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
                   )}
                 </div>
                 <ParsedText text={currentSegment?.text || ''} />
-                
+
                 {/* Show contextual images during narration */}
                 {currentSegment?.type === SegmentType.NARRATION && images.length > 0 && (
                   <div className="mt-6 relative">

@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 // Exporting ParsedSegment for use elsewhere
@@ -53,19 +52,19 @@ export const parseLangText = (inputText: string): ParsedSegment[] => {
   if (lastIndex < inputText.length) {
     segments.push({ type: 'plain', text: inputText.substring(lastIndex).trim() });
   }
-  
+
   // Filter out empty plain segments that might result from trimming
   const nonEmptySegments = segments.filter(seg => seg.text.length > 0);
 
   if (nonEmptySegments.length === 0 && inputText.length > 0) {
     return [{ type: 'plain', text: inputText.trim() }];
   }
-  
+
   return nonEmptySegments;
 };
 
 
-export const ParsedText: React.FC<ParsedTextProps> = ({ text }) => {
+const ParsedText: React.FC<ParsedTextProps> = ({ text }) => {
   const parsedSegments = parseLangText(text);
 
   if (!parsedSegments || parsedSegments.length === 0) {
