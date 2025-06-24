@@ -1,6 +1,6 @@
 {
-  "name": "Multimedia Lesson Planner",
-  "description": "An AI-powered application to craft dynamic learning journeys with narration and curated video segments, now with speech-to-text input.",
+  "name": "AILingo.Tube",
+  "description": "An AI-powered language learning application that crafts dynamic learning journeys with narration and curated video segments, now with speech-to-text input.",
   "requestFramePermissions": [
     "microphone"
   ],

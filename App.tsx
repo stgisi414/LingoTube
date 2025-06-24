@@ -61,7 +61,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-slate-100 flex flex-col items-center p-4 selection:bg-purple-500 selection:text-white">
       <header className="w-full max-w-4xl text-center my-8">
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
-          Multimedia Lesson Planner
+          AILingo.Tube
         </h1>
         <p className="mt-4 text-lg text-slate-400">
           Craft dynamic learning journeys with AI-powered narration and curated video segments.
@@ -102,7 +102,7 @@ const App: React.FC = () => {
       </main>
 
       <footer className="w-full max-w-4xl text-center py-8 text-slate-500 text-sm">
-        <p>&copy; {new Date().getFullYear()} AI Lesson Planner. Powered by Gemini.</p>
+        <p>&copy; {new Date().getFullYear()} AILingo.Tube. Powered by Gemini.</p>
       </footer>
     </div>
   );
