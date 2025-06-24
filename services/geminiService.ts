@@ -279,3 +279,57 @@ Return ONLY a valid JSON object matching this interface:
         return { relevant: false, reason: "An error occurred during relevance check.", confidence: 0 };
     }
 };
+
+/**
+ * Generates multilingual narration with language tags for supported languages
+ */
+export const generateMultilingualNarration = async (content: string, targetLanguages: string[] = ['en', 'es', 'fr', 'de', 'it', 'zh', 'ja', 'ko']): Promise<string> => {
+    console.log(`🌍 MULTILINGUAL NARRATION: Generating multilingual content`);
+    console.log(`🌍 MULTILINGUAL NARRATION: Parameters:`, {
+        contentLength: content.length,
+        targetLanguages,
+        timestamp: new Date().toISOString()
+    });
+
+    const genAI = getAiClient();
+    const prompt = `
+You are a multilingual education expert. Take the following educational content and create a multilingual narration that includes the same concepts in multiple languages.
+
+Original content: "${content}"
+
+Target languages: ${targetLanguages.join(', ')}
+
+REQUIREMENTS:
+1. Create a narration that teaches the same concept in multiple languages
+2. Use the [LANG:xx] format to mark different language sections
+3. Include key terms and concepts in each language
+4. Make it educational and natural sounding
+5. Supported language codes: en (English), es (Spanish), fr (French), de (German), it (Italian), zh (Chinese), ja (Japanese), ko (Korean)
+
+FORMAT EXAMPLE:
+"Let's learn about this concept. [LANG:es]Vamos a aprender sobre este concepto.[LANG:en] This is important because... [LANG:fr]C'est important parce que...[LANG:en]"
+
+Generate a comprehensive multilingual narration that covers the key educational points in the specified languages:`;
+
+    try {
+        const startTime = performance.now();
+        const model = genAI.getGenerativeModel({ model: GEMINI_MODEL_NAME });
+        const result = await model.generateContent({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
+        });
+        const endTime = performance.now();
+
+        const multilingualText = result.response.text();
+        console.log(`🌍 MULTILINGUAL NARRATION: Generated multilingual content:`, {
+            responseTime: `${(endTime - startTime).toFixed(2)}ms`,
+            outputLength: multilingualText.length,
+            hasLanguageTags: multilingualText.includes('[LANG:')
+        });
+
+        return multilingualText;
+    } catch (error) {
+        console.error(`❌ MULTILINGUAL NARRATION: Error generating multilingual content:`, error);
+        return content; // Fallback to original content
+    }
+};

@@ -3,8 +3,8 @@ import { LessonPlan, LessonSegment, SegmentType, VideoSegment, NarrationSegment,
 import { BookOpenIcon, FilmIcon, RefreshCwIcon, CheckCircleIcon, SpeakerPlayIcon, SpeakerStopIcon, ExternalLinkIcon } from '../constants';
 import { YouTubePlayerWrapper } from './YouTubePlayerWrapper';
 import ParsedText from './ParsedText';
-import { synthesizeSpeech, playTTSAudio } from '../services/googleTTSService';
-import { generateSearchQueries, checkVideoRelevance, findVideoSegments } from '../services/geminiService';
+import { synthesizeSpeech, playTTSAudio, playMultilingualTTS } from '../services/googleTTSService';
+import { generateSearchQueries, checkVideoRelevance, findVideoSegments, generateMultilingualNarration } from '../services/geminiService';
 import { searchYouTube, getVideoTranscript, SearchedVideo } from '../services/videoSourcingService';
 
 // This interface defines the state for the entire video fetching pipeline for one segment.
@@ -55,14 +55,33 @@ const SegmentItem: React.FC<{
               {displayTitle}
             </h3>
             {segment.type === SegmentType.NARRATION && (
-              <button
-                onClick={() => onToggleSpeech(segment.id, (segment as NarrationSegment).text)}
-                className={`p-1.5 rounded-full transition-colors ${isSpeaking ? 'text-red-400 hover:bg-red-500/20' : 'text-purple-400 hover:bg-purple-500/20'}`}
-                aria-label={isSpeaking ? "Stop narration" : "Play narration"}
-                title={isSpeaking ? "Stop narration" : "Play narration"}
-              >
-                {isSpeaking ? SpeakerStopIcon : SpeakerPlayIcon}
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={async () => {
+                    const currentText = (segment as NarrationSegment).text;
+                    if (!currentText.includes('[LANG:')) {
+                      const multilingualText = await generateMultilingualNarration(currentText);
+                      // For now, we'll trigger the speech with the new multilingual text
+                      onToggleSpeech(segment.id, multilingualText);
+                    } else {
+                      onToggleSpeech(segment.id, currentText);
+                    }
+                  }}
+                  className="p-1.5 rounded-full transition-colors text-blue-400 hover:bg-blue-500/20"
+                  aria-label="Generate multilingual narration"
+                  title="Generate multilingual narration"
+                >
+                  🌍
+                </button>
+                <button
+                  onClick={() => onToggleSpeech(segment.id, (segment as NarrationSegment).text)}
+                  className={`p-1.5 rounded-full transition-colors ${isSpeaking ? 'text-red-400 hover:bg-red-500/20' : 'text-purple-400 hover:bg-purple-500/20'}`}
+                  aria-label={isSpeaking ? "Stop narration" : "Play narration"}
+                  title={isSpeaking ? "Stop narration" : "Play narration"}
+                >
+                  {isSpeaking ? SpeakerStopIcon : SpeakerPlayIcon}
+                </button>
+              </div>
             )}
           </div>
           {segment.type === SegmentType.NARRATION && (
@@ -330,10 +349,27 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
 
     setSpeakingSegmentId(segmentId);
     try {
-      const audioContent = await synthesizeSpeech(rawText);
-      if (audioContent) {
-        await playTTSAudio(audioContent, audioRef, () => setSpeakingSegmentId(null));
+      // Check if text contains language tags for multilingual playback
+      const hasLanguageTags = rawText.includes('[LANG:');
+      
+      if (hasLanguageTags) {
+        console.log('🌍 Using multilingual TTS for:', segmentId);
+        await playMultilingualTTS(
+          rawText, 
+          audioRef, 
+          () => setSpeakingSegmentId(null),
+          (segmentIndex, totalSegments, currentText) => {
+            console.log(`🎵 Playing segment ${segmentIndex + 1}/${totalSegments}: ${currentText.substring(0, 30)}...`);
+          }
+        );
         return;
+      } else {
+        // Use regular TTS for plain text
+        const audioContent = await synthesizeSpeech(rawText);
+        if (audioContent) {
+          await playTTSAudio(audioContent, audioRef, () => setSpeakingSegmentId(null));
+          return;
+        }
       }
     } catch (error) {
       console.warn("Google TTS failed, falling back to browser TTS:", error);
