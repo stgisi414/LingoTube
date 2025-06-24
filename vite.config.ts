@@ -15,7 +15,8 @@ export default defineConfig(({ mode }) => {
       },
       server: {
         host: '0.0.0.0',
-        allowedHosts: true // Changed from 'all' to true
+        port: 5173,
+        allowedHosts: true
       }
     };
 });
