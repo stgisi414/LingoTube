@@ -32,16 +32,25 @@ interface GoogleTTSResponse {
   audioContent: string; // Base64 encoded audio
 }
 
-export const synthesizeSpeech = async (options: TTSOptions): Promise<string | null> => {
+export const synthesizeSpeech = async (text: string, options: Partial<TTSOptions> = {}): Promise<string | null> => {
+  const fullOptions: TTSOptions = {
+    text,
+    languageCode: options.languageCode || 'en-US',
+    voiceName: options.voiceName,
+    ssmlGender: options.ssmlGender || 'NEUTRAL',
+    audioEncoding: options.audioEncoding || 'MP3',
+    speakingRate: options.speakingRate || 1.0,
+    pitch: options.pitch || 0.0
+  };
   if (!GOOGLE_TTS_API_KEY) {
     console.warn("GOOGLE_TTS_API_KEY not configured. Cannot synthesize speech.");
     return null;
   }
 
   // Parse the text to extract language information
-  const parsedSegments = parseLangText(options.text);
-  let textToSpeak = options.text;
-  let languageCode = options.languageCode || 'en-US';
+  const parsedSegments = parseLangText(fullOptions.text);
+  let textToSpeak = fullOptions.text;
+  let languageCode = fullOptions.languageCode || 'en-US';
 
   // Use the first language segment if available
   if (parsedSegments.length > 0) {
@@ -69,17 +78,17 @@ export const synthesizeSpeech = async (options: TTSOptions): Promise<string | nu
     },
     voice: {
       languageCode: languageCode,
-      ssmlGender: options.ssmlGender || 'NEUTRAL'
+      ssmlGender: fullOptions.ssmlGender || 'NEUTRAL'
     },
     audioConfig: {
-      audioEncoding: options.audioEncoding || 'MP3',
-      speakingRate: options.speakingRate || 1.0,
-      pitch: options.pitch || 0.0
+      audioEncoding: fullOptions.audioEncoding || 'MP3',
+      speakingRate: fullOptions.speakingRate || 1.0,
+      pitch: fullOptions.pitch || 0.0
     }
   };
 
-  if (options.voiceName) {
-    requestBody.voice.name = options.voiceName;
+  if (fullOptions.voiceName) {
+    requestBody.voice.name = fullOptions.voiceName;
   }
 
   try {
@@ -105,7 +114,7 @@ export const synthesizeSpeech = async (options: TTSOptions): Promise<string | nu
   }
 };
 
-export const playTTSAudio = async (audioContent: string): Promise<void> => {
+export const playTTSAudio = async (audioContent: string, audioRef?: React.MutableRefObject<HTMLAudioElement | null>, onComplete?: () => void): Promise<void> => {
   try {
     // Convert base64 to blob
     const binaryString = atob(audioContent);
@@ -119,9 +128,14 @@ export const playTTSAudio = async (audioContent: string): Promise<void> => {
     const audioUrl = URL.createObjectURL(blob);
     const audio = new Audio(audioUrl);
     
+    if (audioRef) {
+      audioRef.current = audio;
+    }
+    
     return new Promise((resolve, reject) => {
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
+        if (onComplete) onComplete();
         resolve();
       };
       audio.onerror = (error) => {

@@ -111,3 +111,6 @@ export const YOUTUBE_DATA_API_KEY = process.env.YOUTUBE_DATA_API_KEY;
 
 // For Google Text-to-Speech API. Ensure this is set in your environment.
 export const GOOGLE_TTS_API_KEY = process.env.GOOGLE_TTS_API_KEY;
+
+// For Image Search API. Ensure this is set in your environment.
+export const IMAGE_CUSTOM_SEARCH_CX = process.env.IMAGE_CUSTOM_SEARCH_CX;

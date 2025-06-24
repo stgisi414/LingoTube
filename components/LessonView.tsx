@@ -33,6 +33,8 @@ interface LessonViewProps {
   onReset: () => void;
 }
 
+import { PlayerMode } from './PlayerMode';
+
 const SegmentItem: React.FC<SegmentItemProps> = ({ 
   segment, 
   isCurrent, 
@@ -157,12 +159,13 @@ const SegmentItem: React.FC<SegmentItemProps> = ({
 
 
 export const LessonView: React.FC<LessonViewProps> = ({ lessonPlan, onReset }) => {
+  const [viewMode, setViewMode] = useState<'list' | 'player'>('list');
   const [currentSegmentIdx, setCurrentSegmentIdx] = useState(0);
   const [completedSegments, setCompletedSegments] = useState<Set<string>>(new Set());
   const [videoPlayerHeight, setVideoPlayerHeight] = useState('360'); 
   const [isSpeechSynthesisSupported, setIsSpeechSynthesisSupported] = useState(false);
   const [speakingSegmentId, setSpeakingSegmentId] = useState<string | null>(null);
-  const [isUsingGoogleTTS, setIsUsingGoogleTTS] = useState<boolean>(false);
+  
   const speechUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [fetchedVideoInfo, setFetchedVideoInfo] = useState<Record<string, VideoFetchState>>({});
@@ -285,41 +288,38 @@ export const LessonView: React.FC<LessonViewProps> = ({ lessonPlan, onReset }) =
 
 
   const handleToggleSpeech = useCallback(async (segmentId: string, rawText: string) => {
-    if (!isSpeechSynthesisSupported && !rawText) return;
+    if (!rawText) return;
 
     if (speakingSegmentId === segmentId) {
         setSpeakingSegmentId(null);
-        if (isUsingGoogleTTS) {
-            if (audioRef.current) {
-                audioRef.current.pause();
-                audioRef.current.currentTime = 0;
-            }
-        } else {
-            if (window.speechSynthesis && window.speechSynthesis.speaking) {
-                window.speechSynthesis.cancel();
-            }
-            speechUtteranceRef.current = null;
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
         }
+        if (window.speechSynthesis && window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+        }
+        speechUtteranceRef.current = null;
         return;
     }
 
     setSpeakingSegmentId(segmentId);
-    if (isUsingGoogleTTS) {
-      try {
+    
+    // Always try Google TTS first
+    try {
         const audioContent = await synthesizeSpeech(rawText);
-            if (audioContent) {
-                playTTSAudio(audioContent, audioRef, () => {
-                    setSpeakingSegmentId(null);
-                });
-            } else {
+        if (audioContent) {
+            await playTTSAudio(audioContent, audioRef, () => {
                 setSpeakingSegmentId(null);
-                console.error("Failed to synthesize speech.");
-            }
-      } catch (error) {
-        console.error("Error synthesizing speech:", error);
-        setSpeakingSegmentId(null);
-      }
-    } else {
+            });
+            return; // Successfully used Google TTS
+        }
+    } catch (error) {
+        console.warn("Google TTS failed, falling back to browser TTS:", error);
+    }
+
+    // Fallback to browser TTS if Google TTS fails
+    if (isSpeechSynthesisSupported) {
         if (window.speechSynthesis && window.speechSynthesis.speaking) {
             window.speechSynthesis.cancel();
         }
@@ -418,20 +418,32 @@ export const LessonView: React.FC<LessonViewProps> = ({ lessonPlan, onReset }) =
 
   const isLessonComplete = currentSegmentIdx === allLessonParts.length - 1 && completedSegments.has(allLessonParts[currentSegmentIdx].id);
 
+  if (viewMode === 'player') {
+    return <PlayerMode lessonPlan={lessonPlan} onExit={() => setViewMode('list')} />;
+  }
+
   return (
     <div className="space-y-8 pb-16" ref={mainContentRef}>
       <div className="sticky top-0 bg-slate-900/80 backdrop-blur-md py-4 z-10 rounded-b-lg shadow-lg">
         <div className="max-w-3xl mx-auto px-4">
             <div className="flex justify-between items-center mb-2">
                 <h2 className="text-2xl font-bold text-purple-300 truncate" title={lessonPlan.topic}>{lessonPlan.topic}</h2>
-                <button 
-                    onClick={onReset}
-                    className="flex items-center text-sm bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md transition-colors"
-                    title="Go back to topic selection"
-                    aria-label="Reset lesson and go back to topic selection"
-                >
-                    {RefreshCwIcon} <span className="ml-2 hidden sm:inline">New Lesson</span>
-                </button>
+                <div className="flex items-center space-x-2">
+                    <button
+                        onClick={() => setViewMode(viewMode === 'list' ? 'player' : 'list')}
+                        className="flex items-center text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md transition-colors"
+                    >
+                        {viewMode === 'list' ? '▶️ Player' : '📋 List'}
+                    </button>
+                    <button 
+                        onClick={onReset}
+                        className="flex items-center text-sm bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md transition-colors"
+                        title="Go back to topic selection"
+                        aria-label="Reset lesson and go back to topic selection"
+                    >
+                        {RefreshCwIcon} <span className="ml-2 hidden sm:inline">New Lesson</span>
+                    </button>
+                </div>
             </div>
             <div>
                 <p className="text-sm text-slate-400 mb-1">Learning Progress ({currentStep}/{totalSteps})</p>
