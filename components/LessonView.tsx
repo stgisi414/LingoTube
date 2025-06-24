@@ -288,7 +288,6 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
     }
   }, [currentSegmentIdx, allLessonParts, videoFetchState, orchestrateVideoSourcing]);
 
-
   const handleNextSegment = useCallback(() => {
     stopSpeech();
     setSpeakingSegmentId(null);
