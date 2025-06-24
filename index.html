@@ -44,3 +44,509 @@
     <script type="module" src="/index.tsx"></script>
 </body>
 </html>
+```
+
+```python
+import re
+
+original_code = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AILingo.Tube</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <link rel="apple-touch-icon" href="/logo.png">
+    <meta property="og:image" content="/logo.png">
+    <meta property="og:title" content="AILingo.Tube">
+    <meta property="og:description" content="An AI-powered language learning application that crafts dynamic learning journeys with narration and curated video segments">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="/logo.png">
+    <meta name="twitter:title" content="AILingo.Tube">
+    <meta name="twitter:description" content="An AI-powered language learning application that crafts dynamic learning journeys with narration and curated video segments">
+    <link rel="manifest" href="/manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      html {
+        overflow-y: scroll;
+      }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.6.0",
+    "react-youtube": "https://esm.sh/react-youtube@^10.1.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-slate-900">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
+"""
+
+modified_code = re.sub(r'(<link rel="icon" type="image/png" href=")(/logo\.png)(">)\n    (<link rel="apple-touch-icon" href=")(/logo\.png)(">)\n    (<meta property="og:image" content=")(/logo\.png)(">)\n    (<meta name="twitter:image" content=")(/logo\.png)(">)', 
+                         r'\1${logoPath}\3\n    \4${logoPath}\6\n    \7${logoPath}\9\n    \10${logoPath}\12',
+                         original_code)
+
+print(modified_code)
+```
+
+```
+import re
+
+original_code = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AILingo.Tube</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <link rel="apple-touch-icon" href="/logo.png">
+    <meta property="og:image" content="/logo.png">
+    <meta property="og:title" content="AILingo.Tube">
+    <meta property="og:description" content="An AI-powered language learning application that crafts dynamic learning journeys with narration and curated video segments">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="/logo.png">
+    <meta name="twitter:title" content="AILingo.Tube">
+    <meta name="twitter:description" content="An AI-powered language learning application that crafts dynamic learning journeys with narration and curated video segments">
+    <link rel="manifest" href="/manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      html {
+        overflow-y: scroll;
+      }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.6.0",
+    "react-youtube": "https://esm.sh/react-youtube@^10.1.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-slate-900">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
+"""
+
+# This is a placeholder, the actual path will be determined in index.tsx
+modified_code = original_code.replace('<link rel="icon" type="image/png" href="/logo.png">', '<link rel="icon" type="image/png" href="${logoPath}">')
+modified_code = modified_code.replace('<link rel="apple-touch-icon" href="/logo.png">', '<link rel="apple-touch-icon" href="${logoPath}">')
+modified_code = modified_code.replace('<meta property="og:image" content="/logo.png">', '<meta property="og:image" content="${logoPath}">')
+modified_code = modified_code.replace('<meta name="twitter:image" content="/logo.png">', '<meta name="twitter:image" content="${logoPath}">')
+
+print(modified_code)
+```
+
+```typescript
+// index.tsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import logo from '/logo.png'; // Import the logo
+
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// Dynamically set the logo path in the HTML head
+const setFavicon = (path: string) => {
+  const linkIcon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+  const linkAppleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement;
+  const metaOgImage = document.querySelector('meta[property="og:image"]') as HTMLMetaElement;
+  const metaTwitterImage = document.querySelector('meta[name="twitter:image"]') as HTMLMetaElement;
+
+  if (linkIcon) linkIcon.href = path;
+  if (linkAppleTouchIcon) linkAppleTouchIcon.href = path;
+  if (metaOgImage) metaOgImage.content = path;
+  if (metaTwitterImage) metaTwitterImage.content = path;
+};
+
+setFavicon(logo);
+```
+
+The core issue is the hashed logo name. The correct approach involves importing the logo file in `index.tsx` (or another appropriate entry point), which allows Vite to handle the asset and provide the correct hashed path. Then the meta tags in the index.html is updated dynamically with the correct path.
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AILingo.Tube</title>
+    <link rel="icon" type="image/png" href="">
+    <link rel="apple-touch-icon" href="">
+    <meta property="og:image" content="">
+    <meta property="og:title" content="AILingo.Tube">
+    <meta property="og:description" content="An AI-powered language learning application that crafts dynamic learning journeys with narration and curated video segments">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="">
+    <meta name="twitter:title" content="AILingo.Tube">
+    <meta name="twitter:description" content="An AI-powered language learning application that crafts dynamic learning journeys with narration and curated video segments">
+    <link rel="manifest" href="/manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      html {
+        overflow-y: scroll;
+      }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.6.0",
+    "react-youtube": "https://esm.sh/react-youtube@^10.1.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-slate-900">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
+```
+
+```typescript
+// index.tsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import logo from '/logo.png'; // Import the logo
+
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// Dynamically set the logo path in the HTML head
+const setFavicon = (path: string) => {
+  const linkIcon = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+  const linkAppleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement;
+  const metaOgImage = document.querySelector('meta[property="og:image"]') as HTMLMetaElement;
+  const metaTwitterImage = document.querySelector('meta[name="twitter:image"]') as HTMLMetaElement;
+
+  if (linkIcon) {
+      linkIcon.href = path;
+  }
+  if (linkAppleTouchIcon) {
+      linkAppleTouchIcon.href = path;
+  }
+  if (metaOgImage) {
+      metaOgImage.content = path;
+  }
+  if (metaTwitterImage) {
+      metaTwitterImage.content = path;
+  }
+};
+
+setFavicon(logo);
+```
+
+```python
+original_code = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AILingo.Tube</title>
+    <link rel="icon" type="image/png" href="/logo.png">
+    <link rel="apple-touch-icon" href="/logo.png">
+    <meta property="og:image" content="/logo.png">
+    <meta property="og:title" content="AILingo.Tube">
+    <meta property="og:description" content="An AI-powered language learning application that crafts dynamic learning journeys with narration and curated video segments">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="/logo.png">
+    <meta name="twitter:title" content="AILingo.Tube">
+    <meta name="twitter:description" content="An AI-powered language learning application that crafts dynamic learning journeys with narration and curated video segments">
+    <link rel="manifest" href="/manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      html {
+        overflow-y: scroll;
+      }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.6.0",
+    "react-youtube": "https://esm.sh/react-youtube@^10.1.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-slate-900">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
+"""
+
+modified_code = original_code.replace('href="/logo.png"', 'href=""')
+modified_code = modified_code.replace('content="/logo.png"', 'content=""')
+
+print(modified_code)
+```
+
+```typescript
+// index.tsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import logo from '/logo.png'; // Import the logo
+
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// Dynamically set the logo path in the HTML head
+const setFavicon = (path: string) => {
+  const linkIcon = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+  const linkAppleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null;
+  const metaOgImage = document.querySelector('meta[property="og:image"]') as HTMLMetaElement | null;
+  const metaTwitterImage = document.querySelector('meta[name="twitter:image"]') as HTMLMetaElement | null;
+
+  if (linkIcon) {
+    linkIcon.href = path;
+  }
+  if (linkAppleTouchIcon) {
+    linkAppleTouchIcon.href = path;
+  }
+  if (metaOgImage) {
+    metaOgImage.content = path;
+  }
+  if (metaTwitterImage) {
+    metaTwitterImage.content = path;
+  }
+};
+
+setFavicon(logo);
+```
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AILingo.Tube</title>
+    <link rel="icon" type="image/png" href="">
+    <link rel="apple-touch-icon" href="">
+    <meta property="og:image" content="">
+    <meta property="og:title" content="AILingo.Tube">
+    <meta property="og:description" content="An AI-powered language learning application that crafts dynamic learning journeys with narration and curated video segments">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="">
+    <meta name="twitter:title" content="AILingo.Tube">
+    <meta name="twitter:description" content="An AI-powered language learning application that crafts dynamic learning journeys with narration and curated video segments">
+    <link rel="manifest" href="/manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      html {
+        overflow-y: scroll;
+      }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.6.0",
+    "react-youtube": "https://esm.sh/react-youtube@^10.1.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-slate-900">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
+```
+
+```typescript
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import logo from '/logo.png'; // Import the logo
+
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// Dynamically set the logo path in the HTML head
+const setFavicon = (path: string) => {
+  const linkIcon = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+  const linkAppleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null;
+  const metaOgImage = document.querySelector('meta[property="og:image"]') as HTMLMetaElement | null;
+  const metaTwitterImage = document.querySelector('meta[name="twitter:image"]') as HTMLMetaElement | null;
+
+  if (linkIcon) {
+    linkIcon.href = path;
+  }
+  if (linkAppleTouchIcon) {
+    linkAppleTouchIcon.href = path;
+  }
+  if (metaOgImage) {
+    metaOgImage.content = path;
+  }
+  if (metaTwitterImage) {
+    metaTwitterImage.content = path;
+  }
+};
+
+setFavicon(logo);
+```
+
+The final modified code involves clearing the `href` and `content` attributes in the HTML and using the `index.tsx` to import the logo and dynamically set the attributes.
+
+```replit_final_file
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AILingo.Tube</title>
+    <link rel="icon" type="image/png" href="">
+    <link rel="apple-touch-icon" href="">
+    <meta property="og:image" content="">
+    <meta property="og:title" content="AILingo.Tube">
+    <meta property="og:description" content="An AI-powered language learning application that crafts dynamic learning journeys with narration and curated video segments">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="">
+    <meta name="twitter:title" content="AILingo.Tube">
+    <meta name="twitter:description" content="An AI-powered language learning application that crafts dynamic learning journeys with narration and curated video segments">
+    <link rel="manifest" href="/manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+      html {
+        overflow-y: scroll;
+      }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.6.0",
+    "react-youtube": "https://esm.sh/react-youtube@^10.1.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="bg-slate-900">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
+```import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import logo from '/logo.png'; // Import the logo
+
+const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+// Dynamically set the logo path in the HTML head
+const setFavicon = (path: string) => {
+  const linkIcon = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+  const linkAppleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null;
+  const metaOgImage = document.querySelector('meta[property="og:image"]') as HTMLMetaElement | null;
+  const metaTwitterImage = document.querySelector('meta[name="twitter:image"]') as HTMLMetaElement | null;
+
+  if (linkIcon) {
+    linkIcon.href = path;
+  }
+  if (linkAppleTouchIcon) {
+    linkAppleTouchIcon.href = path;
+  }
+  if (metaOgImage) {
+    metaOgImage.content = path;
+  }
+  if (metaTwitterImage) {
+    metaTwitterImage.content = path;
+  }
+};
+
+setFavicon(logo);
