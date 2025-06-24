@@ -1,8 +1,7 @@
 // components/LessonView.tsx
-
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { LessonPlan, LessonSegment, SegmentType, VideoSegment, NarrationSegment, VideoTimeSegment } from '../types';
-import { BookOpenIcon, FilmIcon, RefreshCwIcon, CheckCircleIcon, SpeakerPlayIcon, SpeakerStopIcon, ExternalLinkIcon } from '../constants';
+import { BookOpenIcon, FilmIcon, RefreshCwIcon, CheckCircleIcon, SpeakerPlayIcon, SpeakerStopIcon, ChevronLeftIcon, ChevronRightIcon } from '../constants';
 import { YouTubePlayerWrapper } from './YouTubePlayerWrapper';
 import ParsedText from './ParsedText';
 import { speakMultilingualText, stopSpeech, isSpeaking } from '../services/googleTTSService';
@@ -18,98 +17,7 @@ interface VideoFetchState {
   timeSegments: VideoTimeSegment[] | null;
 }
 
-// This is the UI component for a single item in the lesson plan.
-const SegmentItem: React.FC<{
-  segment: LessonSegment;
-  isCurrent: boolean;
-  isComplete?: boolean;
-  videoHeight?: string;
-  speakingSegmentId: string | null;
-  onToggleSpeech: (segmentId: string, rawText: string) => void;
-  videoFetchInfo?: VideoFetchState;
-  onVideoTimeSegmentComplete: () => void;
-  currentVideoTimeSegmentIndex: number;
-}> = ({
-  segment, isCurrent, isComplete, videoHeight, speakingSegmentId,
-  onToggleSpeech, videoFetchInfo, onVideoTimeSegmentComplete, currentVideoTimeSegmentIndex
-}) => {
-  const commonClasses = "p-6 rounded-lg shadow-lg transition-all duration-300 ease-in-out border-2";
-  const currentClasses = isCurrent ? "border-purple-500 bg-slate-700/70 scale-105" : "border-slate-700 bg-slate-800 hover:border-purple-700/50";
-  const completeClasses = isComplete ? "opacity-70 border-green-500/50" : "";
-  const isCurrentlySpeaking = speakingSegmentId === segment.id;
-
-  const videoSeg = segment as VideoSegment;
-  const displayTitle = videoFetchInfo?.videoTitle || (segment.type === SegmentType.VIDEO ? videoSeg.title : 'Narration');
-  const timeSegments = videoFetchInfo?.timeSegments;
-  const currentVideoId = videoFetchInfo?.videoId;
-  const currentVideoTimeSegment = timeSegments ? timeSegments[currentVideoTimeSegmentIndex] : null;
-
-  return (
-    <div className={`${commonClasses} ${currentClasses} ${completeClasses} relative`} id={`segment-${segment.id}`}>
-      {isComplete && <div className="absolute top-3 right-3 text-green-400" aria-label="Completed">{CheckCircleIcon}</div>}
-      <div className="flex items-start space-x-4">
-        <div className="flex-shrink-0 text-purple-400 pt-1" aria-hidden="true">
-          {segment.type === SegmentType.NARRATION ? BookOpenIcon : FilmIcon}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className={`text-xl font-semibold text-transparent bg-clip-text bg-gradient-to-r ${segment.type === SegmentType.NARRATION ? 'from-purple-400 to-fuchsia-500' : 'from-pink-400 to-red-500'}`}>
-              <ParsedText text={displayTitle} />
-            </h3>
-            {segment.type === SegmentType.NARRATION && (
-              <button
-                onClick={() => onToggleSpeech(segment.id, (segment as NarrationSegment).text)}
-                className={`p-1.5 rounded-full transition-colors ${isCurrentlySpeaking ? 'text-red-400 hover:bg-red-500/20' : 'text-purple-400 hover:bg-purple-500/20'}`}
-                aria-label={isCurrentlySpeaking ? "Stop narration" : "Play narration"}
-                title={isCurrentlySpeaking ? "Stop narration" : "Play narration"}
-              >
-                {isCurrentlySpeaking ? SpeakerStopIcon : SpeakerPlayIcon}
-              </button>
-            )}
-          </div>
-          {segment.type === SegmentType.NARRATION && (
-            <ParsedText text={(segment as NarrationSegment).text} />
-          )}
-          {segment.type === SegmentType.VIDEO && (
-            <>
-              <div className="text-sm text-slate-400 mb-3 italic">
-                <ParsedText text={videoSeg.segmentDescription} />
-              </div>
-              {videoFetchInfo?.status === 'success' && currentVideoId && currentVideoTimeSegment ? (
-                <>
-                  <YouTubePlayerWrapper
-                    key={`${currentVideoId}-${currentVideoTimeSegmentIndex}`}
-                    videoId={currentVideoId}
-                    startSeconds={currentVideoTimeSegment.startTime}
-                    endSeconds={currentVideoTimeSegment.endTime}
-                    onEnd={onVideoTimeSegmentComplete}
-                    height={videoHeight || '360'}
-                  />
-                  <div className="mt-2 p-2 bg-slate-800/50 rounded-md text-sm">
-                    <p className="font-semibold text-purple-300">Playing Segment {currentVideoTimeSegmentIndex + 1} of {timeSegments?.length}:</p>
-                    <p className="text-slate-400 italic">"{currentVideoTimeSegment.reason}"</p>
-                  </div>
-                </>
-              ) : videoFetchInfo?.status === 'loading' ? (
-                <div className="p-4 bg-slate-700/50 rounded-md border border-slate-600 text-slate-300 text-center">
-                  <div className="animate-pulse">{videoFetchInfo.message}</div>
-                </div>
-              ) : (
-                <div className="p-4 bg-slate-700/50 rounded-md border border-slate-600">
-                  <p className={`mb-2 ${videoFetchInfo?.status === 'error' ? 'text-red-400' : 'text-slate-300'}`}>
-                    {videoFetchInfo?.message || "Could not find a valid video."}
-                  </p>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// This is the main component that renders the lesson.
+// This is the main component that renders the lesson with proper progression.
 export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void; }> = ({ lessonPlan, onReset }) => {
   const [currentSegmentIdx, setCurrentSegmentIdx] = useState(0);
   const [completedSegments, setCompletedSegments] = useState<Set<string>>(new Set());
@@ -125,6 +33,10 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
     ...lessonPlan.segments,
     { type: SegmentType.NARRATION, id: 'outro-narration', text: lessonPlan.outroNarration },
   ], [lessonPlan]);
+
+  const currentSegment = allLessonParts[currentSegmentIdx];
+  const isLastSegment = currentSegmentIdx === allLessonParts.length - 1;
+  const isFirstSegment = currentSegmentIdx === 0;
 
   const orchestrateVideoSourcing = useCallback(async (segment: VideoSegment) => {
     const segmentId = segment.id;
@@ -155,32 +67,16 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
 
     try {
         console.log(`\n🔍 PIPELINE STEP 1: Generating search queries for "${segment.title}"`);
-        console.log(`🔍 PIPELINE STEP 1: Input parameters:`, {
-            segmentTitle: segment.title,
-            mainTopic: lessonPlan.topic,
-            timestamp: new Date().toISOString()
-        });
         updateState('loading', 'Step 1/5: Generating search queries...', { videoId: null, videoTitle: null, timeSegments: null });
         const queries = await generateSearchQueries(segment.title, lessonPlan.topic);
         console.log(`✅ PIPELINE STEP 1: Generated ${queries.length} search queries:`, queries);
-        console.log(`✅ PIPELINE STEP 1: Query generation completed in ${Date.now() - Date.now()}ms\n`);
 
         console.log(`\n🔎 PIPELINE STEP 2: Searching YouTube with ${queries.length} queries`);
         updateState('loading', 'Step 2/5: Searching YouTube for candidates...');
-        const searchStartTime = Date.now();
         const searchPromises = queries.map(async (q, index) => {
             console.log(`🔎 PIPELINE: Searching with query ${index + 1}/${queries.length}: "${q}"`);
-            const queryStartTime = Date.now();
             const results = await searchYouTube(q);
-            const queryEndTime = Date.now();
-            console.log(`🔎 PIPELINE: Query ${index + 1} returned ${results.length} results in ${queryEndTime - queryStartTime}ms`);
-            if (results.length > 0) {
-                console.log(`🔎 PIPELINE: Top results for "${q}":`, results.slice(0, 3).map(r => ({
-                    youtubeId: r.youtubeId,
-                    title: r.title.substring(0, 50) + '...',
-                    score: r.educationalScore
-                })));
-            }
+            console.log(`🔎 PIPELINE: Query ${index + 1} returned ${results.length} results`);
             return results;
         });
 
@@ -190,29 +86,18 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
         const uniqueVideos = [...new Map(videoCandidates.map(v => [v.youtubeId, v])).values()]
             .sort((a, b) => b.educationalScore - a.educationalScore);
 
-        console.log(`🔎 PIPELINE STEP 2: Unique videos after deduplication: ${uniqueVideos.length}`);
-
         if (uniqueVideos.length === 0) {
-            console.error(`❌ PIPELINE STEP 2: No videos found from any search query`);
             throw new Error("No videos found from any search query.");
         }
 
         const candidateCount = Math.min(5, uniqueVideos.length);
         console.log(`\n🤖 PIPELINE STEP 3: Checking top ${candidateCount} videos for relevance`);
-        console.log(`🤖 PIPELINE STEP 3: Starting AI relevance analysis for segment: "${segment.title}"`);
-        console.log(`🤖 PIPELINE STEP 3: Candidates to analyze:`, uniqueVideos.slice(0, candidateCount).map((v, i) => ({
-            rank: i + 1,
-            youtubeId: v.youtubeId,
-            title: v.title,
-            educationalScore: v.educationalScore
-        })));
         updateState('loading', `Step 3/5: Checking top ${candidateCount} videos for relevance...`);
 
         const relevancePromises = uniqueVideos.slice(0, 5).map(async (video, index) => {
             console.log(`🤖 PIPELINE: Analyzing candidate ${index + 1}/${candidateCount}: "${video.title}"`);
             const transcript = await getVideoTranscript(video.youtubeId);
-            video.transcript = transcript; // Attach transcript for later use
-            console.log(`🤖 PIPELINE: Transcript obtained for "${video.title}": ${transcript ? `${transcript.length} chars` : 'none'}`);
+            video.transcript = transcript;
 
             const relevanceResult = await checkVideoRelevance(video.title, segment.title, lessonPlan.topic, transcript);
             console.log(`🤖 PIPELINE: Relevance result for "${video.title}":`, relevanceResult);
@@ -223,216 +108,90 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
         const relevanceResults = await Promise.all(relevancePromises);
         const relevantVideos = relevanceResults.filter(v => v.relevant);
 
-        console.log(`🤖 PIPELINE STEP 3: Relevance analysis complete:`, {
-            totalAnalyzed: relevanceResults.length,
-            relevantCount: relevantVideos.length,
-        });
-
         if (relevantVideos.length === 0) {
-            console.error(`❌ PIPELINE STEP 3: No relevant videos found after AI analysis`);
             throw new Error("No relevant videos found after AI analysis.");
         }
 
-        // Sort by confidence, then by original educational score
         relevantVideos.sort((a, b) => (b.confidence - a.confidence) || (b.educationalScore - a.educationalScore));
         const bestVideo = relevantVideos[0];
 
-        console.log(`\n🏆 PIPELINE STEP 4: Selected best video:`, {
-            youtubeId: bestVideo.youtubeId,
-            title: bestVideo.title,
-            confidence: bestVideo.confidence,
-            educationalScore: bestVideo.educationalScore,
-            selectionReason: 'Highest confidence score after AI analysis'
-        });
-
+        console.log(`\n🏆 PIPELINE STEP 4: Selected best video: "${bestVideo.title}"`);
         updateState('loading', `Step 4/5: Best video found: "${bestVideo.title}"`);
 
         console.log(`\n🎬 PIPELINE STEP 5: Finding time segments in "${bestVideo.title}"`);
-        console.log(`🎬 PIPELINE STEP 5: Input parameters:`, {
-            videoTitle: bestVideo.title,
-            segmentTitle: segment.title,
-            hasTranscript: !!bestVideo.transcript,
-            transcriptLength: bestVideo.transcript?.length || 0
-        });
         updateState('loading', `Step 5/5: Identifying key segments in the video...`);
-        const segmentStartTime = Date.now();
         const timeSegments = await findVideoSegments(bestVideo.title, segment.title, bestVideo.transcript || null);
-        const segmentEndTime = Date.now();
-
-        console.log(`🎬 PIPELINE STEP 5: Time segments analysis completed in ${segmentEndTime - segmentStartTime}ms`);
-        console.log(`🎬 PIPELINE STEP 5: Time segments found:`, {
-            segmentCount: timeSegments?.length || 0,
-            segments: timeSegments?.map((ts, i) => ({
-                index: i + 1,
-                startTime: ts.startTime,
-                endTime: ts.endTime,
-                duration: ts.endTime - ts.startTime,
-                reason: ts.reason.substring(0, 50) + '...'
-            }))
-        });
 
         if (!timeSegments || timeSegments.length === 0) {
-            console.error(`❌ PIPELINE STEP 5: Could not identify any relevant time segments`);
             throw new Error("Could not identify any relevant time segments in the selected video.");
         }
 
-        console.log(`\n${'='.repeat(80)}`);
-        console.log(`✅ VIDEO SOURCING PIPELINE COMPLETE`);
-        console.log(`✅ PIPELINE: Successfully sourced video for "${segment.title}"`);
-        console.log(`✅ PIPELINE: Final result:`, {
-            segmentTitle: segment.title,
-            selectedVideoId: bestVideo.youtubeId,
-            selectedVideoTitle: bestVideo.title,
-            timeSegmentCount: timeSegments.length,
-            totalPipelineTime: `${Date.now() - Date.now()}ms`,
-            timestamp: new Date().toISOString()
-        });
-        console.log(`${'='.repeat(80)}\n`);
-
+        console.log(`\n✅ VIDEO SOURCING PIPELINE COMPLETE for "${segment.title}"`);
         updateState('success', 'Video ready!', { videoId: bestVideo.youtubeId, videoTitle: bestVideo.title, timeSegments });
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during video sourcing.";
-        console.log(`\n${'='.repeat(80)}`);
-        console.error(`❌ VIDEO SOURCING PIPELINE FAILED`);
-        console.error(`❌ PIPELINE ERROR: Video sourcing failed for "${segment.title}":`, {
-            error: errorMessage,
-            segmentId,
-            segmentTitle: segment.title,
-            timestamp: new Date().toISOString(),
-            stack: error instanceof Error ? error.stack : undefined
-        });
-        console.log(`${'='.repeat(80)}\n`);
+        console.error(`❌ VIDEO SOURCING PIPELINE FAILED for "${segment.title}":`, errorMessage);
         updateState('error', `Video sourcing failed: ${errorMessage}`);
     }
   }, [lessonPlan.topic]);
 
-
   // This effect triggers the video pipeline when a video segment becomes active.
   useEffect(() => {
-    const currentSegment = allLessonParts[currentSegmentIdx];
-    
     console.log(`\n${'='.repeat(60)}`);
-    console.log(`📍 SEGMENT NAVIGATION: Current position in lesson`);
-    console.log(`📍 Current Index: ${currentSegmentIdx} of ${allLessonParts.length - 1}`);
+    console.log(`📍 LESSON PROGRESSION: Now at segment ${currentSegmentIdx + 1} of ${allLessonParts.length}`);
     console.log(`📍 Current Segment: "${currentSegment?.id}" (${currentSegment?.type})`);
-    console.log(`📍 Is Video Segment: ${currentSegment?.type === SegmentType.VIDEO}`);
-    console.log(`📍 Timestamp: ${new Date().toISOString()}`);
-    
-    // Show complete lesson structure with current position
-    console.log(`\n📋 LESSON STRUCTURE:`);
-    allLessonParts.forEach((segment, index) => {
-        const marker = index === currentSegmentIdx ? '👉 CURRENT' : '   ';
-        const typeIcon = segment.type === SegmentType.VIDEO ? '🎥' : '📖';
-        console.log(`${marker} ${index}: ${typeIcon} ${segment.id} (${segment.type})`);
-    });
-    
-    // Show which video segments are coming up
-    const upcomingVideoSegments = allLessonParts
-        .slice(currentSegmentIdx + 1)
-        .filter(s => s.type === SegmentType.VIDEO)
-        .slice(0, 3);
-    
-    if (upcomingVideoSegments.length > 0) {
-        console.log(`\n🔮 UPCOMING VIDEO SEGMENTS:`);
-        upcomingVideoSegments.forEach((segment, index) => {
-            const position = allLessonParts.findIndex(s => s.id === segment.id);
-            console.log(`   ${index + 1}. "${segment.id}" at position ${position}`);
-        });
-    } else {
-        console.log(`\n🔮 NO MORE VIDEO SEGMENTS in this lesson`);
-    }
-    
-    // Show video fetch states for all video segments
-    const videoSegments = allLessonParts.filter(s => s.type === SegmentType.VIDEO);
-    if (videoSegments.length > 0) {
-        console.log(`\n📊 VIDEO FETCH STATES:`);
-        videoSegments.forEach(segment => {
-            const state = videoFetchState[segment.id];
-            const stateIcon = state?.status === 'success' ? '✅' : 
-                            state?.status === 'error' ? '❌' : 
-                            state?.status === 'loading' ? '⏳' : '⚪';
-            console.log(`   ${stateIcon} ${segment.id}: ${state?.status || 'idle'} - ${state?.message || 'Not started'}`);
-        });
-    }
-    
+    console.log(`📍 Progress: ${Math.round(((currentSegmentIdx + 1) / allLessonParts.length) * 100)}%`);
     console.log(`${'='.repeat(60)}\n`);
-    
-    // Now check if current segment is a video segment
+
     if (currentSegment.type === SegmentType.VIDEO) {
-        console.log(`\n🎬 VIDEO SEGMENT ACTIVE: "${currentSegment.id}"`);
-        console.log(`🎬 VIDEO DETAILS:`, {
-            segmentId: currentSegment.id,
-            title: (currentSegment as VideoSegment).title,
-            description: (currentSegment as VideoSegment).segmentDescription,
-            searchQuery: (currentSegment as VideoSegment).youtubeSearchQuery
-        });
-        
+        console.log(`🎬 VIDEO SEGMENT ACTIVE: "${currentSegment.id}"`);
+
         const currentFetchState = videoFetchState[currentSegment.id];
         const shouldStartPipeline = !currentFetchState || currentFetchState.status === 'idle';
-        
-        console.log(`🎬 PIPELINE DECISION:`, {
-            hasExistingState: !!currentFetchState,
-            currentStatus: currentFetchState?.status || 'none',
-            shouldStartPipeline,
-            reason: shouldStartPipeline ? 'No existing state or status is idle' : 'Already processed or in progress'
-        });
-        
+
         if (shouldStartPipeline) {
-            console.log(`\n🚀 STARTING VIDEO PIPELINE for "${currentSegment.id}"`);
+            console.log(`🚀 STARTING VIDEO PIPELINE for "${currentSegment.id}"`);
             setCurrentVideoTimeSegmentIndex(0);
             orchestrateVideoSourcing(currentSegment as VideoSegment);
         } else {
-            console.log(`\n⏭️ SKIPPING VIDEO PIPELINE: "${currentSegment.id}" already processed`);
-            console.log(`⏭️ Current state:`, currentFetchState);
+            console.log(`⏭️ SKIPPING VIDEO PIPELINE: "${currentSegment.id}" already processed`);
         }
     } else {
-        console.log(`\n📖 NARRATION SEGMENT ACTIVE: "${currentSegment.id}"`);
-        console.log(`📖 No video pipeline needed for narration segments`);
-        
-        // Show when the next video segment will be encountered
-        const nextVideoIndex = allLessonParts.findIndex((segment, index) => 
-            index > currentSegmentIdx && segment.type === SegmentType.VIDEO
-        );
-        
-        if (nextVideoIndex !== -1) {
-            const nextVideoSegment = allLessonParts[nextVideoIndex];
-            const stepsUntilVideo = nextVideoIndex - currentSegmentIdx;
-            console.log(`📖 Next video segment: "${nextVideoSegment.id}" in ${stepsUntilVideo} step(s)`);
-        } else {
-            console.log(`📖 No more video segments in this lesson`);
-        }
+        console.log(`📖 NARRATION SEGMENT ACTIVE: "${currentSegment.id}"`);
     }
-  }, [currentSegmentIdx, allLessonParts, videoFetchState, orchestrateVideoSourcing]);
+  }, [currentSegmentIdx, currentSegment, videoFetchState, orchestrateVideoSourcing]);
 
   const handleNextSegment = useCallback(() => {
     stopSpeech();
     setSpeakingSegmentId(null);
 
     if (currentSegmentIdx < allLessonParts.length - 1) {
-        setCompletedSegments(prev => new Set(prev).add(allLessonParts[currentSegmentIdx].id));
+        setCompletedSegments(prev => new Set(prev).add(currentSegment.id));
         setCurrentSegmentIdx(prev => prev + 1);
+        setCurrentVideoTimeSegmentIndex(0); // Reset video time segment for new segment
     }
-  }, [currentSegmentIdx, allLessonParts]);
+  }, [currentSegmentIdx, allLessonParts.length, currentSegment.id]);
 
-  const handlePrevSegment = () => {
+  const handlePrevSegment = useCallback(() => {
     stopSpeech();
     setSpeakingSegmentId(null);
 
     if (currentSegmentIdx > 0) {
       setCurrentSegmentIdx(prev => prev - 1);
+      setCurrentVideoTimeSegmentIndex(0); // Reset video time segment for new segment
     }
-  };
+  }, [currentSegmentIdx]);
 
   const handleVideoTimeSegmentComplete = useCallback(() => {
-    const segmentId = allLessonParts[currentSegmentIdx].id;
+    const segmentId = currentSegment.id;
     const fetchInfo = videoFetchState[segmentId];
     if (fetchInfo?.timeSegments && currentVideoTimeSegmentIndex < fetchInfo.timeSegments.length - 1) {
       setCurrentVideoTimeSegmentIndex(prev => prev + 1);
     } else {
       handleNextSegment(); // Move to the next lesson segment after all video parts are played
     }
-  }, [currentSegmentIdx, allLessonParts, videoFetchState, currentVideoTimeSegmentIndex, handleNextSegment]);
+  }, [currentSegment.id, videoFetchState, currentVideoTimeSegmentIndex, handleNextSegment]);
 
   const handleToggleSpeech = useCallback(async (segmentId: string, rawText: string) => {
     if (speakingSegmentId === segmentId || isSpeaking()) {
@@ -464,49 +223,164 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
     return () => window.removeEventListener('resize', calculateHeight);
   }, []);
 
+  const progress = ((currentSegmentIdx + 1) / allLessonParts.length) * 100;
+  const isCurrentlySpeaking = speakingSegmentId === currentSegment.id;
+  const videoFetchInfo = videoFetchState[currentSegment.id];
+
   return (
-    <div ref={mainContentRef} className="space-y-8 pb-16">
-      <div className="sticky top-0 bg-slate-900/80 backdrop-blur-md py-4 z-10 rounded-b-lg shadow-lg">
-        <div className="max-w-3xl mx-auto px-4">
-            <div className="flex justify-between items-center mb-2">
-                <h2 className="text-2xl font-bold text-purple-300 truncate" title={lessonPlan.topic}>
-                  <ParsedText text={lessonPlan.topic} />
-                </h2>
-                <div className="flex items-center space-x-2">
-                    <button onClick={onReset} className="flex items-center text-sm bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md">
-                        {RefreshCwIcon} <span className="ml-2 hidden sm:inline">New Lesson</span>
-                    </button>
-                </div>
+    <div ref={mainContentRef} className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
+      {/* Header with lesson info and progress */}
+      <div className="sticky top-0 bg-slate-900/95 backdrop-blur-md py-4 z-10 border-b border-slate-700">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold text-purple-300 truncate" title={lessonPlan.topic}>
+              <ParsedText text={lessonPlan.topic} />
+            </h1>
+            <button onClick={onReset} className="flex items-center text-sm bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md transition-colors">
+              {RefreshCwIcon} <span className="ml-2">New Lesson</span>
+            </button>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mb-2">
+            <div className="flex justify-between text-sm text-slate-400 mb-1">
+              <span>Segment {currentSegmentIdx + 1} of {allLessonParts.length}</span>
+              <span>{Math.round(progress)}% Complete</span>
             </div>
+            <div className="w-full bg-slate-700 rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="space-y-6 max-w-3xl mx-auto px-4">
-        {allLessonParts.map((segment, index) => (
-          <SegmentItem
-            key={segment.id}
-            segment={segment}
-            isCurrent={index === currentSegmentIdx}
-            isComplete={completedSegments.has(segment.id)}
-            videoHeight={videoPlayerHeight}
-            speakingSegmentId={speakingSegmentId}
-            onToggleSpeech={handleToggleSpeech}
-            videoFetchInfo={videoFetchState[segment.id]}
-            onVideoTimeSegmentComplete={handleVideoTimeSegmentComplete}
-            currentVideoTimeSegmentIndex={currentVideoTimeSegmentIndex}
-          />
-        ))}
+      {/* Current Segment Content */}
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
+
+          {/* Segment Header */}
+          <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 p-6 border-b border-slate-700">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="text-purple-400 text-2xl">
+                  {currentSegment.type === SegmentType.NARRATION ? BookOpenIcon : FilmIcon}
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-white">
+                    {currentSegment.type === SegmentType.VIDEO ? 
+                      <ParsedText text={(videoFetchInfo?.videoTitle || (currentSegment as VideoSegment).title)} /> :
+                      "Narration"
+                    }
+                  </h2>
+                  <p className="text-slate-400 text-sm">
+                    {currentSegment.type === SegmentType.NARRATION ? "Listen to the narration" : "Watch the video segment"}
+                  </p>
+                </div>
+              </div>
+
+              {completedSegments.has(currentSegment.id) && (
+                <div className="text-green-400 text-xl">{CheckCircleIcon}</div>
+              )}
+            </div>
+          </div>
+
+          {/* Segment Content */}
+          <div className="p-6">
+            {currentSegment.type === SegmentType.NARRATION ? (
+              <div className="space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 text-lg leading-relaxed text-slate-200">
+                    <ParsedText text={(currentSegment as NarrationSegment).text} />
+                  </div>
+                  <button
+                    onClick={() => handleToggleSpeech(currentSegment.id, (currentSegment as NarrationSegment).text)}
+                    className={`ml-4 p-3 rounded-full transition-colors ${
+                      isCurrentlySpeaking ? 'text-red-400 hover:bg-red-500/20' : 'text-purple-400 hover:bg-purple-500/20'
+                    }`}
+                    aria-label={isCurrentlySpeaking ? "Stop narration" : "Play narration"}
+                  >
+                    {isCurrentlySpeaking ? SpeakerStopIcon : SpeakerPlayIcon}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Video segment description */}
+                <div className="text-slate-400 italic mb-4">
+                  <ParsedText text={(currentSegment as VideoSegment).segmentDescription} />
+                </div>
+
+                {/* Video content */}
+                {videoFetchInfo?.status === 'success' && videoFetchInfo.videoId && videoFetchInfo.timeSegments ? (
+                  <div className="space-y-4">
+                    <YouTubePlayerWrapper
+                      key={`${videoFetchInfo.videoId}-${currentVideoTimeSegmentIndex}`}
+                      videoId={videoFetchInfo.videoId}
+                      startSeconds={videoFetchInfo.timeSegments[currentVideoTimeSegmentIndex].startTime}
+                      endSeconds={videoFetchInfo.timeSegments[currentVideoTimeSegmentIndex].endTime}
+                      onEnd={handleVideoTimeSegmentComplete}
+                      height={videoPlayerHeight}
+                    />
+                    <div className="bg-slate-700/50 rounded-lg p-4">
+                      <div className="text-sm text-purple-300 font-semibold mb-1">
+                        Playing Segment {currentVideoTimeSegmentIndex + 1} of {videoFetchInfo.timeSegments.length}
+                      </div>
+                      <div className="text-slate-400 italic">
+                        "{videoFetchInfo.timeSegments[currentVideoTimeSegmentIndex].reason}"
+                      </div>
+                    </div>
+                  </div>
+                ) : videoFetchInfo?.status === 'loading' ? (
+                  <div className="bg-slate-700/50 rounded-lg p-8 text-center">
+                    <div className="animate-pulse text-slate-300 mb-2">
+                      🔄 {videoFetchInfo.message}
+                    </div>
+                    <div className="text-sm text-slate-500">Please wait while we find the perfect video...</div>
+                  </div>
+                ) : videoFetchInfo?.status === 'error' ? (
+                  <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6 text-center">
+                    <div className="text-red-400 mb-2">❌ {videoFetchInfo.message}</div>
+                    <div className="text-sm text-slate-400">You can skip this segment or try again later.</div>
+                  </div>
+                ) : (
+                  <div className="bg-slate-700/50 rounded-lg p-6 text-center">
+                    <div className="text-slate-400">Preparing video content...</div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 mt-10 text-center">
-          <div className="flex flex-col sm:flex-row justify-center items-center space-y-3 sm:space-y-0 sm:space-x-4">
-            <button onClick={handlePrevSegment} disabled={currentSegmentIdx === 0} className="px-6 py-2.5 bg-slate-600 hover:bg-slate-500 text-slate-200 font-semibold rounded-lg shadow-md disabled:opacity-50 w-full sm:w-auto">
-              Previous Segment
-            </button>
-            <button onClick={handleNextSegment} disabled={currentSegmentIdx >= allLessonParts.length - 1} className="px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-md disabled:opacity-50 w-full sm:w-auto">
-              Next Segment
-            </button>
-          </div>
+      {/* Navigation Controls */}
+      <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-700 p-4">
+        <div className="max-w-4xl mx-auto flex justify-between items-center">
+          <button
+            onClick={handlePrevSegment}
+            disabled={isFirstSegment}
+            className="flex items-center px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {ChevronLeftIcon} <span className="ml-2">Previous</span>
+          </button>
+
+          <span className="text-slate-400 text-sm">
+            {currentSegment.type === SegmentType.VIDEO && videoFetchInfo?.timeSegments && 
+             `Video part ${currentVideoTimeSegmentIndex + 1} of ${videoFetchInfo.timeSegments.length}`
+            }
+          </span>
+
+          <button
+            onClick={handleNextSegment}
+            disabled={isLastSegment}
+            className="flex items-center px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <span className="mr-2">{isLastSegment ? 'Complete' : 'Next'}</span> {ChevronRightIcon}
+          </button>
+        </div>
       </div>
     </div>
   );
