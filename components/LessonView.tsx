@@ -311,26 +311,96 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
   // This effect triggers the video pipeline when a video segment becomes active.
   useEffect(() => {
     const currentSegment = allLessonParts[currentSegmentIdx];
-    console.log(`🔍 SEGMENT CHECK: Current segment index ${currentSegmentIdx}:`, {
-        segmentId: currentSegment?.id,
-        segmentType: currentSegment?.type,
-        isVideoSegment: currentSegment?.type === SegmentType.VIDEO,
-        fetchState: videoFetchState[currentSegment?.id],
-        allSegmentTypes: allLessonParts.map(s => ({ id: s.id, type: s.type }))
+    
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`📍 SEGMENT NAVIGATION: Current position in lesson`);
+    console.log(`📍 Current Index: ${currentSegmentIdx} of ${allLessonParts.length - 1}`);
+    console.log(`📍 Current Segment: "${currentSegment?.id}" (${currentSegment?.type})`);
+    console.log(`📍 Is Video Segment: ${currentSegment?.type === SegmentType.VIDEO}`);
+    console.log(`📍 Timestamp: ${new Date().toISOString()}`);
+    
+    // Show complete lesson structure with current position
+    console.log(`\n📋 LESSON STRUCTURE:`);
+    allLessonParts.forEach((segment, index) => {
+        const marker = index === currentSegmentIdx ? '👉 CURRENT' : '   ';
+        const typeIcon = segment.type === SegmentType.VIDEO ? '🎥' : '📖';
+        console.log(`${marker} ${index}: ${typeIcon} ${segment.id} (${segment.type})`);
     });
     
+    // Show which video segments are coming up
+    const upcomingVideoSegments = allLessonParts
+        .slice(currentSegmentIdx + 1)
+        .filter(s => s.type === SegmentType.VIDEO)
+        .slice(0, 3);
+    
+    if (upcomingVideoSegments.length > 0) {
+        console.log(`\n🔮 UPCOMING VIDEO SEGMENTS:`);
+        upcomingVideoSegments.forEach((segment, index) => {
+            const position = allLessonParts.findIndex(s => s.id === segment.id);
+            console.log(`   ${index + 1}. "${segment.id}" at position ${position}`);
+        });
+    } else {
+        console.log(`\n🔮 NO MORE VIDEO SEGMENTS in this lesson`);
+    }
+    
+    // Show video fetch states for all video segments
+    const videoSegments = allLessonParts.filter(s => s.type === SegmentType.VIDEO);
+    if (videoSegments.length > 0) {
+        console.log(`\n📊 VIDEO FETCH STATES:`);
+        videoSegments.forEach(segment => {
+            const state = videoFetchState[segment.id];
+            const stateIcon = state?.status === 'success' ? '✅' : 
+                            state?.status === 'error' ? '❌' : 
+                            state?.status === 'loading' ? '⏳' : '⚪';
+            console.log(`   ${stateIcon} ${segment.id}: ${state?.status || 'idle'} - ${state?.message || 'Not started'}`);
+        });
+    }
+    
+    console.log(`${'='.repeat(60)}\n`);
+    
+    // Now check if current segment is a video segment
     if (currentSegment.type === SegmentType.VIDEO) {
-        console.log(`🎬 VIDEO SEGMENT DETECTED: Checking if pipeline should start for "${currentSegment.id}"`, {
-            currentFetchState: videoFetchState[currentSegment.id],
-            shouldStartPipeline: !videoFetchState[currentSegment.id] || videoFetchState[currentSegment.id].status === 'idle'
+        console.log(`\n🎬 VIDEO SEGMENT ACTIVE: "${currentSegment.id}"`);
+        console.log(`🎬 VIDEO DETAILS:`, {
+            segmentId: currentSegment.id,
+            title: (currentSegment as VideoSegment).title,
+            description: (currentSegment as VideoSegment).segmentDescription,
+            searchQuery: (currentSegment as VideoSegment).youtubeSearchQuery
         });
         
-        if (!videoFetchState[currentSegment.id] || videoFetchState[currentSegment.id].status === 'idle') {
-            console.log(`🚀 TRIGGERING VIDEO PIPELINE for segment: ${currentSegment.id}`);
-            setCurrentVideoTimeSegmentIndex(0); // Reset time segment index for new video
+        const currentFetchState = videoFetchState[currentSegment.id];
+        const shouldStartPipeline = !currentFetchState || currentFetchState.status === 'idle';
+        
+        console.log(`🎬 PIPELINE DECISION:`, {
+            hasExistingState: !!currentFetchState,
+            currentStatus: currentFetchState?.status || 'none',
+            shouldStartPipeline,
+            reason: shouldStartPipeline ? 'No existing state or status is idle' : 'Already processed or in progress'
+        });
+        
+        if (shouldStartPipeline) {
+            console.log(`\n🚀 STARTING VIDEO PIPELINE for "${currentSegment.id}"`);
+            setCurrentVideoTimeSegmentIndex(0);
             orchestrateVideoSourcing(currentSegment as VideoSegment);
         } else {
-            console.log(`⏭️ SKIPPING VIDEO PIPELINE: Already processed for segment ${currentSegment.id}`);
+            console.log(`\n⏭️ SKIPPING VIDEO PIPELINE: "${currentSegment.id}" already processed`);
+            console.log(`⏭️ Current state:`, currentFetchState);
+        }
+    } else {
+        console.log(`\n📖 NARRATION SEGMENT ACTIVE: "${currentSegment.id}"`);
+        console.log(`📖 No video pipeline needed for narration segments`);
+        
+        // Show when the next video segment will be encountered
+        const nextVideoIndex = allLessonParts.findIndex((segment, index) => 
+            index > currentSegmentIdx && segment.type === SegmentType.VIDEO
+        );
+        
+        if (nextVideoIndex !== -1) {
+            const nextVideoSegment = allLessonParts[nextVideoIndex];
+            const stepsUntilVideo = nextVideoIndex - currentSegmentIdx;
+            console.log(`📖 Next video segment: "${nextVideoSegment.id}" in ${stepsUntilVideo} step(s)`);
+        } else {
+            console.log(`📖 No more video segments in this lesson`);
         }
     }
   }, [currentSegmentIdx, allLessonParts, videoFetchState, orchestrateVideoSourcing]);
