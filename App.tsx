@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { InputControls } from './components/InputControls';
 import { LessonView } from './components/LessonView';
@@ -48,7 +47,7 @@ const App: React.FC = () => {
     setError(null);
     setCurrentTopic("");
   };
-  
+
   useEffect(() => {
     if (error && (appStatus === AppStatus.IDLE || appStatus === AppStatus.RECOGNIZING_SPEECH)) {
       const timer = setTimeout(() => setError(null), 5000);
@@ -60,9 +59,12 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-slate-100 flex flex-col items-center p-4 selection:bg-purple-500 selection:text-white">
       <header className="w-full max-w-4xl text-center my-8">
-        <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
-          AILingo.Tube
-        </h1>
+        <div className="flex items-center justify-center mb-4">
+          <img src="/logo.png" alt="AILingo.Tube" className="w-16 h-16 mr-4" />
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
+            AILingo.Tube
+          </h1>
+        </div>
         <p className="mt-4 text-lg text-slate-400">
           Craft dynamic learning journeys with AI-powered narration and curated video segments.
         </p>
@@ -78,7 +80,7 @@ const App: React.FC = () => {
         )}
 
         {appStatus === AppStatus.PROCESSING_INPUT && <LoadingIndicator message={`Generating lesson for "${currentTopic}"...`} />}
-        
+
         {error && appStatus === AppStatus.ERROR && (
           <div 
             className="mt-6 p-4 bg-red-700/30 border border-red-500 rounded-lg text-red-300 flex items-center space-x-3"
