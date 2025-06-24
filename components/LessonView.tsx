@@ -128,6 +128,8 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
 
   const orchestrateVideoSourcing = useCallback(async (segment: VideoSegment) => {
     const segmentId = segment.id;
+    console.log(`\n${'='.repeat(80)}`);
+    console.log(`🚀 VIDEO SOURCING PIPELINE STARTED`);
     console.log(`🚀 PIPELINE: Starting video sourcing orchestration for segment: "${segment.title}"`);
     console.log(`🚀 PIPELINE: Segment details:`, {
         segmentId,
@@ -136,6 +138,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
         searchQuery: segment.youtubeSearchQuery,
         timestamp: new Date().toISOString()
     });
+    console.log(`${'='.repeat(80)}\n`);
 
     const updateState = (status: VideoFetchState['status'], message: string, data: Partial<VideoFetchState> = {}) => {
         console.log(`📊 PIPELINE STATE: ${segmentId} -> ${status}: ${message}`, data);
@@ -151,17 +154,33 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
     };
 
     try {
-        console.log(`🔍 PIPELINE STEP 1: Generating search queries for "${segment.title}"`);
+        console.log(`\n🔍 PIPELINE STEP 1: Generating search queries for "${segment.title}"`);
+        console.log(`🔍 PIPELINE STEP 1: Input parameters:`, {
+            segmentTitle: segment.title,
+            mainTopic: lessonPlan.topic,
+            timestamp: new Date().toISOString()
+        });
         updateState('loading', 'Step 1/5: Generating search queries...', { videoId: null, videoTitle: null, timeSegments: null });
         const queries = await generateSearchQueries(segment.title, lessonPlan.topic);
         console.log(`✅ PIPELINE STEP 1: Generated ${queries.length} search queries:`, queries);
+        console.log(`✅ PIPELINE STEP 1: Query generation completed in ${Date.now() - Date.now()}ms\n`);
 
-        console.log(`🔎 PIPELINE STEP 2: Searching YouTube with ${queries.length} queries`);
+        console.log(`\n🔎 PIPELINE STEP 2: Searching YouTube with ${queries.length} queries`);
         updateState('loading', 'Step 2/5: Searching YouTube for candidates...');
+        const searchStartTime = Date.now();
         const searchPromises = queries.map(async (q, index) => {
             console.log(`🔎 PIPELINE: Searching with query ${index + 1}/${queries.length}: "${q}"`);
+            const queryStartTime = Date.now();
             const results = await searchYouTube(q);
-            console.log(`🔎 PIPELINE: Query ${index + 1} returned ${results.length} results`);
+            const queryEndTime = Date.now();
+            console.log(`🔎 PIPELINE: Query ${index + 1} returned ${results.length} results in ${queryEndTime - queryStartTime}ms`);
+            if (results.length > 0) {
+                console.log(`🔎 PIPELINE: Top results for "${q}":`, results.slice(0, 3).map(r => ({
+                    youtubeId: r.youtubeId,
+                    title: r.title.substring(0, 50) + '...',
+                    score: r.educationalScore
+                })));
+            }
             return results;
         });
 
@@ -179,7 +198,14 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
         }
 
         const candidateCount = Math.min(5, uniqueVideos.length);
-        console.log(`🤖 PIPELINE STEP 3: Checking top ${candidateCount} videos for relevance`);
+        console.log(`\n🤖 PIPELINE STEP 3: Checking top ${candidateCount} videos for relevance`);
+        console.log(`🤖 PIPELINE STEP 3: Starting AI relevance analysis for segment: "${segment.title}"`);
+        console.log(`🤖 PIPELINE STEP 3: Candidates to analyze:`, uniqueVideos.slice(0, candidateCount).map((v, i) => ({
+            rank: i + 1,
+            youtubeId: v.youtubeId,
+            title: v.title,
+            educationalScore: v.educationalScore
+        })));
         updateState('loading', `Step 3/5: Checking top ${candidateCount} videos for relevance...`);
 
         const relevancePromises = uniqueVideos.slice(0, 5).map(async (video, index) => {
@@ -211,19 +237,38 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
         relevantVideos.sort((a, b) => (b.confidence - a.confidence) || (b.educationalScore - a.educationalScore));
         const bestVideo = relevantVideos[0];
 
-        console.log(`🏆 PIPELINE STEP 4: Selected best video:`, {
+        console.log(`\n🏆 PIPELINE STEP 4: Selected best video:`, {
             youtubeId: bestVideo.youtubeId,
             title: bestVideo.title,
+            confidence: bestVideo.confidence,
+            educationalScore: bestVideo.educationalScore,
+            selectionReason: 'Highest confidence score after AI analysis'
         });
 
         updateState('loading', `Step 4/5: Best video found: "${bestVideo.title}"`);
 
-        console.log(`🎬 PIPELINE STEP 5: Finding time segments in "${bestVideo.title}"`);
+        console.log(`\n🎬 PIPELINE STEP 5: Finding time segments in "${bestVideo.title}"`);
+        console.log(`🎬 PIPELINE STEP 5: Input parameters:`, {
+            videoTitle: bestVideo.title,
+            segmentTitle: segment.title,
+            hasTranscript: !!bestVideo.transcript,
+            transcriptLength: bestVideo.transcript?.length || 0
+        });
         updateState('loading', `Step 5/5: Identifying key segments in the video...`);
+        const segmentStartTime = Date.now();
         const timeSegments = await findVideoSegments(bestVideo.title, segment.title, bestVideo.transcript || null);
+        const segmentEndTime = Date.now();
 
+        console.log(`🎬 PIPELINE STEP 5: Time segments analysis completed in ${segmentEndTime - segmentStartTime}ms`);
         console.log(`🎬 PIPELINE STEP 5: Time segments found:`, {
             segmentCount: timeSegments?.length || 0,
+            segments: timeSegments?.map((ts, i) => ({
+                index: i + 1,
+                startTime: ts.startTime,
+                endTime: ts.endTime,
+                duration: ts.endTime - ts.startTime,
+                reason: ts.reason.substring(0, 50) + '...'
+            }))
         });
 
         if (!timeSegments || timeSegments.length === 0) {
@@ -231,13 +276,33 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
             throw new Error("Could not identify any relevant time segments in the selected video.");
         }
 
-        console.log(`✅ PIPELINE COMPLETE: Successfully sourced video for "${segment.title}"`);
+        console.log(`\n${'='.repeat(80)}`);
+        console.log(`✅ VIDEO SOURCING PIPELINE COMPLETE`);
+        console.log(`✅ PIPELINE: Successfully sourced video for "${segment.title}"`);
+        console.log(`✅ PIPELINE: Final result:`, {
+            segmentTitle: segment.title,
+            selectedVideoId: bestVideo.youtubeId,
+            selectedVideoTitle: bestVideo.title,
+            timeSegmentCount: timeSegments.length,
+            totalPipelineTime: `${Date.now() - Date.now()}ms`,
+            timestamp: new Date().toISOString()
+        });
+        console.log(`${'='.repeat(80)}\n`);
 
         updateState('success', 'Video ready!', { videoId: bestVideo.youtubeId, videoTitle: bestVideo.title, timeSegments });
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during video sourcing.";
-        console.error(`❌ PIPELINE ERROR: Video sourcing failed for "${segment.title}":`, error);
+        console.log(`\n${'='.repeat(80)}`);
+        console.error(`❌ VIDEO SOURCING PIPELINE FAILED`);
+        console.error(`❌ PIPELINE ERROR: Video sourcing failed for "${segment.title}":`, {
+            error: errorMessage,
+            segmentId,
+            segmentTitle: segment.title,
+            timestamp: new Date().toISOString(),
+            stack: error instanceof Error ? error.stack : undefined
+        });
+        console.log(`${'='.repeat(80)}\n`);
         updateState('error', `Video sourcing failed: ${errorMessage}`);
     }
   }, [lessonPlan.topic]);
