@@ -101,7 +101,7 @@ export const GEMINI_MODEL_NAME = "gemini-1.5-flash-latest";
 export const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 export const YOUTUBE_DATA_API_KEY = import.meta.env.VITE_YOUTUBE_DATA_API_KEY;
 export const GOOGLE_TTS_API_KEY = import.meta.env.VITE_GOOGLE_TTS_API_KEY;
-export const YOUTUBE_CUSTOM_SEARCH_CX = import.meta.env.VITE_YOUTUBE_CUSTOM_SEARCH_CX;
+export const YOUTUBE_CUSTOM_SEARCH_CX = import.meta.env.VITE_GOOGLE_CUSTOM_SEARCH_CX;
 export const GOOGLE_CUSTOM_SEARCH_API_KEY = import.meta.env.VITE_GOOGLE_CUSTOM_SEARCH_API_KEY;
 export const SUPADATA_API_KEY = import.meta.env.VITE_SUPADATA_API_KEY;
 export const IMAGE_CUSTOM_SEARCH_CX = import.meta.env.VITE_IMAGE_CUSTOM_SEARCH_CX;
@@ -111,10 +111,10 @@ console.log("DEBUG: Environment Variables Check:", {
   hasGeminiKey: !!GEMINI_API_KEY,
   hasYouTubeKey: !!YOUTUBE_DATA_API_KEY,
   hasGoogleTTSKey: !!GOOGLE_TTS_API_KEY,
-  hasCustomSearchCX: !!GOOGLE_CUSTOM_SEARCH_CX,
+  hasCustomSearchCX: !!YOUTUBE_CUSTOM_SEARCH_CX,
   hasCustomSearchKey: !!GOOGLE_CUSTOM_SEARCH_API_KEY,
   hasSupadataKey: !!SUPADATA_API_KEY,
   hasImageSearchCX: !!IMAGE_CUSTOM_SEARCH_CX,
-  customSearchCX: GOOGLE_CUSTOM_SEARCH_CX,
+  customSearchCX: YOUTUBE_CUSTOM_SEARCH_CX,
   customSearchKeyLength: GOOGLE_CUSTOM_SEARCH_API_KEY?.length || 0
 });
