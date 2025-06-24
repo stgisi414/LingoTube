@@ -1,3 +1,4 @@
+
 // components/ParsedText.tsx
 
 import React from 'react';
@@ -13,29 +14,26 @@ interface ParsedTextProps {
 }
 
 /**
- * A more robust parser that splits the text by language tags and reconstructs it.
- * This handles malformed or mismatched tags better for display purposes.
+ * Parser that handles language tags for both display and TTS compatibility.
+ * Maintains compatibility with the TTS service's parseLanguageSegments function.
  */
 export const parseLangText = (inputText: string): ParsedSegment[] => {
   if (!inputText || typeof inputText !== 'string') return [];
 
-  // Remove content in parentheses first and clean the text
-  let cleanText = inputText.replace(/\([^)]*\)/g, '').trim();
+  // Remove content in parentheses first but preserve the original text structure for TTS
+  let workingText = inputText.replace(/\([^)]*\)/g, '').trim();
   
-  // Remove orphaned closing tags that don't have matching opening tags
-  cleanText = cleanText.replace(/<\/lang:\w{2,3}>\s*/g, '');
-
   const segments: ParsedSegment[] = [];
   
-  // Use a more sophisticated regex to find properly paired language tags
-  const langTagRegex = /<lang:(\w{2,3})>(.*?)(?=<lang:\w{2,3}>|$)/g;
+  // Use the same regex pattern as the TTS service for consistency
+  const langTagRegex = /<lang:(\w+)>(.*?)<\/lang:\1>/g;
   let lastIndex = 0;
   let match;
 
-  while ((match = langTagRegex.exec(cleanText)) !== null) {
+  while ((match = langTagRegex.exec(workingText)) !== null) {
     // Add any English text before this tag
     if (match.index > lastIndex) {
-      const englishText = cleanText.slice(lastIndex, match.index).trim();
+      const englishText = workingText.slice(lastIndex, match.index).trim();
       if (englishText) {
         segments.push({ type: 'plain', text: englishText });
       }
@@ -48,20 +46,20 @@ export const parseLangText = (inputText: string): ParsedSegment[] => {
       segments.push({ type: 'lang', text: langText, langCode });
     }
 
-    lastIndex = match.index + match[0].length;
+    lastIndex = langTagRegex.lastIndex;
   }
 
   // Add any remaining English text
-  if (lastIndex < cleanText.length) {
-    const remainingText = cleanText.slice(lastIndex).trim();
+  if (lastIndex < workingText.length) {
+    const remainingText = workingText.slice(lastIndex).trim();
     if (remainingText) {
       segments.push({ type: 'plain', text: remainingText });
     }
   }
 
   // If no language tags were found, return the original cleaned text as plain
-  if (segments.length === 0 && cleanText) {
-    return [{ type: 'plain', text: cleanText }];
+  if (segments.length === 0 && workingText) {
+    return [{ type: 'plain', text: workingText }];
   }
 
   return segments;
