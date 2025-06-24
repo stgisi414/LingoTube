@@ -1,16 +1,119 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MicIcon, StopCircleIcon, SendIcon } from '../constants';
-import { SpeechRecognition, AppStatus } from '../types'; // Import AppStatus and SpeechRecognition type
+import { SpeechRecognition, AppStatus } from '../types';
 
 interface InputControlsProps {
   onSubmit: (topic: string) => void;
   isProcessing: boolean;
-  setAppStatus: (status: AppStatus) => void; // Use imported AppStatus
+  setAppStatus: (status: AppStatus) => void;
 }
 
+interface SentenceTemplate {
+  id: string;
+  template: string;
+  blanks: { id: string; placeholder: string; options?: string[] }[];
+  example: string;
+}
+
+const SENTENCE_TEMPLATES: SentenceTemplate[] = [
+  {
+    id: 'learn-about',
+    template: 'I want to learn {subject} about {topic}',
+    blanks: [
+      {
+        id: 'subject',
+        placeholder: 'what',
+        options: ['the basics', 'advanced concepts', 'practical applications', 'history', 'theory', 'fundamentals', 'everything']
+      },
+      {
+        id: 'topic',
+        placeholder: 'topic',
+        options: ['quantum physics', 'machine learning', 'cooking', 'photography', 'guitar playing', 'stock trading', 'web development']
+      }
+    ],
+    example: 'I want to learn the basics about quantum physics'
+  },
+  {
+    id: 'review-for',
+    template: 'I want to review {subject} for {purpose}',
+    blanks: [
+      {
+        id: 'subject',
+        placeholder: 'subject',
+        options: ['calculus', 'biology', 'chemistry', 'history', 'literature', 'economics', 'psychology']
+      },
+      {
+        id: 'purpose',
+        placeholder: 'purpose',
+        options: ['my exam', 'a job interview', 'a presentation', 'general knowledge', 'teaching others', 'certification']
+      }
+    ],
+    example: 'I want to review calculus for my exam'
+  },
+  {
+    id: 'understand-how',
+    template: 'I want to understand how {process} works {context}',
+    blanks: [
+      {
+        id: 'process',
+        placeholder: 'process',
+        options: ['blockchain', 'photosynthesis', 'the stock market', 'neural networks', 'engines', 'computers', 'vaccines']
+      },
+      {
+        id: 'context',
+        placeholder: 'context',
+        options: ['in detail', 'from scratch', 'for beginners', 'practically', 'theoretically', 'step by step']
+      }
+    ],
+    example: 'I want to understand how blockchain works in detail'
+  },
+  {
+    id: 'explore-relationship',
+    template: 'I want to explore the relationship between {concept1} and {concept2}',
+    blanks: [
+      {
+        id: 'concept1',
+        placeholder: 'first concept',
+        options: ['music', 'exercise', 'diet', 'technology', 'climate', 'economics', 'psychology']
+      },
+      {
+        id: 'concept2',
+        placeholder: 'second concept',
+        options: ['health', 'productivity', 'society', 'environment', 'politics', 'culture', 'education']
+      }
+    ],
+    example: 'I want to explore the relationship between music and productivity'
+  },
+  {
+    id: 'compare-contrast',
+    template: 'I want to compare and contrast {item1} {operator} {item2}',
+    blanks: [
+      {
+        id: 'item1',
+        placeholder: 'first item',
+        options: ['Python', 'democracy', 'renewable energy', 'traditional art', 'classical music', 'capitalism']
+      },
+      {
+        id: 'operator',
+        placeholder: 'operator',
+        options: ['vs', 'and', 'with', 'versus', 'alongside']
+      },
+      {
+        id: 'item2',
+        placeholder: 'second item',
+        options: ['JavaScript', 'autocracy', 'fossil fuels', 'modern art', 'jazz music', 'socialism']
+      }
+    ],
+    example: 'I want to compare and contrast Python vs JavaScript'
+  }
+];
+
 export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProcessing, setAppStatus }) => {
-  const [topic, setTopic] = useState('');
+  const [selectedTemplate, setSelectedTemplate] = useState<SentenceTemplate>(SENTENCE_TEMPLATES[0]);
+  const [blankValues, setBlankValues] = useState<Record<string, string>>({});
+  const [customTopic, setCustomTopic] = useState('');
+  const [useCustomInput, setUseCustomInput] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [speechRecognition, setSpeechRecognition] = useState<SpeechRecognition | null>(null);
   const [micPermissionError, setMicPermissionError] = useState<string | null>(null);
@@ -21,6 +124,16 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
     isRecordingRef.current = isRecording;
   }, [isRecording]);
 
+  // Initialize blank values when template changes
+  useEffect(() => {
+    const initialValues: Record<string, string> = {};
+    selectedTemplate.blanks.forEach(blank => {
+      initialValues[blank.id] = '';
+    });
+    setBlankValues(initialValues);
+  }, [selectedTemplate]);
+
+  // Speech recognition setup
   useEffect(() => {
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognitionInstance: SpeechRecognition | null = null;
@@ -34,8 +147,8 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
 
       recognitionInstance.onresult = (event) => {
         const speechResult = event.results[0][0].transcript;
-        setTopic(speechResult);
-        setIsRecording(false); 
+        setCustomTopic(speechResult);
+        setIsRecording(false);
         setAppStatus(AppStatus.IDLE);
       };
 
@@ -43,39 +156,37 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
         console.error('Speech recognition error:', event.error);
         let errorMsg = 'Speech recognition error: ' + event.error;
         if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-            errorMsg = "Microphone access denied. Please enable microphone permissions in your browser settings.";
-            setMicPermissionError(errorMsg);
+          errorMsg = "Microphone access denied. Please enable microphone permissions in your browser settings.";
+          setMicPermissionError(errorMsg);
         } else if (event.error === 'no-speech') {
-            errorMsg = "No speech detected. Please try again.";
-            // Set specific error for no speech, or let user retry
+          errorMsg = "No speech detected. Please try again.";
         } else {
-            setMicPermissionError(errorMsg); // Set general speech error
+          setMicPermissionError(errorMsg);
         }
         setIsRecording(false);
-        setAppStatus(AppStatus.ERROR); 
+        setAppStatus(AppStatus.ERROR);
       };
-      
+
       recognitionInstance.onend = () => {
-        if (isRecordingRef.current) { 
-            setIsRecording(false);
-            setAppStatus(AppStatus.IDLE);
+        if (isRecordingRef.current) {
+          setIsRecording(false);
+          setAppStatus(AppStatus.IDLE);
         }
       };
       setSpeechRecognition(recognitionInstance);
     } else {
       console.warn('Speech Recognition API not supported in this browser.');
     }
-    
+
     return () => {
-        if (recognitionInstance) {
-            recognitionInstance.abort();
-            recognitionInstance.onresult = null;
-            recognitionInstance.onerror = null;
-            recognitionInstance.onend = null;
-        }
+      if (recognitionInstance) {
+        recognitionInstance.abort();
+        recognitionInstance.onresult = null;
+        recognitionInstance.onerror = null;
+        recognitionInstance.onend = null;
+      }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps 
-  }, [setAppStatus, setTopic, setIsRecording, setMicPermissionError, setSpeechRecognition]); // All setters are stable, effect runs once.
+  }, [setAppStatus]);
 
   const handleMicClick = useCallback(async () => {
     if (!speechRecognition) {
@@ -86,11 +197,9 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
 
     if (isRecording) {
       speechRecognition.stop();
-      // setIsRecording(false); // onend should handle this
-      // setAppStatus(AppStatus.IDLE); // onend should handle this
     } else {
       try {
-        await navigator.mediaDevices.getUserMedia({ audio: true }); // Check mic permission
+        await navigator.mediaDevices.getUserMedia({ audio: true });
         setMicPermissionError(null);
         speechRecognition.start();
         setIsRecording(true);
@@ -99,65 +208,198 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
         console.error("Error accessing microphone:", err);
         let msg = "Microphone access denied or microphone not found. Please check permissions and hardware.";
         if (err instanceof Error && err.name === 'NotFoundError') {
-            msg = "No microphone found. Please connect a microphone and try again.";
+          msg = "No microphone found. Please connect a microphone and try again.";
         }
         setMicPermissionError(msg);
         setAppStatus(AppStatus.ERROR);
         setIsRecording(false);
       }
     }
-  }, [speechRecognition, isRecording, setAppStatus, setIsRecording, setMicPermissionError]);
+  }, [speechRecognition, isRecording, setAppStatus]);
+
+  const generateTopicFromTemplate = useCallback(() => {
+    let topic = selectedTemplate.template;
+    selectedTemplate.blanks.forEach(blank => {
+      const value = blankValues[blank.id] || blank.placeholder;
+      topic = topic.replace(`{${blank.id}}`, value);
+    });
+    return topic;
+  }, [selectedTemplate, blankValues]);
+
+  const isTemplateComplete = useCallback(() => {
+    return selectedTemplate.blanks.every(blank => blankValues[blank.id]?.trim());
+  }, [selectedTemplate, blankValues]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (topic.trim() && !isProcessing) {
-      onSubmit(topic.trim());
+    
+    let finalTopic = '';
+    if (useCustomInput) {
+      finalTopic = customTopic.trim();
+    } else {
+      if (!isTemplateComplete()) return;
+      finalTopic = generateTopicFromTemplate();
     }
+
+    if (finalTopic && !isProcessing) {
+      onSubmit(finalTopic);
+    }
+  };
+
+  const updateBlankValue = (blankId: string, value: string) => {
+    setBlankValues(prev => ({
+      ...prev,
+      [blankId]: value
+    }));
   };
 
   return (
     <div className="bg-slate-800 p-6 sm:p-8 rounded-xl shadow-2xl border border-slate-700">
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label htmlFor="topic" className="block text-sm font-medium text-purple-300 mb-1">
-            What do you want to learn about today?
-          </label>
-          <textarea
-            id="topic"
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            placeholder="e.g., The basics of Quantum Physics, History of the Roman Empire, How to bake sourdough bread..."
-            rows={4}
-            className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-shadow placeholder-slate-500"
-            disabled={isProcessing || isRecording}
-            aria-label="Topic to learn"
-          />
+        
+        {/* Toggle between template and custom input */}
+        <div className="flex items-center justify-center space-x-4 mb-6">
+          <button
+            type="button"
+            onClick={() => setUseCustomInput(false)}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              !useCustomInput ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+            }`}
+          >
+            Guided Templates
+          </button>
+          <button
+            type="button"
+            onClick={() => setUseCustomInput(true)}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              useCustomInput ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+            }`}
+          >
+            Free Input
+          </button>
         </div>
 
+        {!useCustomInput ? (
+          /* Template-based input */
+          <div className="space-y-4">
+            {/* Template selector */}
+            <div>
+              <label className="block text-sm font-medium text-purple-300 mb-2">
+                Choose a lesson template:
+              </label>
+              <select
+                value={selectedTemplate.id}
+                onChange={(e) => {
+                  const template = SENTENCE_TEMPLATES.find(t => t.id === e.target.value);
+                  if (template) setSelectedTemplate(template);
+                }}
+                className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                disabled={isProcessing || isRecording}
+              >
+                {SENTENCE_TEMPLATES.map(template => (
+                  <option key={template.id} value={template.id}>
+                    {template.example}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Template builder */}
+            <div className="bg-slate-700/50 p-4 rounded-lg">
+              <div className="text-lg text-slate-200 mb-4 leading-relaxed">
+                {selectedTemplate.template.split(/(\{[^}]+\})/).map((part, index) => {
+                  const blankMatch = part.match(/\{([^}]+)\}/);
+                  if (blankMatch) {
+                    const blankId = blankMatch[1];
+                    const blank = selectedTemplate.blanks.find(b => b.id === blankId);
+                    if (!blank) return part;
+
+                    return (
+                      <span key={index} className="inline-block mx-1">
+                        {blank.options ? (
+                          <select
+                            value={blankValues[blankId] || ''}
+                            onChange={(e) => updateBlankValue(blankId, e.target.value)}
+                            className="bg-purple-600 text-white px-2 py-1 rounded border-none focus:ring-2 focus:ring-purple-400 min-w-[120px]"
+                            disabled={isProcessing || isRecording}
+                          >
+                            <option value="">{blank.placeholder}</option>
+                            {blank.options.map(option => (
+                              <option key={option} value={option}>{option}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            value={blankValues[blankId] || ''}
+                            onChange={(e) => updateBlankValue(blankId, e.target.value)}
+                            placeholder={blank.placeholder}
+                            className="bg-purple-600 text-white px-2 py-1 rounded border-none focus:ring-2 focus:ring-purple-400 min-w-[120px]"
+                            disabled={isProcessing || isRecording}
+                          />
+                        )}
+                      </span>
+                    );
+                  }
+                  return <span key={index}>{part}</span>;
+                })}
+              </div>
+              
+              {/* Preview */}
+              <div className="text-sm text-slate-400 border-t border-slate-600 pt-3">
+                <strong>Preview:</strong> {generateTopicFromTemplate()}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Custom input */
+          <div>
+            <label htmlFor="custom-topic" className="block text-sm font-medium text-purple-300 mb-1">
+              What do you want to learn about today?
+            </label>
+            <textarea
+              id="custom-topic"
+              value={customTopic}
+              onChange={(e) => setCustomTopic(e.target.value)}
+              placeholder="e.g., The basics of Quantum Physics, History of the Roman Empire, How to bake sourdough bread..."
+              rows={4}
+              className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-shadow placeholder-slate-500"
+              disabled={isProcessing || isRecording}
+              aria-label="Topic to learn"
+            />
+          </div>
+        )}
+
         {micPermissionError && (
-            <p className="text-sm text-red-400" role="alert">{micPermissionError}</p>
+          <p className="text-sm text-red-400" role="alert">{micPermissionError}</p>
         )}
 
         <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0 sm:space-x-4">
-          <button
-            type="button"
-            onClick={handleMicClick}
-            disabled={isProcessing || !speechRecognition}
-            className={`flex items-center justify-center px-4 py-2.5 border rounded-lg transition-all duration-150 ease-in-out w-full sm:w-auto
-                        ${isRecording 
-                            ? 'bg-red-600 hover:bg-red-700 border-red-500 text-white animate-pulse' 
-                            : 'bg-slate-600 hover:bg-slate-500 border-slate-500 text-slate-200'}
-                        ${isProcessing || !speechRecognition ? 'opacity-50 cursor-not-allowed' : ''}`}
-            aria-pressed={isRecording}
-            aria-label={isRecording ? "Stop voice input" : "Start voice input"}
-          >
-            {isRecording ? StopCircleIcon : MicIcon}
-            <span className="ml-2">{isRecording ? 'Stop Recording...' : 'Use Voice Input'}</span>
-          </button>
+          {useCustomInput && (
+            <button
+              type="button"
+              onClick={handleMicClick}
+              disabled={isProcessing || !speechRecognition}
+              className={`flex items-center justify-center px-4 py-2.5 border rounded-lg transition-all duration-150 ease-in-out w-full sm:w-auto
+                          ${isRecording 
+                              ? 'bg-red-600 hover:bg-red-700 border-red-500 text-white animate-pulse' 
+                              : 'bg-slate-600 hover:bg-slate-500 border-slate-500 text-slate-200'}
+                          ${isProcessing || !speechRecognition ? 'opacity-50 cursor-not-allowed' : ''}`}
+              aria-pressed={isRecording}
+              aria-label={isRecording ? "Stop voice input" : "Start voice input"}
+            >
+              {isRecording ? StopCircleIcon : MicIcon}
+              <span className="ml-2">{isRecording ? 'Stop Recording...' : 'Use Voice Input'}</span>
+            </button>
+          )}
           
           <button
             type="submit"
-            disabled={isProcessing || isRecording || !topic.trim()}
+            disabled={
+              isProcessing || 
+              isRecording || 
+              (useCustomInput ? !customTopic.trim() : !isTemplateComplete())
+            }
             className="flex items-center justify-center px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-colors duration-150 ease-in-out w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Generate lesson based on the entered topic"
           >
@@ -165,8 +407,9 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
             {SendIcon}
           </button>
         </div>
-        {!speechRecognition && window.SpeechRecognition === undefined && window.webkitSpeechRecognition === undefined && (
-             <p className="text-xs text-slate-500 text-center sm:text-left pt-2">Voice input is not supported by your browser.</p>
+        
+        {!useCustomInput && !speechRecognition && window.SpeechRecognition === undefined && window.webkitSpeechRecognition === undefined && (
+          <p className="text-xs text-slate-500 text-center sm:text-left pt-2">Voice input is not supported by your browser.</p>
         )}
       </form>
     </div>
