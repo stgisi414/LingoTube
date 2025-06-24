@@ -1,5 +1,5 @@
 
-import { GOOGLE_CUSTOM_SEARCH_API_KEY, GOOGLE_CUSTOM_SEARCH_CX } from '../constants';
+import { GOOGLE_CUSTOM_SEARCH_API_KEY, YOUTUBE_CUSTOM_SEARCH_CX } from '../constants';
 
 // Interface for the item in Custom Search API response
 interface CustomSearchItem {
@@ -77,7 +77,7 @@ interface CustomSearchResponse {
 
 
 export const fetchYouTubeVideoId = async (query: string): Promise<string | null> => {
-  if (!GOOGLE_CUSTOM_SEARCH_API_KEY || !GOOGLE_CUSTOM_SEARCH_CX) {
+  if (!GOOGLE_CUSTOM_SEARCH_API_KEY || !YOUTUBE_CUSTOM_SEARCH_CX) {
     console.warn("Google Custom Search API Key or CX not configured in constants.ts. Cannot fetch YouTube video ID.");
     return null;
   }
@@ -88,7 +88,7 @@ export const fetchYouTubeVideoId = async (query: string): Promise<string | null>
   // For this implementation, we assume the CX is either YouTube-specific or the query is crafted to be YouTube-relevant.
   // To be more explicit, one might add "site:youtube.com" to the query string if the CX is general.
   const searchQuery = query; // Assuming query is specific enough or CX is configured for YouTube
-  const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_CUSTOM_SEARCH_API_KEY}&cx=${GOOGLE_CUSTOM_SEARCH_CX}&q=${encodeURIComponent(searchQuery)}&num=1`; // Get 1 result
+  const url = `https://www.googleapis.com/customsearch/v1?key=${GOOGLE_CUSTOM_SEARCH_API_KEY}&cx=${YOUTUBE_CUSTOM_SEARCH_CX}&q=${encodeURIComponent(searchQuery)}&num=1`; // Get 1 result
 
   try {
     const response = await fetch(url);
