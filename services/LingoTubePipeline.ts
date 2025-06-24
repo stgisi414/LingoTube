@@ -178,23 +178,54 @@ export class LearningPipeline {
 
     async searchVideos(learningPoint) {
         log("FLOW: Step 2 - Search educational videos");
+        console.log("DEBUG VIDEO SEARCH START:", {
+            learningPoint,
+            timestamp: new Date().toISOString()
+        });
+        
         updateStatus('searching_videos');
         displayStatusMessage('🔎 Finding educational content...', `Searching for: "${learningPoint}"`);
         try {
+            console.log("DEBUG: Calling gemini.generateSearchQueries...");
             const searchQueries = await this.gemini.generateSearchQueries(learningPoint);
+            console.log("DEBUG: Search queries result:", {
+                searchQueries,
+                isArray: Array.isArray(searchQueries),
+                length: searchQueries?.length
+            });
+            
             if (!searchQueries || !Array.isArray(searchQueries) || searchQueries.length === 0) {
+                console.error("DEBUG: Search queries generation failed:", searchQueries);
                 throw new Error("Failed to generate search queries.");
             }
             log(`Generated search queries:`, searchQueries);
+            
             let allVideos = [];
             for (const query of searchQueries.slice(0, 2)) {
+                console.log(`DEBUG: Searching YouTube for query: "${query}"`);
                 displayStatusMessage('🔎 Searching educational videos...', `Query: "${query}"`);
+                
                 const results = await this.videoSourcer.searchYouTube(query);
+                console.log(`DEBUG: YouTube search results for "${query}":`, {
+                    resultsCount: results?.length || 0,
+                    results: results
+                });
+                
                 allVideos.push(...results);
                 if (allVideos.length >= 15) break; // Get more videos for filtering
             }
-            log(`Total videos found: ${allVideos.length}`);
+            
+            console.log("DEBUG: All videos collected:", {
+                totalCount: allVideos.length,
+                videos: allVideos.map(v => ({
+                    youtubeId: v.youtubeId,
+                    title: v.title,
+                    educationalScore: v.educationalScore
+                }))
+            });
+            
             if (allVideos.length === 0) {
+                console.error("DEBUG: No videos found from any search query");
                 await this.createFallbackContent(learningPoint);
                 return;
             }
@@ -204,22 +235,44 @@ export class LearningPipeline {
             const uniqueVideos = [...new Map(allVideos.map(v => [v.youtubeId, v])).values()]
                 .sort((a, b) => b.educationalScore - a.educationalScore);
 
+            console.log("DEBUG: Unique videos for relevance checking:", {
+                count: uniqueVideos.length,
+                videos: uniqueVideos.map(v => ({
+                    youtubeId: v.youtubeId,
+                    title: v.title,
+                    educationalScore: v.educationalScore
+                }))
+            });
+
             const relevantVideos = [];
             const mainTopic = currentLessonPlan.topic || learningPoint;
 
             // Check up to 8 top videos for relevance (reduced since transcript analysis is more thorough)
             for (const video of uniqueVideos.slice(0, 8)) {
+                console.log(`DEBUG: Checking relevance for video: "${video.title}" (${video.youtubeId})`);
                 displayStatusMessage('🎯 Analyzing video content...', `Checking: "${video.title}"`);
 
                 // Fetch transcript for more accurate relevance checking
+                console.log(`DEBUG: Fetching transcript for ${video.youtubeId}...`);
                 const transcript = await this.videoSourcer.getVideoTranscript(video.youtubeId);
+                console.log(`DEBUG: Transcript result:`, {
+                    youtubeId: video.youtubeId,
+                    hasTranscript: !!transcript,
+                    transcriptLength: transcript?.length || 0
+                });
 
+                console.log(`DEBUG: Calling gemini.checkVideoRelevance...`);
                 const relevanceCheck = await this.gemini.checkVideoRelevance(
                     video.title, 
                     learningPoint, 
                     mainTopic, 
                     transcript
                 );
+                console.log(`DEBUG: Relevance check result:`, {
+                    youtubeId: video.youtubeId,
+                    title: video.title,
+                    relevanceCheck
+                });
 
                 if (relevanceCheck.relevant) {
                     // Apply confidence-based scoring (higher boost for transcript-based analysis)
@@ -237,9 +290,20 @@ export class LearningPipeline {
 
                     const transcriptNote = transcript ? " (with transcript)" : " (title only)";
                     log(`RELEVANT VIDEO: "${video.title}" (Confidence: ${relevanceCheck.confidence || 'N/A'})${transcriptNote} - ${relevanceCheck.reason}`);
+                    console.log(`DEBUG: Added relevant video:`, {
+                        youtubeId: video.youtubeId,
+                        title: video.title,
+                        educationalScore: video.educationalScore,
+                        relevanceConfidence: video.relevanceConfidence
+                    });
                 } else {
                     const transcriptNote = transcript ? " (analyzed transcript)" : " (title only)";
                     log(`FILTERED OUT: "${video.title}"${transcriptNote} - ${relevanceCheck.reason}`);
+                    console.log(`DEBUG: Filtered out video:`, {
+                        youtubeId: video.youtubeId,
+                        title: video.title,
+                        reason: relevanceCheck.reason
+                    });
                 }
 
                 // Stop when we have enough HIGH-CONFIDENCE relevant videos
@@ -256,23 +320,51 @@ export class LearningPipeline {
                 relevantVideos.splice(4); // Keep only top 4 most relevant
             }
 
-            log(`Relevant videos after filtering: ${relevantVideos.length}`);
+            console.log("DEBUG: Final relevant videos:", {
+                count: relevantVideos.length,
+                videos: relevantVideos.map(v => ({
+                    youtubeId: v.youtubeId,
+                    title: v.title,
+                    educationalScore: v.educationalScore,
+                    relevanceConfidence: v.relevanceConfidence
+                }))
+            });
 
             // If no relevant videos found, fall back to original top videos with warning
             if (relevantVideos.length === 0) {
+                console.warn("DEBUG: No relevant videos found, using top search results as fallback");
                 log("WARNING: No relevant videos found, using top search results as fallback");
                 currentVideoChoices = uniqueVideos.slice(0, 3);
+                console.log("DEBUG: Fallback video choices:", {
+                    count: currentVideoChoices.length,
+                    videos: currentVideoChoices.map(v => ({
+                        youtubeId: v.youtubeId,
+                        title: v.title,
+                        educationalScore: v.educationalScore
+                    }))
+                });
             } else {
                 relevantVideos.sort((a, b) => b.educationalScore - a.educationalScore);
                 currentVideoChoices = relevantVideos;
+                console.log("DEBUG: Final video choices (sorted):", {
+                    count: currentVideoChoices.length,
+                    videos: currentVideoChoices.map(v => ({
+                        youtubeId: v.youtubeId,
+                        title: v.title,
+                        educationalScore: v.educationalScore,
+                        relevanceConfidence: v.relevanceConfidence
+                    }))
+                });
             }
 
             if (currentVideoChoices.length === 0) {
+                console.error("DEBUG: No video choices available, creating fallback content");
                 await this.createFallbackContent(learningPoint);
                 return;
             }
 
             log(`FLOW: Found ${currentVideoChoices.length} relevant videos for "${learningPoint}"`);
+            console.log("DEBUG: Proceeding to autoSelectBestVideo with choices:", currentVideoChoices.length);
             this.autoSelectBestVideo(learningPoint);
         } catch (error) {
             logError('Video search failed:', error);
@@ -282,24 +374,55 @@ export class LearningPipeline {
 
     async autoSelectBestVideo(learningPoint) {
         log("FLOW: Step 4 - Auto-selecting best video with final validation");
+        console.log("DEBUG: autoSelectBestVideo called with:", {
+            learningPoint,
+            currentVideoChoicesCount: currentVideoChoices?.length || 0,
+            currentVideoChoices: currentVideoChoices?.map(v => ({
+                youtubeId: v.youtubeId,
+                title: v.title
+            }))
+        });
+        
         updateStatus('choosing_video');
+
+        if (!currentVideoChoices || currentVideoChoices.length === 0) {
+            console.error("DEBUG: No video choices available in autoSelectBestVideo");
+            await this.createFallbackContent(learningPoint);
+            return;
+        }
 
         // Get the top candidate
         let bestVideo = currentVideoChoices[0];
+        console.log("DEBUG: Initial best video candidate:", {
+            youtubeId: bestVideo.youtubeId,
+            title: bestVideo.title,
+            educationalScore: bestVideo.educationalScore
+        });
 
         // Double-check the selected video with an even stricter prompt
+        console.log("DEBUG: Performing final relevance check...");
         const finalCheck = await this.gemini.checkVideoRelevance(bestVideo.title, learningPoint, currentLessonPlan.topic);
+        console.log("DEBUG: Final relevance check result:", finalCheck);
 
         // If the best video fails the final check, try the next one
         if (!finalCheck.relevant && currentVideoChoices.length > 1) {
             log(`FINAL CHECK: Best video "${bestVideo.title}" failed final relevance check. Trying next option.`);
+            console.log("DEBUG: First video failed final check, trying second option");
             bestVideo = currentVideoChoices[1];
             const secondCheck = await this.gemini.checkVideoRelevance(bestVideo.title, learningPoint, currentLessonPlan.topic);
+            console.log("DEBUG: Second video relevance check:", secondCheck);
             if (!secondCheck.relevant && currentVideoChoices.length > 2) {
                 bestVideo = currentVideoChoices[2];
+                console.log("DEBUG: Second video also failed, trying third option:", bestVideo.title);
                 log(`FINAL CHECK: Trying third option: "${bestVideo.title}"`);
             }
         }
+
+        console.log("DEBUG: Final selected video:", {
+            youtubeId: bestVideo.youtubeId,
+            title: bestVideo.title,
+            educationalScore: bestVideo.educationalScore
+        });
 
         log(`FLOW: Final selected video: ${bestVideo.title} (ID: ${bestVideo.youtubeId})`);
         displayStatusMessage('✅ Video selected!', `"${bestVideo.title}"`);
@@ -326,27 +449,53 @@ export class LearningPipeline {
 
     async generateSegments(video) {
         log("FLOW: Step 7 - Generate segments");
+        console.log("DEBUG: generateSegments called with video:", {
+            youtubeId: video.youtubeId,
+            title: video.title,
+            hasTranscript: !!video.transcript,
+            transcriptLength: video.transcript?.length || 0
+        });
+        
         updateStatus('generating_segments');
         displayStatusMessage('✂️ Finding best segments...', `Analyzing: "${video.title}"`);
         try {
             const learningPoint = currentLessonPlan[currentLearningPath][currentSegmentIndex];
             const youtubeUrl = `https://www.youtube.com/watch?v=${video.youtubeId}`;
 
+            console.log("DEBUG: Segment generation context:", {
+                learningPoint,
+                youtubeUrl,
+                currentLearningPath,
+                currentSegmentIndex
+            });
+
             // Use transcript if available from relevance checking
             const transcript = video.transcript || null;
             const transcriptNote = transcript ? " (with transcript data)" : " (title-based)";
             displayStatusMessage('✂️ Finding best segments...', `Analyzing: "${video.title}"${transcriptNote}`);
 
+            console.log("DEBUG: Calling gemini.findVideoSegments...");
             currentSegments = await this.gemini.findVideoSegments(video.title, youtubeUrl, learningPoint, transcript);
+            console.log("DEBUG: findVideoSegments result:", {
+                segments: currentSegments,
+                segmentCount: currentSegments?.length || 0
+            });
+            
             if (!currentSegments || currentSegments.length === 0) {
+                console.warn("DEBUG: No segments generated, using default segment");
                 currentSegments = [{ startTime: 30, endTime: 180, reason: "Default educational segment" }];
             }
             log(`Generated ${currentSegments.length} segments:`, currentSegments);
+            console.log("DEBUG: Final segments to play:", currentSegments);
+            
             currentSegmentPlayIndex = 0;
+            console.log("DEBUG: Proceeding to playSegments...");
             this.playSegments(video);
         } catch (error) {
+            console.error("DEBUG: Error in generateSegments:", error);
             logError('Failed to generate segments:', error);
             currentSegments = [{ startTime: 30, endTime: 180, reason: "Fallback segment due to error" }];
+            console.log("DEBUG: Using fallback segments due to error:", currentSegments);
             this.playSegments(video);
         }
     }
