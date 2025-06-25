@@ -24,6 +24,12 @@ export const getSmartCrop = async (
   originalWidth: number, 
   originalHeight: number
 ): Promise<SmartCropResult> => {
+  // Validate inputs first
+  if (!imageUrl || !originalWidth || !originalHeight || originalWidth <= 0 || originalHeight <= 0) {
+    console.warn("Invalid smart crop inputs, using center crop");
+    return getCenterCrop(Math.max(originalWidth, 800), Math.max(originalHeight, 600));
+  }
+
   if (!GOOGLE_VISION_API_KEY) {
     console.warn("Google Vision API key not configured, using center crop");
     return getCenterCrop(originalWidth, originalHeight);
@@ -32,12 +38,41 @@ export const getSmartCrop = async (
   try {
     console.log(`🔍 Smart crop analysis for: ${context}`);
     
-    // Fetch image and convert to base64
-    const imageResponse = await fetch(imageUrl);
+    // Add timeout and better error handling for image fetch
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+    const imageResponse = await fetch(imageUrl, { 
+      signal: controller.signal,
+      headers: {
+        'Accept': 'image/*'
+      }
+    });
+    clearTimeout(timeoutId);
+    
+    if (!imageResponse.ok) {
+      throw new Error(`Image fetch failed: ${imageResponse.status}`);
+    }
+    
     const imageBlob = await imageResponse.blob();
+    
+    // Validate blob
+    if (!imageBlob || imageBlob.size === 0) {
+      throw new Error("Empty or invalid image blob");
+    }
+    
     const imageBase64 = await blobToBase64(imageBlob);
 
-    // Call Google Vision API
+    // Validate base64 data
+    const base64Data = imageBase64.split(',')[1];
+    if (!base64Data) {
+      throw new Error("Invalid base64 image data");
+    }
+
+    // Call Google Vision API with timeout
+    const visionController = new AbortController();
+    const visionTimeoutId = setTimeout(() => visionController.abort(), 15000); // 15 second timeout
+    
     const visionResponse = await fetch(
       `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_VISION_API_KEY}`,
       {
@@ -45,11 +80,12 @@ export const getSmartCrop = async (
         headers: {
           'Content-Type': 'application/json',
         },
+        signal: visionController.signal,
         body: JSON.stringify({
           requests: [
             {
               image: {
-                content: imageBase64.split(',')[1] // Remove data:image/jpeg;base64, prefix
+                content: base64Data
               },
               features: [
                 { type: 'OBJECT_LOCALIZATION', maxResults: 20 },
@@ -61,13 +97,26 @@ export const getSmartCrop = async (
         })
       }
     );
+    clearTimeout(visionTimeoutId);
 
     if (!visionResponse.ok) {
-      throw new Error(`Vision API error: ${visionResponse.status}`);
+      const errorText = await visionResponse.text();
+      throw new Error(`Vision API error: ${visionResponse.status} - ${errorText}`);
     }
 
     const visionData = await visionResponse.json();
+    
+    // Validate response structure
+    if (!visionData.responses || !visionData.responses[0]) {
+      throw new Error("Invalid Vision API response structure");
+    }
+    
     const annotations = visionData.responses[0];
+    
+    // Check for errors in the response
+    if (annotations.error) {
+      throw new Error(`Vision API returned error: ${annotations.error.message}`);
+    }
 
     // Analyze detected objects and faces
     const faces = annotations.faceAnnotations || [];
@@ -99,7 +148,10 @@ export const getSmartCrop = async (
 
   } catch (error) {
     console.error("Smart crop analysis failed:", error);
-    return getCenterCrop(originalWidth, originalHeight);
+    // Return a safe fallback crop
+    const safeWidth = Math.max(originalWidth || 800, 400);
+    const safeHeight = Math.max(originalHeight || 600, 300);
+    return getCenterCrop(safeWidth, safeHeight);
   }
 };
 
@@ -143,18 +195,34 @@ function calculateOptimalCrop(
  * Create crop area focusing on detected faces
  */
 function cropAroundFaces(faces: any[], width: number, height: number, aspectRatio: number): CropArea {
+  // Validate inputs
+  if (!faces || faces.length === 0 || !width || !height || width <= 0 || height <= 0) {
+    return getCenterCrop(width || 800, height || 600).bestCrop;
+  }
+
   // Find bounding box that includes all faces
   let minX = width, minY = height, maxX = 0, maxY = 0;
 
   faces.forEach(face => {
+    if (!face.boundingPoly || !face.boundingPoly.vertices) {
+      return; // Skip invalid face data
+    }
+    
     const vertices = face.boundingPoly.vertices;
     vertices.forEach(vertex => {
-      minX = Math.min(minX, vertex.x || 0);
-      minY = Math.min(minY, vertex.y || 0);
-      maxX = Math.max(maxX, vertex.x || 0);
-      maxY = Math.max(maxY, vertex.y || 0);
+      if (vertex && typeof vertex.x === 'number' && typeof vertex.y === 'number') {
+        minX = Math.min(minX, vertex.x);
+        minY = Math.min(minY, vertex.y);
+        maxX = Math.max(maxX, vertex.x);
+        maxY = Math.max(maxY, vertex.y);
+      }
     });
   });
+
+  // If no valid vertices found, return center crop
+  if (minX >= maxX || minY >= maxY) {
+    return getCenterCrop(width, height).bestCrop;
+  }
 
   console.log(`📍 Face bounding box: (${minX}, ${minY}) to (${maxX}, ${maxY})`);
 

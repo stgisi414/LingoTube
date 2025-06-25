@@ -178,14 +178,14 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
 
   const handleNextSegment = useCallback(async () => {
     if (currentSegmentIdx >= allLessonParts.length - 1) return;
-    
+
     // Start smooth transition only if we're not on the first segment
     const nextIdx = currentSegmentIdx + 1;
     const isFirstSegment = currentSegmentIdx === 0;
-    
+
     // IMMEDIATELY clear any generated illustrations by forcing re-render key
     const illustrationClearKey = Date.now();
-    
+
     if (!isFirstSegment) {
       setTransitionState({
         isTransitioning: true,
@@ -200,7 +200,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
 
       // Phase 1: Fade out current content
       await new Promise(resolve => setTimeout(resolve, 200));
-      
+
       // Phase 2: Show loading state
       setTransitionState(prev => ({ ...prev, phase: 'loading' }));
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -209,16 +209,27 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
       stopSpeech();
       setSpeakingSegmentId(null);
     }
-    
+
     // Phase 3: Update content
     setCompletedSegments(prev => new Set(prev).add(currentSegment.id));
-    setCurrentSegmentIdx(nextIdx);
+    setCurrentSegmentIdx(prev => {
+      const newIndex = prev + 1;
+      // Force re-render by clearing any cached image state
+      setTimeout(() => {
+        const imageElements = document.querySelectorAll('img[src*="fal.run"], img[src*="images"]');
+        imageElements.forEach(img => {
+          (img as HTMLImageElement).style.display = 'none';
+          (img as HTMLImageElement).src = '';
+        });
+      }, 0);
+      return newIndex;
+    });
     setCurrentVideoTimeSegmentIndex(0);
-    
+
     if (!isFirstSegment) {
       setTransitionState(prev => ({ ...prev, phase: 'fadeIn' }));
       await new Promise(resolve => setTimeout(resolve, 200));
-      
+
       // Phase 4: Complete transition
       setTransitionState({
         isTransitioning: false,
@@ -231,13 +242,13 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
 
   const handlePrevSegment = useCallback(async () => {
     if (currentSegmentIdx <= 0) return;
-    
+
     // Start smooth transition
     const prevIdx = currentSegmentIdx - 1;
-    
+
     // IMMEDIATELY clear any generated illustrations by forcing re-render key
     const illustrationClearKey = Date.now();
-    
+
     setTransitionState({
       isTransitioning: true,
       fromSegment: currentSegmentIdx,
@@ -251,18 +262,29 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
 
     // Phase 1: Fade out current content
     await new Promise(resolve => setTimeout(resolve, 200));
-    
+
     // Phase 2: Show loading state
     setTransitionState(prev => ({ ...prev, phase: 'loading' }));
     await new Promise(resolve => setTimeout(resolve, 300));
-    
+
     // Phase 3: Update content and fade in
-    setCurrentSegmentIdx(prevIdx);
+    setCurrentSegmentIdx(prev => {
+      const newIndex = prev - 1;
+      // Force re-render by clearing any cached image state
+      setTimeout(() => {
+        const imageElements = document.querySelectorAll('img[src*="fal.run"], img[src*="images"]');
+        imageElements.forEach(img => {
+          (img as HTMLImageElement).style.display = 'none';
+          (img as HTMLImageElement).src = '';
+        });
+      }, 0);
+      return newIndex;
+    });
     setCurrentVideoTimeSegmentIndex(0);
-    
+
     setTransitionState(prev => ({ ...prev, phase: 'fadeIn' }));
     await new Promise(resolve => setTimeout(resolve, 200));
-    
+
     // Phase 4: Complete transition
     setTransitionState({
       isTransitioning: false,
