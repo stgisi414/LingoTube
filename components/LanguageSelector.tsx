@@ -6,6 +6,17 @@ interface LanguageSelectorProps {
   className?: string;
 }
 
+const languageFlags: Record<SupportedLanguage, string> = {
+  en: '🇺🇸',
+  ko: '🇰🇷',
+  zh: '🇨🇳',
+  ja: '🇯🇵',
+  es: '🇪🇸',
+  it: '🇮🇹',
+  de: '🇩🇪',
+  fr: '🇫🇷'
+};
+
 export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = '' }) => {
   const { currentLanguage, setLanguage, availableLanguages, getLanguageName } = useTranslation();
 
@@ -21,11 +32,11 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = 
       <select
         value={currentLanguage}
         onChange={handleLanguageChange}
-        className="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className="px-4 py-2 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-black font-semibold rounded-lg border-2 border-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-200 shadow-lg hover:from-yellow-300 hover:via-yellow-400 hover:to-yellow-500 transition-all duration-200 cursor-pointer"
       >
         {availableLanguages.map((lang) => (
-          <option key={lang} value={lang}>
-            {getLanguageName(lang)}
+          <option key={lang} value={lang} className="bg-white text-black">
+            {languageFlags[lang]} {getLanguageName(lang)}
           </option>
         ))}
       </select>
