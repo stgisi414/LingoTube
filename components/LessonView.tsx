@@ -183,6 +183,9 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
     const nextIdx = currentSegmentIdx + 1;
     const isFirstSegment = currentSegmentIdx === 0;
     
+    // IMMEDIATELY clear any generated illustrations by forcing re-render key
+    const illustrationClearKey = Date.now();
+    
     if (!isFirstSegment) {
       setTransitionState({
         isTransitioning: true,
@@ -231,6 +234,9 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
     
     // Start smooth transition
     const prevIdx = currentSegmentIdx - 1;
+    
+    // IMMEDIATELY clear any generated illustrations by forcing re-render key
+    const illustrationClearKey = Date.now();
     
     setTransitionState({
       isTransitioning: true,
@@ -411,7 +417,12 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
               <div className="space-y-4 min-h-fit">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 text-lg leading-relaxed text-slate-200 min-h-fit">
-                    <ParsedText text={(currentSegment as NarrationSegment).text} lessonTopic={lessonPlan.topic} generateIllustration={true} />
+                    <ParsedText 
+                      key={`${currentSegment.id}-${currentSegmentIdx}-${transitionState.isTransitioning ? 'transitioning' : 'stable'}`}
+                      text={(currentSegment as NarrationSegment).text} 
+                      lessonTopic={lessonPlan.topic} 
+                      generateIllustration={!transitionState.isTransitioning} 
+                    />
                   </div>
                   <button
                     onClick={() => handleToggleSpeech(currentSegment.id, (currentSegment as NarrationSegment).text)}
