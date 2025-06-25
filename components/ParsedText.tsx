@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { SpeakerPlayIcon, SpeakerStopIcon } from '../constants';
-import { searchImages } from '../services/imageSearchService';
+import { generateImage } from '../services/falAiService';
 
 export interface ParsedSegment {
   type: 'plain' | 'lang';
@@ -74,24 +74,26 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
   const [isLoadingImage, setIsLoadingImage] = useState(false);
 
   useEffect(() => {
-    const searchForIllustration = async () => {
-      if (text.length > 20) { // Only search for longer text segments
+    const generateIllustration = async () => {
+      if (text.length > 20) { // Only generate for longer text segments
         setIsLoadingImage(true);
         try {
-          const searchQuery = text.slice(0, 100); // Use first 100 chars as search query
-          const images = await searchImages(searchQuery);
-          if (images.length > 0) {
-            setIllustrationImage(images[0].link);
+          // Create a clean prompt from the text for image generation
+          const cleanText = text.replace(/<lang:[^>]*>|<\/lang:[^>]*>/g, '').replace(/\([^)]*\)/g, '').trim();
+          const imagePrompt = cleanText.slice(0, 150); // Use first 150 chars as prompt
+          const imageUrl = await generateImage(imagePrompt);
+          if (imageUrl) {
+            setIllustrationImage(imageUrl);
           }
         } catch (error) {
-          console.error('Failed to search for illustration:', error);
+          console.error('Failed to generate illustration:', error);
         } finally {
           setIsLoadingImage(false);
         }
       }
     };
 
-    searchForIllustration();
+    generateIllustration();
   }, [text]);
 
   const parsedSegments = parseLangText(text);
@@ -155,7 +157,7 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
           )}
           {isLoadingImage && (
             <div className="mb-3 w-full h-48 bg-slate-700 rounded-lg border border-slate-600 flex items-center justify-center">
-              <span className="text-slate-400 text-sm">Loading illustration...</span>
+              <span className="text-slate-400 text-sm">Generating illustration...</span>
             </div>
           )}
           <div className="text-slate-200 leading-relaxed">
