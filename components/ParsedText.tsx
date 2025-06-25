@@ -173,9 +173,32 @@ const ParsedText: React.FC<ParsedTextProps> = ({
           {generateIllustration && illustrationImage && (
             <div className="mb-3">
               <img
-                src={illustrationImage}
+                src={illustrationImage.split('#')[0]} // Remove crop hash if present
                 alt="Illustration for narration"
                 className="w-full h-48 object-cover rounded-lg border border-slate-600"
+                style={{
+                  // Apply smart crop positioning if available
+                  ...(illustrationImage.includes('#crop=') && (() => {
+                    const cropParams = new URLSearchParams(illustrationImage.split('#crop=')[1]);
+                    const x = parseInt(cropParams.get('x') || '0');
+                    const y = parseInt(cropParams.get('y') || '0');
+                    const w = parseInt(cropParams.get('w') || '800');
+                    const h = parseInt(cropParams.get('h') || '600');
+                    
+                    // Calculate object-position based on crop center
+                    const centerX = x + w / 2;
+                    const centerY = y + h / 2;
+                    
+                    // Convert to percentage for object-position
+                    // Assuming typical image dimensions, adjust as needed
+                    const posX = Math.max(0, Math.min(100, (centerX / 800) * 100));
+                    const posY = Math.max(0, Math.min(100, (centerY / 600) * 100));
+                    
+                    return {
+                      objectPosition: `${posX}% ${posY}%`
+                    };
+                  })() || {})
+                }}
                 onError={(e) => {
                   const container = e.currentTarget.parentElement;
                   if (container) {

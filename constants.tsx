@@ -103,7 +103,6 @@ export const SpeakerStopIcon: React.ReactNode = (
 export const GEMINI_MODEL_NAME = "gemini-2.0-flash";
 
 export const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-export const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 export const YOUTUBE_DATA_API_KEY = import.meta.env.VITE_YOUTUBE_DATA_API_KEY;
 export const GOOGLE_TTS_API_KEY = import.meta.env.VITE_GOOGLE_TTS_API_KEY;
 export const YOUTUBE_CUSTOM_SEARCH_CX = import.meta.env.VITE_GOOGLE_CUSTOM_SEARCH_CX;
