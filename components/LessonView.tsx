@@ -179,42 +179,51 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
   const handleNextSegment = useCallback(async () => {
     if (currentSegmentIdx >= allLessonParts.length - 1) return;
     
-    // Start smooth transition
+    // Start smooth transition only if we're not on the first segment
     const nextIdx = currentSegmentIdx + 1;
+    const isFirstSegment = currentSegmentIdx === 0;
     
-    setTransitionState({
-      isTransitioning: true,
-      fromSegment: currentSegmentIdx,
-      toSegment: nextIdx,
-      phase: 'fadeOut'
-    });
+    if (!isFirstSegment) {
+      setTransitionState({
+        isTransitioning: true,
+        fromSegment: currentSegmentIdx,
+        toSegment: nextIdx,
+        phase: 'fadeOut'
+      });
 
-    // Stop any current speech
-    stopSpeech();
-    setSpeakingSegmentId(null);
+      // Stop any current speech
+      stopSpeech();
+      setSpeakingSegmentId(null);
 
-    // Phase 1: Fade out current content
-    await new Promise(resolve => setTimeout(resolve, 200));
+      // Phase 1: Fade out current content
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Phase 2: Show loading state
+      setTransitionState(prev => ({ ...prev, phase: 'loading' }));
+      await new Promise(resolve => setTimeout(resolve, 300));
+    } else {
+      // For first segment, just stop speech without transition
+      stopSpeech();
+      setSpeakingSegmentId(null);
+    }
     
-    // Phase 2: Show loading state
-    setTransitionState(prev => ({ ...prev, phase: 'loading' }));
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Phase 3: Update content and fade in
+    // Phase 3: Update content
     setCompletedSegments(prev => new Set(prev).add(currentSegment.id));
     setCurrentSegmentIdx(nextIdx);
     setCurrentVideoTimeSegmentIndex(0);
     
-    setTransitionState(prev => ({ ...prev, phase: 'fadeIn' }));
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    // Phase 4: Complete transition
-    setTransitionState({
-      isTransitioning: false,
-      fromSegment: -1,
-      toSegment: -1,
-      phase: 'complete'
-    });
+    if (!isFirstSegment) {
+      setTransitionState(prev => ({ ...prev, phase: 'fadeIn' }));
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Phase 4: Complete transition
+      setTransitionState({
+        isTransitioning: false,
+        fromSegment: -1,
+        toSegment: -1,
+        phase: 'complete'
+      });
+    }
   }, [currentSegmentIdx, allLessonParts.length, currentSegment.id]);
 
   const handlePrevSegment = useCallback(async () => {
@@ -366,8 +375,8 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
             </div>
           </div>
 
-          {/* Transition Overlay */}
-          {transitionState.isTransitioning && (
+          {/* Transition Overlay - Only show during actual transitions, not initial render */}
+          {transitionState.isTransitioning && currentSegmentIdx > 0 && (
             <div className={`absolute inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ${
               transitionState.phase === 'fadeOut' ? 'bg-slate-900/80 opacity-100' :
               transitionState.phase === 'loading' ? 'bg-slate-900/90 opacity-100' :
@@ -396,7 +405,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
 
           {/* Segment Content */}
           <div className={`p-6 transition-opacity duration-300 ${
-            transitionState.isTransitioning && transitionState.phase !== 'fadeIn' ? 'opacity-30' : 'opacity-100'
+            transitionState.isTransitioning && transitionState.phase !== 'fadeIn' && currentSegmentIdx > 0 ? 'opacity-30' : 'opacity-100'
           }`}>
             {currentSegment.type === SegmentType.NARRATION ? (
               <div className="space-y-4 min-h-fit">
