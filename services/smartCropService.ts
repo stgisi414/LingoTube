@@ -470,18 +470,32 @@ function calculateConfidence(faces: any[], objects: any[], labels: any[]): numbe
 }
 
 /**
- * Fallback center crop
+ * Fallback center crop with improved aspect ratio handling
  */
 function getCenterCrop(width: number, height: number): SmartCropResult {
   const aspectRatio = 16 / 9;
   let cropWidth = width;
   let cropHeight = height;
 
+  // Calculate dimensions for 16:9 aspect ratio
   if (width / height > aspectRatio) {
+    // Image is too wide, crop horizontally
     cropWidth = height * aspectRatio;
   } else {
+    // Image is too tall, crop vertically
     cropHeight = width / aspectRatio;
   }
+
+  // Ensure minimum dimensions for readability
+  const minWidth = Math.min(width, 400);
+  const minHeight = Math.min(height, 225); // 400 * 9/16
+  
+  cropWidth = Math.max(cropWidth, minWidth);
+  cropHeight = Math.max(cropHeight, minHeight);
+  
+  // Recalculate if we exceeded bounds
+  if (cropWidth > width) cropWidth = width;
+  if (cropHeight > height) cropHeight = height;
 
   return {
     bestCrop: {
@@ -490,7 +504,7 @@ function getCenterCrop(width: number, height: number): SmartCropResult {
       width: Math.round(cropWidth),
       height: Math.round(cropHeight)
     },
-    confidence: 0.5,
+    confidence: 0.6,
     detectedObjects: [],
     faces: 0
   };
@@ -515,7 +529,7 @@ export const applySmartCrop = (imageUrl: string, cropArea: CropArea): string => 
   });
 
   // For now, return original URL with crop parameters for reference
-  return `${imageUrl}#crop=${cropParams.toString()}`;
+  return `${imageUrl}#crop=${cropParams.toString()}`oString()}`;
 };
 
 /**
