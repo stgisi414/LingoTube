@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { InputControls } from './components/InputControls';
 import { LessonView } from './components/LessonView';
-import { LoadingIndicator } from './components/LoadingIndicator';
+import LoadingIndicator from './components/LoadingIndicator';
 import { generateLessonPlan as callGeminiLessonPlan } from './services/geminiService';
 import { LessonPlan, AppStatus } from './types'; // Import AppStatus from types.ts
 import { AlertTriangle } from './constants';
