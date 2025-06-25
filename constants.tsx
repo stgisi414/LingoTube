@@ -102,7 +102,7 @@ export const SpeakerStopIcon: React.ReactNode = (
 
 export const GEMINI_MODEL_NAME = "gemini-2.0-flash";
 
-export const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+export const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 export const YOUTUBE_DATA_API_KEY = import.meta.env.VITE_YOUTUBE_DATA_API_KEY;
 export const GOOGLE_TTS_API_KEY = import.meta.env.VITE_GOOGLE_TTS_API_KEY;
 export const YOUTUBE_CUSTOM_SEARCH_CX = import.meta.env.VITE_GOOGLE_CUSTOM_SEARCH_CX;
@@ -114,7 +114,7 @@ export const GOOGLE_VISION_API_KEY = import.meta.env.VITE_GOOGLE_VISION_API_KEY;
 
 // Debug environment variables on load
 console.log("DEBUG: Environment Variables Check:", {
-  hasGeminiKey: !!API_KEY,
+  hasGeminiKey: !!GEMINI_API_KEY,
   hasYouTubeKey: !!YOUTUBE_DATA_API_KEY,
   hasGoogleTTSKey: !!GOOGLE_TTS_API_KEY,
   hasCustomSearchCX: !!YOUTUBE_CUSTOM_SEARCH_CX,

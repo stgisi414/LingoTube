@@ -2,8 +2,8 @@
 import { GoogleGenAI } from '@google/genai';
 import { GEMINI_MODEL_NAME } from '../constants';
 
-const API_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY;
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.API_KEY;
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY! });
 
 export interface QuizQuestion {
   question: string;

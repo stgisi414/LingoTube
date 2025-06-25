@@ -1,5 +1,5 @@
 
-import { API_KEY } from '../constants';
+import { GEMINI_API_KEY } from '../constants';
 
 export interface GeminiCropResult {
   bestCrop: {
@@ -18,7 +18,7 @@ export const getGeminiSmartCrop = async (
   originalWidth: number,
   originalHeight: number
 ): Promise<GeminiCropResult> => {
-  if (!API_KEY) {
+  if (!GEMINI_API_KEY) {
     console.warn("Gemini API key not configured, using center crop");
     return getCenterCrop(originalWidth, originalHeight);
   }
@@ -57,7 +57,7 @@ Please respond with ONLY a JSON object in this exact format:
 The coordinates should be in pixels from the top-left corner (0,0).`;
 
     const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: {
