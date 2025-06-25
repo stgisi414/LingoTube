@@ -264,7 +264,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
 
       {/* Current Segment Content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
+        <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden min-h-fit">
 
           {/* Segment Header */}
           <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 p-6 border-b border-slate-700">
@@ -295,14 +295,14 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
           {/* Segment Content */}
           <div className="p-6">
             {currentSegment.type === SegmentType.NARRATION ? (
-              <div className="space-y-4">
+              <div className="space-y-4 min-h-fit">
                 <div className="flex items-start justify-between">
-                  <div className="flex-1 text-lg leading-relaxed text-slate-200">
+                  <div className="flex-1 text-lg leading-relaxed text-slate-200 min-h-fit">
                     <ParsedText text={(currentSegment as NarrationSegment).text} />
                   </div>
                   <button
                     onClick={() => handleToggleSpeech(currentSegment.id, (currentSegment as NarrationSegment).text)}
-                    className={`ml-4 p-3 rounded-full transition-colors ${
+                    className={`ml-4 p-3 rounded-full transition-colors flex-shrink-0 ${
                       isCurrentlySpeaking ? 'text-red-400 hover:bg-red-500/20' : 'text-purple-400 hover:bg-purple-500/20'
                     }`}
                     aria-label={isCurrentlySpeaking ? "Stop narration" : "Play narration"}

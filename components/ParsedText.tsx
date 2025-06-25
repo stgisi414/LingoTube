@@ -125,8 +125,8 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
   };
 
   return (
-    <div className="mb-4 p-4 bg-slate-800 rounded-lg border border-slate-700">
-      <div className="flex items-start space-x-3">
+    <div className="mb-4 p-4 bg-slate-800 rounded-lg border border-slate-700 min-h-fit">
+      <div className="flex items-start space-x-3 min-h-fit">
         {onPlayAudio && (
           <button
             onClick={() => isPlaying ? onStopAudio?.() : onPlayAudio(text)}
