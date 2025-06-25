@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { InputControls } from './components/InputControls';
 import { LessonView } from './components/LessonView';
 import LoadingIndicator from './components/LoadingIndicator';
+import { LanguageSelector } from './components/LanguageSelector';
 import { generateLessonPlan as callGeminiLessonPlan } from './services/geminiService';
 import { LessonPlan, AppStatus } from './types'; // Import AppStatus from types.ts
 import { AlertTriangle } from './constants';
@@ -59,11 +60,16 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-yellow-900 text-gray-100 flex flex-col items-center p-4 selection:bg-yellow-500 selection:text-black">
       <header className="w-full max-w-4xl text-center my-8">
-        <div className="flex items-center justify-center mb-4">
-          <img src="/logo.png" alt="AILingo.Tube" className="w-16 h-16 mr-4 rounded-full border-4 border-yellow-400 animate-pulse shadow-lg shadow-yellow-400/30" />
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 via-yellow-500 to-amber-300">
-            AILingo.Tube
-          </h1>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-center flex-1">
+            <img src="/logo.png" alt="AILingo.Tube" className="w-16 h-16 mr-4 rounded-full border-4 border-yellow-400 animate-pulse shadow-lg shadow-yellow-400/30" />
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 via-yellow-500 to-amber-300">
+              AILingo.Tube
+            </h1>
+          </div>
+          <div className="flex-shrink-0">
+            <LanguageSelector />
+          </div>
         </div>
         <p className="mt-4 text-lg text-gray-300">
           Craft dynamic educational journeys with AI-powered narration, illustrations, and curated video segments.
