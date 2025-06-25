@@ -527,12 +527,12 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
                           <select
                             value={blankValues[blankId] || ''}
                             onChange={(e) => updateBlankValue(blankId, e.target.value)}
-                            className="bg-yellow-600 text-white px-2 py-1 rounded border-none focus:ring-2 focus:ring-yellow-400 min-w-[120px]"
+                            className="bg-yellow-600 text-white px-2 py-1 rounded border-none focus:ring-2 focus:ring-yellow-400 min-w-[120px] max-w-[200px] truncate"
                             disabled={isProcessing || isRecording}
                           >
                             <option value="">{blank.placeholder}</option>
                             {blank.options.map(option => (
-                              <option key={option} value={option}>{option}</option>
+                              <option key={option} value={option} className="truncate">{option}</option>
                             ))}
                           </select>
                         ) : (
@@ -541,7 +541,7 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
                             value={blankValues[blankId] || ''}
                             onChange={(e) => updateBlankValue(blankId, e.target.value)}
                             placeholder={blank.placeholder}
-                            className="bg-yellow-600 text-white px-2 py-1 rounded border-none focus:ring-2 focus:ring-yellow-400 min-w-[120px]"
+                            className="bg-yellow-600 text-white px-2 py-1 rounded border-none focus:ring-2 focus:ring-yellow-400 min-w-[120px] max-w-[200px]"
                             disabled={isProcessing || isRecording}
                           />
                         )}
