@@ -254,7 +254,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
             </div>
             <div className="w-full bg-slate-700 rounded-full h-2">
               <div 
-                className="bg-gradient-to-r from-zinc-500 to-pink-500 h-2 rounded-full transition-all duration-500 ease-out"
+                className="bg-gradient-to-r from-zinc-500 to-amber-500 h-2 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -267,7 +267,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
         <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden min-h-fit">
 
           {/* Segment Header */}
-          <div className="bg-gradient-to-r from-zinc-900/50 to-pink-900/50 p-6 border-b border-slate-700">
+          <div className="bg-gradient-to-r from-zinc-900/50 to-amber-900/50 p-6 border-b border-slate-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="text-zinc-400 text-2xl">

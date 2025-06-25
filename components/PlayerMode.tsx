@@ -197,7 +197,7 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
         <div className="mb-6">
           <div className="w-full bg-slate-700 rounded-full h-3">
             <div 
-              className="bg-gradient-to-r from-zinc-500 to-pink-500 h-3 rounded-full transition-all duration-500"
+              className="bg-gradient-to-r from-zinc-500 to-amber-500 h-3 rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
