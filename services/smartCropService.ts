@@ -1,4 +1,3 @@
-
 import { GOOGLE_VISION_API_KEY } from '../constants';
 
 export interface CropArea {
@@ -37,11 +36,11 @@ export const getSmartCrop = async (
 
   try {
     console.log(`🔍 Smart crop analysis for: ${context}`);
-    
+
     // Add timeout and better error handling for image fetch
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-    
+
     const imageResponse = await fetch(imageUrl, { 
       signal: controller.signal,
       headers: {
@@ -49,18 +48,18 @@ export const getSmartCrop = async (
       }
     });
     clearTimeout(timeoutId);
-    
+
     if (!imageResponse.ok) {
       throw new Error(`Image fetch failed: ${imageResponse.status}`);
     }
-    
+
     const imageBlob = await imageResponse.blob();
-    
+
     // Validate blob
     if (!imageBlob || imageBlob.size === 0) {
       throw new Error("Empty or invalid image blob");
     }
-    
+
     const imageBase64 = await blobToBase64(imageBlob);
 
     // Validate base64 data
@@ -72,7 +71,7 @@ export const getSmartCrop = async (
     // Call Google Vision API with timeout
     const visionController = new AbortController();
     const visionTimeoutId = setTimeout(() => visionController.abort(), 15000); // 15 second timeout
-    
+
     const visionResponse = await fetch(
       `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_VISION_API_KEY}`,
       {
@@ -105,14 +104,14 @@ export const getSmartCrop = async (
     }
 
     const visionData = await visionResponse.json();
-    
+
     // Validate response structure
     if (!visionData.responses || !visionData.responses[0]) {
       throw new Error("Invalid Vision API response structure");
     }
-    
+
     const annotations = visionData.responses[0];
-    
+
     // Check for errors in the response
     if (annotations.error) {
       throw new Error(`Vision API returned error: ${annotations.error.message}`);
@@ -167,7 +166,7 @@ function calculateOptimalCrop(
   height: number
 ): CropArea {
   const targetAspectRatio = 16 / 9; // Landscape aspect ratio
-  
+
   // Priority 1: If faces detected, focus on faces
   if (faces.length > 0) {
     return cropAroundFaces(faces, width, height, targetAspectRatio);
@@ -207,7 +206,7 @@ function cropAroundFaces(faces: any[], width: number, height: number, aspectRati
     if (!face.boundingPoly || !face.boundingPoly.vertices) {
       return; // Skip invalid face data
     }
-    
+
     const vertices = face.boundingPoly.vertices;
     vertices.forEach(vertex => {
       if (vertex && typeof vertex.x === 'number' && typeof vertex.y === 'number') {
@@ -229,11 +228,11 @@ function cropAroundFaces(faces: any[], width: number, height: number, aspectRati
   // For multiple faces, be more generous with padding to ensure all faces are visible
   const isMultipleFaces = faces.length > 1;
   const basePadding = Math.min(width, height) * 0.15;
-  
+
   // Extra generous padding for multiple faces and head space
   const paddingX = basePadding * (isMultipleFaces ? 1.5 : 1.2);
   const paddingY = basePadding * (isMultipleFaces ? 1.8 : 1.5); // More padding above for hair/head
-  
+
   // Apply padding with special attention to not cropping heads
   minX = Math.max(0, minX - paddingX);
   minY = Math.max(0, minY - paddingY * 1.2); // Extra space above faces
@@ -258,7 +257,7 @@ function cropAroundFaces(faces: any[], width: number, height: number, aspectRati
     // Prefer expanding upward and downward, but prioritize upward for head space
     const upwardExpansion = heightDiff * 0.6;
     const downwardExpansion = heightDiff * 0.4;
-    
+
     minY = Math.max(0, minY - upwardExpansion);
     maxY = Math.min(height, maxY + downwardExpansion);
   }
@@ -344,7 +343,7 @@ function adjustToAspectRatio(
     // Prefer expanding downward to keep faces/heads visible
     y = Math.max(0, y - heightDiff * 0.3);
     h = Math.min(maxHeight - y, newHeight);
-    
+
     // If we hit the bottom, adjust upward
     if (y + h > maxHeight) {
       h = maxHeight - y;
@@ -357,7 +356,7 @@ function adjustToAspectRatio(
     const widthDiff = newWidth - w;
     x = Math.max(0, x - widthDiff / 2);
     w = Math.min(maxWidth - x, newWidth);
-    
+
     // If we hit the right edge, adjust leftward
     if (x + w > maxWidth) {
       w = maxWidth - x;
@@ -402,15 +401,15 @@ function adjustToAspectRatioForFaces(
     // Too wide, need to make taller
     const newHeight = w / targetRatio;
     const heightDiff = newHeight - h;
-    
+
     // Ensure we don't crop above the topmost face
     const maxUpwardExpansion = Math.max(0, y - Math.max(0, topmostFaceY - 50)); // 50px buffer above faces
     const upwardExpansion = Math.min(heightDiff * 0.7, maxUpwardExpansion);
     const downwardExpansion = heightDiff - upwardExpansion;
-    
+
     y = Math.max(0, y - upwardExpansion);
     h = Math.min(maxHeight - y, newHeight);
-    
+
     // If we hit constraints, adjust width instead
     if (y + h > maxHeight) {
       h = maxHeight - y;
@@ -427,13 +426,13 @@ function adjustToAspectRatioForFaces(
     const widthDiff = newWidth - w;
     x = Math.max(0, x - widthDiff / 2);
     w = Math.min(maxWidth - x, newWidth);
-    
+
     // If we hit the right edge, adjust height while preserving face visibility
     if (x + w > maxWidth) {
       w = maxWidth - x;
       const newHeight = w / targetRatio;
       const heightReduction = h - newHeight;
-      
+
       // Reduce from bottom first to preserve face area
       h = newHeight;
       // Only adjust y if absolutely necessary and we won't crop faces
@@ -489,10 +488,10 @@ function getCenterCrop(width: number, height: number): SmartCropResult {
   // Ensure minimum dimensions for readability
   const minWidth = Math.min(width, 400);
   const minHeight = Math.min(height, 225); // 400 * 9/16
-  
+
   cropWidth = Math.max(cropWidth, minWidth);
   cropHeight = Math.max(cropHeight, minHeight);
-  
+
   // Recalculate if we exceeded bounds
   if (cropWidth > width) cropWidth = width;
   if (cropHeight > height) cropHeight = height;
@@ -517,10 +516,10 @@ export const applySmartCrop = (imageUrl: string, cropArea: CropArea): string => 
   // For demonstration, we'll return the original URL
   // In a real implementation, you'd use an image processing service
   // or client-side canvas to apply the crop
-  
+
   // You could use services like Cloudinary, ImageKit, or implement
   // server-side image processing to apply the crop coordinates
-  
+
   const cropParams = new URLSearchParams({
     x: cropArea.x.toString(),
     y: cropArea.y.toString(),
@@ -530,6 +529,7 @@ export const applySmartCrop = (imageUrl: string, cropArea: CropArea): string => 
 
   // For now, return original URL with crop parameters for reference
   return `${imageUrl}#crop=${cropParams.toString()}`;
+};
 
 function decodeBase64Image(base64Data: string): Blob {
     // Function to convert base64 to Blob
@@ -543,7 +543,6 @@ function decodeBase64Image(base64Data: string): Blob {
 
     return new Blob([arrayBuffer]);
 }
-};
 
 /*
  * Convert blob to base64
