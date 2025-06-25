@@ -16,6 +16,7 @@ interface ParsedTextProps {
   onStopAudio?: () => void;
   isPlaying?: boolean;
   lessonTopic?: string;
+  generateIllustration?: boolean;
 }
 
 /**
@@ -70,13 +71,13 @@ export const parseLangText = (inputText: string): ParsedSegment[] => {
   return segments;
 };
 
-const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio, isPlaying = false, lessonTopic }) => {
+const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio, isPlaying = false, lessonTopic, generateIllustration = false }) => {
   const [illustrationImage, setIllustrationImage] = useState<string | null>(null);
   const [isLoadingImage, setIsLoadingImage] = useState(false);
 
   useEffect(() => {
     const generateIllustration = async () => {
-      if (text.length > 20) { // Only generate for longer text segments
+      if (text.length > 20 && generateIllustration) { // Only generate for longer text segments and if generateIllustration is true
         setIsLoadingImage(true);
         try {
           // Create a clean prompt from the text for image generation
@@ -91,11 +92,13 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
         } finally {
           setIsLoadingImage(false);
         }
+      } else {
+        setIllustrationImage(null); // Clear the image if generateIllustration is false
       }
     };
 
     generateIllustration();
-  }, [text, lessonTopic]);
+  }, [text, lessonTopic, generateIllustration]);
 
   const parsedSegments = parseLangText(text);
 
@@ -144,7 +147,7 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
           </button>
         )}
         <div className="flex-1">
-          {illustrationImage && (
+          {generateIllustration && (illustrationImage || isLoadingImage) && (
             <div className="mb-3">
               <img 
                 src={illustrationImage} 
