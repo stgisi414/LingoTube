@@ -739,7 +739,7 @@ export class LearningPipeline {
 
         ui.youtubePlayerContainer.innerHTML = `
             <div class="p-8 text-white h-full flex flex-col justify-center items-center" style="background: linear-gradient(135deg, #16213e 0%, #0f172a 100%);">
-                <h2 class="text-4xl font-bold mb-4 text-purple-300">Congratulations!</h2>
+                <h2 class="text-4xl font-bold mb-4 text-zinc-300">Congratulations!</h2>
                 <p class="text-xl mb-8">You've completed the ${currentLearningPath} level for "${topic}".</p>
                 <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-8 border border-white/20 max-w-2xl w-full text-left">
                      <h3 class="text-2xl font-semibold mb-4 text-blue-300">Key Takeaways</h3>

@@ -5,7 +5,7 @@ h1 {
 
 /* Luxury Gold/Black/Silver theme */
 body {
-  background: black;
+  background: black !important;
   color: #f5f5f5;
 }
 

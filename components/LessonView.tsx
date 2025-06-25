@@ -234,7 +234,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
         <div className="max-w-4xl mx-auto px-4">
           <div className="relative mb-4">
             <div className="w-full">
-              <h1 className="text-2xl font-bold text-purple-300 truncate w-full" title={lessonPlan.topic}>
+              <h1 className="text-2xl font-bold text-zinc-300 truncate w-full" title={lessonPlan.topic}>
                 <ParsedText text={lessonPlan.topic} generateIllustration={false} />
               </h1>
             </div>
@@ -254,7 +254,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
             </div>
             <div className="w-full bg-slate-700 rounded-full h-2">
               <div 
-                className="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-500 ease-out"
+                className="bg-gradient-to-r from-zinc-500 to-pink-500 h-2 rounded-full transition-all duration-500 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -267,10 +267,10 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
         <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden min-h-fit">
 
           {/* Segment Header */}
-          <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 p-6 border-b border-slate-700">
+          <div className="bg-gradient-to-r from-zinc-900/50 to-pink-900/50 p-6 border-b border-slate-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="text-purple-400 text-2xl">
+                <div className="text-zinc-400 text-2xl">
                   {currentSegment.type === SegmentType.NARRATION ? BookOpenIcon : FilmIcon}
                 </div>
                 <div>
@@ -303,7 +303,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                   <button
                     onClick={() => handleToggleSpeech(currentSegment.id, (currentSegment as NarrationSegment).text)}
                     className={`ml-4 p-3 rounded-full transition-colors flex-shrink-0 ${
-                      isCurrentlySpeaking ? 'text-red-400 hover:bg-red-500/20' : 'text-purple-400 hover:bg-zinc-500/20'
+                      isCurrentlySpeaking ? 'text-red-400 hover:bg-red-500/20' : 'text-zinc-400 hover:bg-zinc-500/20'
                     }`}
                     aria-label={isCurrentlySpeaking ? "Stop narration" : "Play narration"}
                   >
@@ -330,7 +330,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                       height={videoPlayerHeight}
                     />
                     <div className="bg-slate-700/50 rounded-lg p-4">
-                      <div className="text-sm text-purple-300 font-semibold mb-1">
+                      <div className="text-sm text-zinc-300 font-semibold mb-1">
                         Playing Segment {currentVideoTimeSegmentIndex + 1} of {videoFetchInfo.timeSegments.length}
                       </div>
                       <div className="text-slate-400 italic">

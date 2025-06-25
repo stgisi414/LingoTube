@@ -175,7 +175,7 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-purple-300">{lessonPlan.topic}</h2>
+          <h2 className="text-2xl font-bold text-zinc-300">{lessonPlan.topic}</h2>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <span className="text-sm text-slate-400">Auto Mode:</span>
@@ -197,7 +197,7 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
         <div className="mb-6">
           <div className="w-full bg-slate-700 rounded-full h-3">
             <div 
-              className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full transition-all duration-500"
+              className="bg-gradient-to-r from-zinc-500 to-pink-500 h-3 rounded-full transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -211,7 +211,7 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
           {/* Video/Narration Area */}
           <div className="lg:col-span-3">
             {showingFinalSummary ? (
-              <div className="bg-gradient-to-br from-green-800 to-purple-800 rounded-lg p-8 text-center">
+              <div className="bg-gradient-to-br from-green-800 to-zinc-800 rounded-lg p-8 text-center">
                 <div className="text-6xl mb-4">🎉</div>
                 <h3 className="text-3xl mb-4 text-green-300">Lesson Complete!</h3>
                 <p className="text-lg mb-6">
@@ -257,7 +257,7 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
               <div className="bg-slate-800 rounded-lg p-8 text-center">
                 <h3 className="text-2xl mb-6">Choose Your Learning Experience</h3>
                 <div className="grid md:grid-cols-2 gap-6 mb-6">
-                  <div className="bg-slate-700/50 p-6 rounded-lg border-2 border-purple-500/30">
+                  <div className="bg-slate-700/50 p-6 rounded-lg border-2 border-zinc-500/30">
                     <div className="text-4xl mb-3">🤖</div>
                     <h4 className="text-xl font-semibold mb-3">Autonomous Mode</h4>
                     <p className="text-sm text-slate-400 mb-4">
@@ -304,13 +304,13 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
               <div className="bg-slate-800 rounded-lg p-6">
                 <div className="flex items-center mb-4">
                   {isPlaying ? (
-                    <div className="animate-pulse text-purple-400">
+                    <div className="animate-pulse text-zinc-400">
                       {StopCircleIcon}
                     </div>
                   ) : completedSegments.has(currentSegmentIndex) ? (
                     <div className="text-green-400">{CheckCircleIcon}</div>
                   ) : (
-                    <button onClick={() => playNarration(currentSegment?.text || '')} className="text-purple-400 hover:text-purple-300">
+                    <button onClick={() => playNarration(currentSegment?.text || '')} className="text-zinc-400 hover:text-zinc-300">
                       {PlayIcon}
                     </button>
                   )}
@@ -409,7 +409,7 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
                       src={image.thumbnail}
                       alt={image.title}
                       className={`w-full h-20 object-cover rounded cursor-pointer transition-opacity ${
-                        index === currentImageIndex ? 'ring-2 ring-purple-500' : 'opacity-70 hover:opacity-100'
+                        index === currentImageIndex ? 'ring-2 ring-zinc-500' : 'opacity-70 hover:opacity-100'
                       }`}
                       onClick={() => setCurrentImageIndex(index)}
                       onError={(e) => {

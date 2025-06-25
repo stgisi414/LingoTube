@@ -166,7 +166,7 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
           {isLoadingImage && generateIllustration && (
             <div className="mb-3 w-full h-48 bg-slate-700/50 rounded-lg border border-slate-600 flex items-center justify-center">
               <div className="flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-purple-400"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-zinc-400"></div>
                 <span className="text-slate-400 text-sm">Generating illustration...</span>
               </div>
             </div>
