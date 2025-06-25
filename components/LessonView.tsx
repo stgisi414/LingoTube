@@ -437,8 +437,8 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
           }`}>
             {currentSegment.type === SegmentType.NARRATION ? (
               <div className="space-y-4 min-h-fit">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 text-lg leading-relaxed text-slate-200 min-h-fit">
+                <div className="relative">
+                  <div className="text-lg leading-relaxed text-slate-200 min-h-fit pr-14 sm:pr-16">
                     <ParsedText 
                       key={`${currentSegment.id}-${currentSegmentIdx}-${transitionState.isTransitioning ? 'transitioning' : 'stable'}`}
                       text={(currentSegment as NarrationSegment).text} 
@@ -448,12 +448,14 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                   </div>
                   <button
                     onClick={() => handleToggleSpeech(currentSegment.id, (currentSegment as NarrationSegment).text)}
-                    className={`ml-4 p-3 rounded-full transition-colors flex-shrink-0 ${
+                    className={`absolute top-0 right-0 p-2 sm:p-3 rounded-full transition-colors flex-shrink-0 ${
                       isCurrentlySpeaking ? 'text-red-400 hover:bg-red-500/20' : 'text-zinc-400 hover:bg-zinc-500/20'
                     }`}
                     aria-label={isCurrentlySpeaking ? "Stop narration" : "Play narration"}
                   >
-                    {isCurrentlySpeaking ? SpeakerStopIcon : SpeakerPlayIcon}
+                    <div className="w-5 h-5 sm:w-6 sm:h-6">
+                      {isCurrentlySpeaking ? SpeakerStopIcon : SpeakerPlayIcon}
+                    </div>
                   </button>
                 </div>
               </div>
