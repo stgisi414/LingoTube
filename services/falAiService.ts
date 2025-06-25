@@ -14,7 +14,7 @@ export const generateImage = async (prompt: string): Promise<string | null> => {
     const response = await fetch("https://fal.run/fal-ai/flux-pro/v1.1", {
       method: "POST",
       headers: {
-        "Authorization": `Key ${import.meta.env.VITE_FAL_AI_API_KEY}`,
+        "Authorization": `Key ${import.meta.env.VITE_FAL_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

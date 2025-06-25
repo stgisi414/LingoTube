@@ -110,7 +110,7 @@ export const YOUTUBE_CUSTOM_SEARCH_CX = import.meta.env.VITE_GOOGLE_CUSTOM_SEARC
 export const GOOGLE_CUSTOM_SEARCH_API_KEY = import.meta.env.VITE_GOOGLE_CUSTOM_SEARCH_API_KEY;
 export const SUPADATA_API_KEY = import.meta.env.VITE_SUPADATA_API_KEY;
 export const IMAGE_CUSTOM_SEARCH_CX = import.meta.env.VITE_IMAGE_CUSTOM_SEARCH_CX;
-export const FAL_AI_API_KEY = import.meta.env.VITE_FAL_AI_API_KEY;
+export const FAL_API_KEY = import.meta.env.VITE_FAL_API_KEY;
 
 // Debug environment variables on load
 console.log("DEBUG: Environment Variables Check:", {

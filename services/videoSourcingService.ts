@@ -200,7 +200,7 @@ export const getVideoTranscript = async (youtubeId: string): Promise<string | nu
 
     try {
         const startTime = performance.now();
-        const apiUrl = `https://api.supadata.ai/v1/youtube/video?id=${youtubeId}`;
+        const apiUrl = `https://api.supadata.ai/v1/youtube/transcript?url=https://www.youtube.com/watch?v=${youtubeId}`;
         console.log(`📜 TRANSCRIPT: Making request to: ${apiUrl}`);
         
         const response = await fetch(apiUrl, {
