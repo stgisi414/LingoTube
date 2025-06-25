@@ -1,5 +1,5 @@
 import { FAL_API_KEY } from '../constants';
-import { getSmartCrop, applySmartCrop, SmartCropResult } from './smartCropService';
+import { getGeminiSmartCrop, GeminiCropResult } from './geminiCropService';
 
 interface FalImageResult {
   images: Array<{
@@ -13,7 +13,7 @@ interface EnhancedImageResult {
   url: string;
   width: number;
   height: number;
-  smartCrop?: SmartCropResult;
+  smartCrop?: GeminiCropResult;
   croppedUrl?: string;
 }
 
@@ -55,9 +55,9 @@ export const generateIllustration = async (prompt: string, topic?: string): Prom
       const enhancedResults = await Promise.all(
         result.images.map(async (img): Promise<EnhancedImageResult> => {
           try {
-            // Get smart crop analysis
-            const smartCrop = await getSmartCrop(img.url, topic || prompt, img.width, img.height);
-            const croppedUrl = applySmartCrop(img.url, smartCrop.bestCrop);
+            // Get Gemini smart crop analysis
+            const smartCrop = await getGeminiSmartCrop(img.url, topic || prompt, img.width, img.height);
+            const croppedUrl = `${img.url}#crop=x:${smartCrop.bestCrop.x},y:${smartCrop.bestCrop.y},w:${smartCrop.bestCrop.width},h:${smartCrop.bestCrop.height}`;
 
             return {
               url: img.url,
@@ -67,7 +67,7 @@ export const generateIllustration = async (prompt: string, topic?: string): Prom
               croppedUrl
             };
           } catch (error) {
-            console.warn("Smart crop analysis failed for image:", error);
+            console.warn("Gemini crop analysis failed for image:", error);
             return {
               url: img.url,
               width: img.width,
@@ -77,7 +77,7 @@ export const generateIllustration = async (prompt: string, topic?: string): Prom
         })
       );
 
-      console.log(`🎯 Smart crop analysis completed for ${enhancedResults.length} images`);
+      console.log(`🤖 Gemini crop analysis completed for ${enhancedResults.length} images`);
       return enhancedResults;
     }
 
