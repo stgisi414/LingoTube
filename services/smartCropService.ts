@@ -156,21 +156,28 @@ function cropAroundFaces(faces: any[], width: number, height: number, aspectRati
     });
   });
 
-  // Add generous padding around faces to ensure they're visible
-  const paddingX = Math.min(width, height) * 0.2;
-  const paddingY = Math.min(width, height) * 0.25; // Extra padding above for head/hair
+  console.log(`📍 Face bounding box: (${minX}, ${minY}) to (${maxX}, ${maxY})`);
+
+  // For multiple faces, be more generous with padding to ensure all faces are visible
+  const isMultipleFaces = faces.length > 1;
+  const basePadding = Math.min(width, height) * 0.15;
   
+  // Extra generous padding for multiple faces and head space
+  const paddingX = basePadding * (isMultipleFaces ? 1.5 : 1.2);
+  const paddingY = basePadding * (isMultipleFaces ? 1.8 : 1.5); // More padding above for hair/head
+  
+  // Apply padding with special attention to not cropping heads
   minX = Math.max(0, minX - paddingX);
-  minY = Math.max(0, minY - paddingY);
+  minY = Math.max(0, minY - paddingY * 1.2); // Extra space above faces
   maxX = Math.min(width, maxX + paddingX);
-  maxY = Math.min(height, maxY + paddingY);
+  maxY = Math.min(height, maxY + paddingY * 0.8); // Less space below faces
 
   const faceWidth = maxX - minX;
   const faceHeight = maxY - minY;
 
-  // Ensure minimum crop size to show full upper body/context
-  const minCropWidth = width * 0.4;
-  const minCropHeight = height * 0.4;
+  // For business/professional context, ensure we show upper torso
+  const minCropWidth = width * (isMultipleFaces ? 0.6 : 0.5);
+  const minCropHeight = height * (isMultipleFaces ? 0.6 : 0.5);
 
   if (faceWidth < minCropWidth) {
     const widthDiff = minCropWidth - faceWidth;
@@ -180,12 +187,18 @@ function cropAroundFaces(faces: any[], width: number, height: number, aspectRati
 
   if (faceHeight < minCropHeight) {
     const heightDiff = minCropHeight - faceHeight;
-    minY = Math.max(0, minY - heightDiff / 2);
-    maxY = Math.min(height, maxY + heightDiff / 2);
+    // Prefer expanding upward and downward, but prioritize upward for head space
+    const upwardExpansion = heightDiff * 0.6;
+    const downwardExpansion = heightDiff * 0.4;
+    
+    minY = Math.max(0, minY - upwardExpansion);
+    maxY = Math.min(height, maxY + downwardExpansion);
   }
 
+  console.log(`📏 Final face crop area before aspect ratio adjustment: (${minX}, ${minY}) ${maxX - minX}x${maxY - minY}`);
+
   // Adjust to target aspect ratio while preserving faces
-  return adjustToAspectRatio(minX, minY, maxX - minX, maxY - minY, width, height, aspectRatio);
+  return adjustToAspectRatioForFaces(minX, minY, maxX - minX, maxY - minY, width, height, aspectRatio, faces);
 }
 
 /**
@@ -284,6 +297,88 @@ function adjustToAspectRatio(
       y = Math.max(0, y - (h - (maxHeight - y)) / 2);
     }
   }
+
+  return {
+    x: Math.round(x),
+    y: Math.round(y),
+    width: Math.round(w),
+    height: Math.round(h)
+  };
+}
+
+/**
+ * Face-aware aspect ratio adjustment that prioritizes keeping faces visible
+ */
+function adjustToAspectRatioForFaces(
+  x: number, 
+  y: number, 
+  w: number, 
+  h: number, 
+  maxWidth: number, 
+  maxHeight: number, 
+  targetRatio: number,
+  faces: any[]
+): CropArea {
+  const currentRatio = w / h;
+
+  // Find the topmost face position to ensure we don't crop heads
+  let topmostFaceY = maxHeight;
+  faces.forEach(face => {
+    const vertices = face.boundingPoly.vertices;
+    vertices.forEach(vertex => {
+      topmostFaceY = Math.min(topmostFaceY, vertex.y || maxHeight);
+    });
+  });
+
+  if (currentRatio > targetRatio) {
+    // Too wide, need to make taller
+    const newHeight = w / targetRatio;
+    const heightDiff = newHeight - h;
+    
+    // Ensure we don't crop above the topmost face
+    const maxUpwardExpansion = Math.max(0, y - Math.max(0, topmostFaceY - 50)); // 50px buffer above faces
+    const upwardExpansion = Math.min(heightDiff * 0.7, maxUpwardExpansion);
+    const downwardExpansion = heightDiff - upwardExpansion;
+    
+    y = Math.max(0, y - upwardExpansion);
+    h = Math.min(maxHeight - y, newHeight);
+    
+    // If we hit constraints, adjust width instead
+    if (y + h > maxHeight) {
+      h = maxHeight - y;
+      w = h * targetRatio;
+      const widthDiff = w - (maxWidth - x);
+      if (widthDiff > 0) {
+        x = Math.max(0, x - widthDiff / 2);
+        w = Math.min(maxWidth - x, w);
+      }
+    }
+  } else {
+    // Too tall, need to make wider
+    const newWidth = h * targetRatio;
+    const widthDiff = newWidth - w;
+    x = Math.max(0, x - widthDiff / 2);
+    w = Math.min(maxWidth - x, newWidth);
+    
+    // If we hit the right edge, adjust height while preserving face visibility
+    if (x + w > maxWidth) {
+      w = maxWidth - x;
+      const newHeight = w / targetRatio;
+      const heightReduction = h - newHeight;
+      
+      // Reduce from bottom first to preserve face area
+      h = newHeight;
+      // Only adjust y if absolutely necessary and we won't crop faces
+      if (y + h > maxHeight) {
+        const yAdjustment = (y + h) - maxHeight;
+        if (y - yAdjustment >= Math.max(0, topmostFaceY - 100)) {
+          y = y - yAdjustment;
+        }
+      }
+    }
+  }
+
+  console.log(`🎯 Face-aware crop result: (${Math.round(x)}, ${Math.round(y)}) ${Math.round(w)}x${Math.round(h)}`);
 
   return {
     x: Math.round(x),
