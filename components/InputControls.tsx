@@ -63,7 +63,7 @@ const SENTENCE_TEMPLATES: SentenceTemplate[] = [
         ]
       }
     ],
-```"example": "I want to learn the basics about quantum physics"
+"example": "I want to learn the basics about quantum physics"
   },
   {
     id: 'review-for',
