@@ -124,6 +124,185 @@ const SENTENCE_TEMPLATES: SentenceTemplate[] = [
     example: 'I want to review calculus for my exam'
   },
   {
+    id: 'learn-language',
+    template: 'I want to learn {skill} in {language} {focus}',
+    blanks: [
+      {
+        id: 'skill',
+        placeholder: 'language skill',
+        options: [
+          'basic conversation', 'pronunciation', 'grammar fundamentals', 'vocabulary building', 'listening comprehension',
+          'reading comprehension', 'writing skills', 'speaking fluency', 'business communication', 'academic writing',
+          'idioms and expressions', 'slang and colloquialisms', 'formal speech', 'informal conversation', 'phone etiquette',
+          'email writing', 'essay writing', 'storytelling', 'debate skills', 'presentation skills', 'interview skills',
+          'cultural context', 'regional dialects', 'accent reduction', 'phonetics', 'intonation patterns',
+          'sentence structure', 'verb conjugations', 'noun declensions', 'adjective agreement', 'prepositions',
+          'articles and determiners', 'question formation', 'negation', 'conditional statements', 'subjunctive mood',
+          'passive voice', 'reported speech', 'relative clauses', 'phrasal verbs', 'modal verbs',
+          'tenses and aspects', 'word order', 'punctuation rules', 'capitalization', 'spelling patterns'
+        ]
+      },
+      {
+        id: 'language',
+        placeholder: 'target language',
+        options: [
+          'Spanish', 'French', 'German', 'Italian', 'Portuguese', 'Russian', 'Chinese (Mandarin)', 'Japanese', 'Korean',
+          'Arabic', 'Hindi', 'Dutch', 'Swedish', 'Norwegian', 'Danish', 'Finnish', 'Polish', 'Czech', 'Hungarian',
+          'Greek', 'Turkish', 'Hebrew', 'Thai', 'Vietnamese', 'Indonesian', 'Malay', 'Tagalog', 'Swahili',
+          'Afrikaans', 'Zulu', 'Ukrainian', 'Romanian', 'Bulgarian', 'Croatian', 'Serbian', 'Slovak', 'Slovenian',
+          'Estonian', 'Latvian', 'Lithuanian', 'Georgian', 'Armenian', 'Persian (Farsi)', 'Urdu', 'Bengali',
+          'Tamil', 'Telugu', 'Marathi', 'Gujarati', 'Punjabi', 'Nepali', 'Sinhala', 'Burmese', 'Khmer', 'Lao'
+        ]
+      },
+      {
+        id: 'focus',
+        placeholder: 'learning focus',
+        options: [
+          'for beginners', 'for intermediate learners', 'for advanced speakers', 'for business purposes', 'for travel',
+          'for academic study', 'for professional certification', 'for cultural understanding', 'for literature appreciation',
+          'for media consumption', 'for social interaction', 'for job interviews', 'for dating and relationships',
+          'for medical situations', 'for legal contexts', 'for technical fields', 'for children', 'for teenagers',
+          'for adults', 'for seniors', 'through immersion', 'through music and songs', 'through movies and TV',
+          'through news and current events', 'through poetry and literature', 'through cooking and recipes',
+          'through sports commentary', 'through gaming', 'through social media', 'through podcasts',
+          'with native speaker examples', 'with cultural context', 'with historical background', 'step by step',
+          'intensively', 'at a relaxed pace', 'with practical exercises', 'with real-world scenarios'
+        ]
+      }
+    ],
+    example: 'I want to learn basic conversation in Spanish for travel'
+  },
+  {
+    id: 'improve-language-skill',
+    template: 'I want to improve my {specific_skill} in {language} {method}',
+    blanks: [
+      {
+        id: 'specific_skill',
+        placeholder: 'specific skill',
+        options: [
+          'pronunciation', 'accent', 'listening skills', 'speaking fluency', 'reading speed', 'writing clarity',
+          'vocabulary range', 'grammar accuracy', 'comprehension', 'translation skills', 'interpretation skills',
+          'formal register', 'informal communication', 'technical terminology', 'academic language', 'business language',
+          'conversational flow', 'cultural awareness', 'idiom usage', 'metaphor understanding', 'humor appreciation',
+          'debate skills', 'presentation abilities', 'storytelling', 'description skills', 'explanation skills',
+          'argumentation', 'persuasion techniques', 'negotiation language', 'diplomatic communication', 'small talk',
+          'phone conversations', 'email writing', 'text messaging', 'social media posts', 'formal letters',
+          'essay writing', 'creative writing', 'note-taking', 'summarizing', 'paraphrasing'
+        ]
+      },
+      {
+        id: 'language',
+        placeholder: 'language',
+        options: [
+          'English', 'Spanish', 'French', 'German', 'Italian', 'Portuguese', 'Russian', 'Chinese', 'Japanese', 'Korean',
+          'Arabic', 'Hindi', 'Dutch', 'Swedish', 'Norwegian', 'Danish', 'Finnish', 'Polish', 'Czech', 'Hungarian',
+          'Greek', 'Turkish', 'Hebrew', 'Thai', 'Vietnamese', 'Indonesian', 'Tagalog', 'Swahili', 'Ukrainian'
+        ]
+      },
+      {
+        id: 'method',
+        placeholder: 'learning method',
+        options: [
+          'through interactive exercises', 'through native speaker examples', 'through media immersion', 'through structured lessons',
+          'through conversation practice', 'through pronunciation drills', 'through listening exercises', 'through reading practice',
+          'through writing exercises', 'through grammar analysis', 'through vocabulary building', 'through cultural study',
+          'through error correction', 'through shadowing techniques', 'through repetition and drilling', 'through storytelling',
+          'through role-playing', 'through debates and discussions', 'through music and songs', 'through movies and TV shows',
+          'through news articles', 'through podcasts', 'through audiobooks', 'through language exchange', 'through tutoring',
+          'through self-study', 'through group classes', 'through online courses', 'through mobile apps', 'through flashcards',
+          'using the direct method', 'using the communicative approach', 'using the natural approach', 'using total physical response'
+        ]
+      }
+    ],
+    example: 'I want to improve my pronunciation in French through native speaker examples'
+  },
+  {
+    id: 'language-culture',
+    template: 'I want to understand {cultural_aspect} of {language_culture} {context}',
+    blanks: [
+      {
+        id: 'cultural_aspect',
+        placeholder: 'cultural aspect',
+        options: [
+          'social customs', 'business etiquette', 'dining traditions', 'holiday celebrations', 'family structures',
+          'educational systems', 'workplace culture', 'communication styles', 'non-verbal communication', 'personal space norms',
+          'time concepts', 'relationship dynamics', 'social hierarchies', 'religious practices', 'historical context',
+          'political systems', 'economic structures', 'art and literature', 'music and dance', 'sports culture',
+          'fashion and style', 'food culture', 'drinking customs', 'entertainment preferences', 'humor and jokes',
+          'taboos and sensitive topics', 'gift-giving customs', 'greeting rituals', 'farewell traditions', 'hospitality norms',
+          'gender roles', 'age respect', 'authority relationships', 'conflict resolution', 'decision-making processes',
+          'urban vs rural differences', 'generational gaps', 'class distinctions', 'regional variations', 'cultural values'
+        ]
+      },
+      {
+        id: 'language_culture',
+        placeholder: 'culture/country',
+        options: [
+          'Spanish-speaking countries', 'France', 'Germany', 'Italy', 'Portugal', 'Brazil', 'Russia', 'China', 'Japan', 'Korea',
+          'Arab countries', 'India', 'Netherlands', 'Sweden', 'Norway', 'Denmark', 'Finland', 'Poland', 'Czech Republic',
+          'Hungary', 'Greece', 'Turkey', 'Israel', 'Thailand', 'Vietnam', 'Indonesia', 'Philippines', 'Kenya', 'South Africa',
+          'Ukraine', 'Romania', 'Bulgaria', 'Croatia', 'Serbia', 'Mexico', 'Argentina', 'Colombia', 'Peru', 'Chile',
+          'Quebec (Canada)', 'Belgium', 'Switzerland', 'Austria', 'Morocco', 'Egypt', 'Lebanon', 'Singapore', 'Malaysia'
+        ]
+      },
+      {
+        id: 'context',
+        placeholder: 'context',
+        options: [
+          'for better communication', 'for business interactions', 'for travel preparation', 'for academic study',
+          'for cultural appreciation', 'for avoiding misunderstandings', 'for deeper relationships', 'for professional success',
+          'for social integration', 'for personal growth', 'for historical understanding', 'for current events comprehension',
+          'for media interpretation', 'for literature appreciation', 'for art understanding', 'for religious tolerance',
+          'for political awareness', 'for economic insight', 'for educational purposes', 'for immigration preparation',
+          'for expatriate life', 'for international relations', 'for diplomacy', 'for journalism', 'for anthropological study',
+          'for linguistic research', 'for translation work', 'for interpretation services', 'for cultural consulting',
+          'for teaching purposes', 'for cross-cultural training', 'for diversity awareness', 'for inclusion efforts'
+        ]
+      }
+    ],
+    example: 'I want to understand business etiquette of Japan for professional success'
+  },
+  {
+    id: 'language-exam-prep',
+    template: 'I want to prepare for {exam} in {language} {focus_area}',
+    blanks: [
+      {
+        id: 'exam',
+        placeholder: 'language exam',
+        options: [
+          'TOEFL', 'IELTS', 'TOEIC', 'Cambridge English (FCE, CAE, CPE)', 'DELE (Spanish)', 'DELF/DALF (French)',
+          'TestDaF (German)', 'DSH (German)', 'Goethe Institute exams', 'CILS (Italian)', 'CELI (Italian)', 'CAPLE (Portuguese)',
+          'TORFL (Russian)', 'HSK (Chinese)', 'JLPT (Japanese)', 'TOPIK (Korean)', 'ACTFL OPI', 'TEF (French)',
+          'TCF (French)', 'SIELE (Spanish)', 'CCIP (Portuguese)', 'CELPE-Bras (Portuguese)', 'BULATS', 'TELC',
+          'ÖSD (German)', 'CEFR assessment', 'university entrance exams', 'immigration language tests',
+          'professional certification exams', 'teacher qualification exams', 'interpreter certification', 'translator certification'
+        ]
+      },
+      {
+        id: 'language',
+        placeholder: 'language',
+        options: [
+          'English', 'Spanish', 'French', 'German', 'Italian', 'Portuguese', 'Russian', 'Chinese', 'Japanese', 'Korean',
+          'Arabic', 'Dutch', 'Swedish', 'Norwegian', 'Danish', 'Finnish', 'Polish', 'Czech', 'Hungarian', 'Greek', 'Turkish'
+        ]
+      },
+      {
+        id: 'focus_area',
+        placeholder: 'focus area',
+        options: [
+          'focusing on speaking skills', 'focusing on listening comprehension', 'focusing on reading comprehension', 'focusing on writing skills',
+          'focusing on grammar accuracy', 'focusing on vocabulary expansion', 'focusing on test strategies', 'focusing on time management',
+          'focusing on all skills equally', 'focusing on weak areas', 'focusing on high-frequency topics', 'focusing on academic language',
+          'focusing on formal register', 'focusing on essay writing', 'focusing on oral presentation', 'focusing on interview skills',
+          'with practice tests', 'with exam simulation', 'with score improvement', 'with confidence building',
+          'with stress management', 'with cultural awareness', 'with pronunciation improvement', 'with fluency development',
+          'with accuracy enhancement', 'with speed building', 'with comprehension strategies', 'with critical thinking'
+        ]
+      }
+    ],
+    example: 'I want to prepare for IELTS in English focusing on writing skills'
+  },
+  {
     id: 'understand-how',
     template: 'I want to understand how {process} works {context}',
     blanks: [
