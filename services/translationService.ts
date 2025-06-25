@@ -218,7 +218,7 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
     send: "发送",
     selectTemplate: "选择模板开始",
     customPrompt: "自定义提示",
-    fillInTheBlanks: "填写空白并点击"使用模板"",
+    fillInTheBlanks: "填写空白并点击\"使用模板\"",
     useTemplate: "使用模板",
     
     // Lesson View
