@@ -391,9 +391,24 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                       "Narration"
                     }
                   </h2>
-                  <p className="text-slate-400 text-sm">
-                    {currentSegment.type === SegmentType.NARRATION ? "Listen to the narration" : "Watch the video segment"}
-                  </p>
+                  {currentSegment.type === SegmentType.NARRATION ? (
+                    <div className="flex items-center space-x-2">
+                      <p className="text-slate-400 text-sm">Listen to the narration</p>
+                      <button
+                        onClick={() => handleToggleSpeech(currentSegment.id, (currentSegment as NarrationSegment).text)}
+                        className={`p-1.5 rounded-full transition-colors flex-shrink-0 ${
+                          isCurrentlySpeaking ? 'text-red-400 hover:bg-red-500/20' : 'text-zinc-400 hover:bg-zinc-500/20'
+                        }`}
+                        aria-label={isCurrentlySpeaking ? "Stop narration" : "Play narration"}
+                      >
+                        <div className="w-4 h-4">
+                          {isCurrentlySpeaking ? SpeakerStopIcon : SpeakerPlayIcon}
+                        </div>
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-slate-400 text-sm">Watch the video segment</p>
+                  )}
                 </div>
               </div>
 
@@ -437,26 +452,13 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
           }`}>
             {currentSegment.type === SegmentType.NARRATION ? (
               <div className="space-y-4 min-h-fit">
-                <div className="relative">
-                  <div className="text-lg leading-relaxed text-slate-200 min-h-fit pr-14 sm:pr-16">
-                    <ParsedText 
-                      key={`${currentSegment.id}-${currentSegmentIdx}-${transitionState.isTransitioning ? 'transitioning' : 'stable'}`}
-                      text={(currentSegment as NarrationSegment).text} 
-                      lessonTopic={lessonPlan.topic} 
-                      generateIllustration={!transitionState.isTransitioning} 
-                    />
-                  </div>
-                  <button
-                    onClick={() => handleToggleSpeech(currentSegment.id, (currentSegment as NarrationSegment).text)}
-                    className={`absolute top-0 right-0 p-2 sm:p-3 rounded-full transition-colors flex-shrink-0 ${
-                      isCurrentlySpeaking ? 'text-red-400 hover:bg-red-500/20' : 'text-zinc-400 hover:bg-zinc-500/20'
-                    }`}
-                    aria-label={isCurrentlySpeaking ? "Stop narration" : "Play narration"}
-                  >
-                    <div className="w-5 h-5 sm:w-6 sm:h-6">
-                      {isCurrentlySpeaking ? SpeakerStopIcon : SpeakerPlayIcon}
-                    </div>
-                  </button>
+                <div className="text-lg leading-relaxed text-slate-200 min-h-fit">
+                  <ParsedText 
+                    key={`${currentSegment.id}-${currentSegmentIdx}-${transitionState.isTransitioning ? 'transitioning' : 'stable'}`}
+                    text={(currentSegment as NarrationSegment).text} 
+                    lessonTopic={lessonPlan.topic} 
+                    generateIllustration={!transitionState.isTransitioning} 
+                  />
                 </div>
               </div>
             ) : (
