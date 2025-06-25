@@ -146,7 +146,7 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
               <img 
                 src={illustrationImage} 
                 alt="Illustration for narration" 
-                className="w-full max-w-md h-48 object-cover rounded-lg border border-slate-600"
+                className="w-full h-48 object-cover rounded-lg border border-slate-600"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
@@ -154,7 +154,7 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
             </div>
           )}
           {isLoadingImage && (
-            <div className="mb-3 w-full max-w-md h-48 bg-slate-700 rounded-lg border border-slate-600 flex items-center justify-center">
+            <div className="mb-3 w-full h-48 bg-slate-700 rounded-lg border border-slate-600 flex items-center justify-center">
               <span className="text-slate-400 text-sm">Loading illustration...</span>
             </div>
           )}

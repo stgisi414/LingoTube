@@ -232,11 +232,16 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
       {/* Header with lesson info and progress */}
       <div className="sticky top-0 bg-slate-900/95 backdrop-blur-md py-4 z-10 border-b border-slate-700">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold text-purple-300 truncate" title={lessonPlan.topic}>
-              <ParsedText text={lessonPlan.topic} />
-            </h1>
-            <button onClick={onReset} className="flex items-center text-sm bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md transition-colors">
+          <div className="relative mb-4">
+            <div className="w-full">
+              <h1 className="text-2xl font-bold text-purple-300 truncate w-full" title={lessonPlan.topic}>
+                <ParsedText text={lessonPlan.topic} />
+              </h1>
+            </div>
+            <button 
+              onClick={onReset} 
+              className="absolute top-0 right-0 flex items-center text-sm bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md transition-colors z-[9999999]"
+            >
               {RefreshCwIcon} <span className="ml-2">New Lesson</span>
             </button>
           </div>
