@@ -38,11 +38,20 @@ export const getGeminiSmartCrop = async (
 
 The original image dimensions are ${originalWidth}x${originalHeight} pixels.
 
+CRITICAL: If there are any faces or people in the image, you MUST ensure the crop includes the FULL HEAD and shoulders. Never crop faces, hair, or heads. Leave generous space above any faces.
+
 I need crop coordinates that:
-1. Focus on the most important visual elements for learning
-2. Maintain a 16:9 aspect ratio (landscape)
-3. Preserve any faces or text if present
-4. Create an engaging focal point
+1. NEVER crop faces, heads, or hair - this is the most important rule
+2. Include full shoulders and upper torso if people are present
+3. Focus on the most important visual elements for learning
+4. Maintain a 16:9 aspect ratio (landscape) but prioritize face safety
+5. Preserve any text if present
+6. Leave generous padding around important subjects
+
+For faces specifically:
+- Include at least 20% padding above the top of heads
+- Include full shoulders and some torso
+- Center faces in the upper-middle of the crop area, not at the very top
 
 Please respond with ONLY a JSON object in this exact format:
 {
@@ -54,7 +63,7 @@ Please respond with ONLY a JSON object in this exact format:
   "reasoning": "brief explanation"
 }
 
-The coordinates should be in pixels from the top-left corner (0,0).`;
+The coordinates should be in pixels from the top-left corner (0,0). Remember: NEVER crop faces or heads!`;
 
     const geminiResponse = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
@@ -136,6 +145,16 @@ function sanitizeCropCoordinates(
   width = Math.max(100, Math.floor(Number(width) || maxWidth));
   height = Math.max(56, Math.floor(Number(height) || maxHeight));
 
+  // For face-safe cropping, add generous padding around detected areas
+  const paddingX = Math.min(maxWidth * 0.15, 150);
+  const paddingY = Math.min(maxHeight * 0.2, 150); // More vertical padding for heads
+  
+  // Apply safety padding
+  x = Math.max(0, x - paddingX);
+  y = Math.max(0, y - paddingY * 1.5); // Extra padding above for hair/head space
+  width = Math.min(maxWidth - x, width + paddingX * 2);
+  height = Math.min(maxHeight - y, height + paddingY * 2);
+
   // Ensure crop doesn't exceed image bounds
   if (x + width > maxWidth) {
     width = maxWidth - x;
@@ -144,27 +163,56 @@ function sanitizeCropCoordinates(
     height = maxHeight - y;
   }
 
-  // Adjust to maintain 16:9 aspect ratio
+  // For wide screens, be more conservative with cropping
+  // Adjust to maintain 16:9 aspect ratio but prioritize showing more content
   const targetRatio = 16 / 9;
   const currentRatio = width / height;
 
   if (currentRatio > targetRatio) {
-    // Too wide, reduce width
-    width = Math.floor(height * targetRatio);
+    // Too wide, increase height instead of reducing width to show more content
+    const newHeight = width / targetRatio;
+    const heightIncrease = newHeight - height;
+    
+    // Distribute height increase: 70% upward, 30% downward
+    const upwardIncrease = heightIncrease * 0.3; // Less upward to avoid cropping heads
+    const downwardIncrease = heightIncrease * 0.7;
+    
+    y = Math.max(0, y - upwardIncrease);
+    height = Math.min(maxHeight - y, newHeight);
+    
+    // If we hit the top, adjust downward
+    if (y <= 0) {
+      y = 0;
+      height = Math.min(maxHeight, newHeight);
+      if (height < newHeight) {
+        width = height * targetRatio;
+      }
+    }
   } else {
-    // Too tall, reduce height
-    height = Math.floor(width / targetRatio);
+    // Too tall, reduce height but keep it generous
+    height = Math.min(height, width / targetRatio);
   }
 
-  // Final bounds check
+  // Final bounds check with safety margins
   if (x + width > maxWidth) {
     width = maxWidth - x;
-    height = Math.floor(width / targetRatio);
+    height = Math.min(height, width / targetRatio);
   }
   if (y + height > maxHeight) {
     height = maxHeight - y;
-    width = Math.floor(height * targetRatio);
+    width = Math.min(width, height * targetRatio);
   }
+
+  // Ensure minimum viable crop size
+  const minWidth = Math.min(maxWidth, 400);
+  const minHeight = Math.min(maxHeight, 225);
+  
+  if (width < minWidth || height < minHeight) {
+    // Fall back to center crop if the calculated crop is too small
+    return getCenterCrop(maxWidth, maxHeight).bestCrop;
+  }
+
+  console.log(`🔧 Sanitized crop: x=${x}, y=${y}, w=${width}, h=${height} (original: ${maxWidth}x${maxHeight})`);
 
   return { x, y, width, height };
 }

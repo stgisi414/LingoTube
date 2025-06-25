@@ -199,7 +199,7 @@ const ParsedText: React.FC<ParsedTextProps> = ({
                       
                       console.log(`🎯 Parsed crop coordinates: x=${x}, y=${y}, w=${w}, h=${h}`);
                       
-                      // Calculate object-position based on crop area center
+                      // Calculate object-position based on crop area center with face-safe adjustments
                       const centerX = x + w / 2;
                       const centerY = y + h / 2;
                       
@@ -207,8 +207,24 @@ const ParsedText: React.FC<ParsedTextProps> = ({
                       const imageWidth = 1024;
                       const imageHeight = 768;
                       
-                      const posX = Math.max(0, Math.min(100, (centerX / imageWidth) * 100));
-                      const posY = Math.max(0, Math.min(100, (centerY / imageHeight) * 100));
+                      // For face safety, bias positioning to show more of the upper area
+                      // This helps prevent chin cropping on wider screens
+                      let posX = Math.max(0, Math.min(100, (centerX / imageWidth) * 100));
+                      let posY = Math.max(0, Math.min(100, (centerY / imageHeight) * 100));
+                      
+                      // Apply responsive adjustments based on container width
+                      const containerWidth = window.innerWidth;
+                      if (containerWidth > 900) {
+                        // On wider screens, show more of the top to prevent face cropping
+                        posY = Math.max(15, posY - 10); // Move up but not too much
+                        console.log(`📱 Wide screen adjustment: moved Y from ${posY + 10}% to ${posY}%`);
+                      }
+                      
+                      // Extra safety: if Y position suggests faces might be cut, adjust upward
+                      if (posY > 60) {
+                        posY = Math.max(25, posY - 15);
+                        console.log(`👤 Face safety adjustment: moved Y to ${posY}%`);
+                      }
                       
                       console.log(`✅ Final object-position: ${posX}% ${posY}%`);
                       
