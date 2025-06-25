@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { SpeakerPlayIcon, SpeakerStopIcon } from '../constants';
-import { generateImage } from '../services/falAiService';
+import { generateIllustrationUrls } from '../services/falAiService';
 
 export interface ParsedSegment {
   type: 'plain' | 'lang';
@@ -15,6 +15,7 @@ interface ParsedTextProps {
   onPlayAudio?: (text: string) => void;
   onStopAudio?: () => void;
   isPlaying?: boolean;
+  lessonTopic?: string;
 }
 
 /**
@@ -69,7 +70,7 @@ export const parseLangText = (inputText: string): ParsedSegment[] => {
   return segments;
 };
 
-const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio, isPlaying = false }) => {
+const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio, isPlaying = false, lessonTopic }) => {
   const [illustrationImage, setIllustrationImage] = useState<string | null>(null);
   const [isLoadingImage, setIsLoadingImage] = useState(false);
 
@@ -81,9 +82,9 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
           // Create a clean prompt from the text for image generation
           const cleanText = text.replace(/<lang:[^>]*>|<\/lang:[^>]*>/g, '').replace(/\([^)]*\)/g, '').trim();
           const imagePrompt = cleanText.slice(0, 150); // Use first 150 chars as prompt
-          const imageUrl = await generateImage(imagePrompt);
-          if (imageUrl) {
-            setIllustrationImage(imageUrl);
+          const imageUrls = await generateIllustrationUrls(imagePrompt, lessonTopic);
+          if (imageUrls) {
+            setIllustrationImage(imageUrls);
           }
         } catch (error) {
           console.error('Failed to generate illustration:', error);
@@ -94,7 +95,7 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
     };
 
     generateIllustration();
-  }, [text]);
+  }, [text, lessonTopic]);
 
   const parsedSegments = parseLangText(text);
 

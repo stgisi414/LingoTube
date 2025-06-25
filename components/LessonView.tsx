@@ -298,7 +298,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
               <div className="space-y-4 min-h-fit">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 text-lg leading-relaxed text-slate-200 min-h-fit">
-                    <ParsedText text={(currentSegment as NarrationSegment).text} />
+                    <ParsedText text={(currentSegment as NarrationSegment).text} lessonTopic={lessonPlan.topic} />
                   </div>
                   <button
                     onClick={() => handleToggleSpeech(currentSegment.id, (currentSegment as NarrationSegment).text)}
