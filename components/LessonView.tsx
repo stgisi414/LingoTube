@@ -240,7 +240,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
             </div>
             <button 
               onClick={onReset} 
-              className="absolute top-0 right-0 flex items-center text-sm bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-md transition-colors z-[9999999]"
+              className="absolute top-0 right-0 flex items-center text-sm bg-zinc-600 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-md transition-colors z-[9999999]"
             >
               {RefreshCwIcon} <span className="ml-2">New Lesson</span>
             </button>
@@ -303,7 +303,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                   <button
                     onClick={() => handleToggleSpeech(currentSegment.id, (currentSegment as NarrationSegment).text)}
                     className={`ml-4 p-3 rounded-full transition-colors flex-shrink-0 ${
-                      isCurrentlySpeaking ? 'text-red-400 hover:bg-red-500/20' : 'text-purple-400 hover:bg-purple-500/20'
+                      isCurrentlySpeaking ? 'text-red-400 hover:bg-red-500/20' : 'text-purple-400 hover:bg-zinc-500/20'
                     }`}
                     aria-label={isCurrentlySpeaking ? "Stop narration" : "Play narration"}
                   >
@@ -381,7 +381,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
           <button
             onClick={handleNextSegment}
             disabled={isLastSegment}
-            className="flex items-center px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center px-6 py-3 bg-zinc-600 hover:bg-zinc-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <span className="mr-2">{isLastSegment ? 'Complete' : 'Next'}</span> {ChevronRightIcon}
           </button>

@@ -61,7 +61,7 @@ const App: React.FC = () => {
       <header className="w-full max-w-4xl text-center my-8">
         <div className="flex items-center justify-center mb-4">
           <img src="/logo.png" alt="AILingo.Tube" className="w-16 h-16 mr-4 rounded-full border-4 border-yellow-400 animate-pulse shadow-lg shadow-yellow-400/30" />
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-300">
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 via-yellow-500 to-amber-300">
             AILingo.Tube
           </h1>
         </div>

@@ -470,7 +470,7 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
             type="button"
             onClick={() => setUseCustomInput(false)}
             className={`px-4 py-2 rounded-lg transition-colors ${
-              !useCustomInput ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              !useCustomInput ? 'bg-zinc-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
             Guided Templates
@@ -479,7 +479,7 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
             type="button"
             onClick={() => setUseCustomInput(true)}
             className={`px-4 py-2 rounded-lg transition-colors ${
-              useCustomInput ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              useCustomInput ? 'bg-zinc-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
             Free Input
@@ -491,7 +491,7 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
           <div className="space-y-4">
             {/* Template selector */}
             <div>
-              <label className="block text-sm font-medium text-purple-300 mb-2">
+              <label className="block text-sm font-medium text-gold-300 mb-2">
                 Choose a lesson template:
               </label>
               <select
@@ -500,7 +500,7 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
                   const template = SENTENCE_TEMPLATES.find(t => t.id === e.target.value);
                   if (template) setSelectedTemplate(template);
                 }}
-                className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-gold-500 focus:border-gold-500"
                 disabled={isProcessing || isRecording}
               >
                 {SENTENCE_TEMPLATES.map(template => (
@@ -527,7 +527,7 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
                           <select
                             value={blankValues[blankId] || ''}
                             onChange={(e) => updateBlankValue(blankId, e.target.value)}
-                            className="bg-purple-600 text-white px-2 py-1 rounded border-none focus:ring-2 focus:ring-purple-400 min-w-[120px]"
+                            className="bg-zinc-600 text-white px-2 py-1 rounded border-none focus:ring-2 focus:ring-gold-400 min-w-[120px]"
                             disabled={isProcessing || isRecording}
                           >
                             <option value="">{blank.placeholder}</option>
@@ -541,7 +541,7 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
                             value={blankValues[blankId] || ''}
                             onChange={(e) => updateBlankValue(blankId, e.target.value)}
                             placeholder={blank.placeholder}
-                            className="bg-purple-600 text-white px-2 py-1 rounded border-none focus:ring-2 focus:ring-purple-400 min-w-[120px]"
+                            className="bg-zinc-600 text-white px-2 py-1 rounded border-none focus:ring-2 focus:ring-gold-400 min-w-[120px]"
                             disabled={isProcessing || isRecording}
                           />
                         )}
@@ -561,7 +561,7 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
         ) : (
           /* Custom input */
           <div>
-            <label htmlFor="custom-topic" className="block text-sm font-medium text-purple-300 mb-1">
+            <label htmlFor="custom-topic" className="block text-sm font-medium text-gold-300 mb-1">
               What do you want to learn about today?
             </label>
             <textarea
@@ -570,7 +570,7 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
               onChange={(e) => setCustomTopic(e.target.value)}
               placeholder="e.g., The basics of Quantum Physics, History of the Roman Empire, How to bake sourdough bread..."
               rows={4}
-              className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-shadow placeholder-slate-500"
+              className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-gold-500 focus:border-gold-500 transition-shadow placeholder-slate-500"
               disabled={isProcessing || isRecording}
               aria-label="Topic to learn"
             />
@@ -607,7 +607,7 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
               isRecording || 
               (useCustomInput ? !customTopic.trim() : !isTemplateComplete())
             }
-            className="flex items-center justify-center px-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 transition-colors duration-150 ease-in-out w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center px-6 py-2.5 bg-zinc-600 hover:bg-zinc-700 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-gold-500 focus:ring-opacity-50 transition-colors duration-150 ease-in-out w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label="Generate lesson based on the entered topic"
           >
             <span className="mr-2">Generate Lesson</span>

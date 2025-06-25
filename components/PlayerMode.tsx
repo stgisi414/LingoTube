@@ -179,7 +179,7 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <span className="text-sm text-slate-400">Auto Mode:</span>
-              <div className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors ${autoTransitionEnabled ? 'bg-purple-600' : 'bg-slate-600'}`} 
+              <div className={`w-12 h-6 rounded-full p-1 cursor-pointer transition-colors ${autoTransitionEnabled ? 'bg-zinc-600' : 'bg-slate-600'}`} 
                    onClick={() => setAutoTransitionEnabled(!autoTransitionEnabled)}>
                 <div className={`w-4 h-4 rounded-full bg-white transition-transform ${autoTransitionEnabled ? 'translate-x-6' : ''}`}></div>
               </div>
@@ -237,7 +237,7 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
                 <div className="flex justify-center space-x-4">
                   <button
                     onClick={onExit}
-                    className="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg"
+                    className="bg-zinc-600 hover:bg-zinc-700 px-6 py-3 rounded-lg"
                   >
                     Start New Lesson
                   </button>
@@ -266,7 +266,7 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
                     </p>
                     <button
                       onClick={startAutonomousPlayback}
-                      className="w-full bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-lg flex items-center justify-center"
+                      className="w-full bg-zinc-600 hover:bg-zinc-700 px-6 py-3 rounded-lg flex items-center justify-center"
                     >
                       {PlayIcon} <span className="ml-2">Start Autonomous Learning</span>
                     </button>
@@ -316,7 +316,7 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
                   )}
                   <h3 className="text-lg font-semibold ml-3">Narration</h3>
                   {autoTransitionEnabled && (
-                    <span className="ml-auto text-xs bg-purple-600 px-2 py-1 rounded">AUTO</span>
+                    <span className="ml-auto text-xs bg-zinc-600 px-2 py-1 rounded">AUTO</span>
                   )}
                 </div>
                 <ParsedText text={currentSegment?.text || ''} />
@@ -436,7 +436,7 @@ export const PlayerMode: React.FC<PlayerModeProps> = ({ lessonPlan, onExit }) =>
                   <button
                     onClick={proceedToNext}
                     disabled={currentSegmentIndex >= allSegments.length - 1}
-                    className="px-3 py-2 bg-purple-600 hover:bg-purple-700 rounded disabled:opacity-50"
+                    className="px-3 py-2 bg-zinc-600 hover:bg-zinc-700 rounded disabled:opacity-50"
                   >
                     Next
                   </button>
