@@ -57,15 +57,15 @@ const App: React.FC = () => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-slate-100 flex flex-col items-center p-4 selection:bg-purple-500 selection:text-white">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-yellow-900 text-gray-100 flex flex-col items-center p-4 selection:bg-yellow-500 selection:text-black">
       <header className="w-full max-w-4xl text-center my-8">
         <div className="flex items-center justify-center mb-4">
-          <img src="/logo.png" alt="AILingo.Tube" className="w-16 h-16 mr-4 rounded-full border-4 border-purple-500 animate-pulse" />
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-pink-500 to-red-500">
+          <img src="/logo.png" alt="AILingo.Tube" className="w-16 h-16 mr-4 rounded-full border-4 border-yellow-400 animate-pulse shadow-lg shadow-yellow-400/30" />
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-300">
             AILingo.Tube
           </h1>
         </div>
-        <p className="mt-4 text-lg text-slate-400">
+        <p className="mt-4 text-lg text-gray-300">
           Craft dynamic educational journeys with AI-powered narration, illustrations, and curated video segments.
         </p>
       </header>
@@ -83,14 +83,14 @@ const App: React.FC = () => {
 
         {error && appStatus === AppStatus.ERROR && (
           <div 
-            className="mt-6 p-4 bg-red-700/30 border border-red-500 rounded-lg text-red-300 flex items-center space-x-3"
+            className="mt-6 p-4 bg-amber-900/40 border border-amber-600 rounded-lg text-amber-200 flex items-center space-x-3 shadow-lg"
             role="alert" // Added for accessibility
           >
             {AlertTriangle}
             <span>{error}</span>
             <button
               onClick={resetApp}
-              className="ml-auto bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded-md text-sm"
+              className="ml-auto bg-amber-700 hover:bg-amber-600 text-yellow-100 px-3 py-1 rounded-md text-sm shadow-md border border-amber-500"
               aria-label="Try generating lesson again"
             >
               Try Again
@@ -103,7 +103,7 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="w-full max-w-4xl text-center py-8 text-slate-500 text-sm">
+      <footer className="w-full max-w-4xl text-center py-8 text-gray-400 text-sm">
         <p>&copy; {new Date().getFullYear()} AILingo.Tube. Powered by Gemini.</p>
       </footer>
     </div>
