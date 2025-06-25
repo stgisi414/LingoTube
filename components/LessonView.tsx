@@ -230,7 +230,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
   return (
     <div ref={mainContentRef} className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
       {/* Header with lesson info and progress */}
-      <div className="sticky top-0 bg-slate-900/95 backdrop-blur-md py-4 z-10 border-b border-slate-700">
+      <div className="bg-slate-900 py-4 border-b border-slate-700 min-h-fit">
         <div className="max-w-4xl mx-auto px-4">
           <div className="relative mb-4">
             <div className="w-full">
