@@ -1,11 +1,11 @@
 // components/ParsedText.tsx
 
-import React, { useState, useEffect } from 'react';
-import { SpeakerPlayIcon, SpeakerStopIcon } from '../constants';
-import { generateIllustrationUrls } from '../services/falAiService';
+import React, { useState, useEffect } from "react";
+import { SpeakerPlayIcon, SpeakerStopIcon } from "../constants";
+import { generateIllustrationUrls } from "../services/falAiService";
 
 export interface ParsedSegment {
-  type: 'plain' | 'lang';
+  type: "plain" | "lang";
   text: string;
   langCode?: string;
 }
@@ -24,10 +24,10 @@ interface ParsedTextProps {
  * Maintains compatibility with the TTS service's parseLanguageSegments function.
  */
 export const parseLangText = (inputText: string): ParsedSegment[] => {
-  if (!inputText || typeof inputText !== 'string') return [];
+  if (!inputText || typeof inputText !== "string") return [];
 
   // Remove content in parentheses first but preserve the original text structure for TTS
-  let workingText = inputText.replace(/\([^)]*\)/g, '').trim();
+  let workingText = inputText.replace(/\([^)]*\)/g, "").trim();
 
   const segments: ParsedSegment[] = [];
 
@@ -41,7 +41,7 @@ export const parseLangText = (inputText: string): ParsedSegment[] => {
     if (match.index > lastIndex) {
       const englishText = workingText.slice(lastIndex, match.index).trim();
       if (englishText) {
-        segments.push({ type: 'plain', text: englishText });
+        segments.push({ type: "plain", text: englishText });
       }
     }
 
@@ -49,7 +49,7 @@ export const parseLangText = (inputText: string): ParsedSegment[] => {
     const langCode = match[1];
     const langText = match[2].trim();
     if (langText) {
-      segments.push({ type: 'lang', text: langText, langCode });
+      segments.push({ type: "lang", text: langText, langCode });
     }
 
     lastIndex = langTagRegex.lastIndex;
@@ -59,20 +59,29 @@ export const parseLangText = (inputText: string): ParsedSegment[] => {
   if (lastIndex < workingText.length) {
     const remainingText = workingText.slice(lastIndex).trim();
     if (remainingText) {
-      segments.push({ type: 'plain', text: remainingText });
+      segments.push({ type: "plain", text: remainingText });
     }
   }
 
   // If no language tags were found, return the original cleaned text as plain
   if (segments.length === 0 && workingText) {
-    return [{ type: 'plain', text: workingText }];
+    return [{ type: "plain", text: workingText }];
   }
 
   return segments;
 };
 
-const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio, isPlaying = false, lessonTopic, generateIllustration = false }) => {
-  const [illustrationImage, setIllustrationImage] = useState<string | null>(null);
+const ParsedText: React.FC<ParsedTextProps> = ({
+  text,
+  onPlayAudio,
+  onStopAudio,
+  isPlaying = false,
+  lessonTopic,
+  generateIllustration = false,
+}) => {
+  const [illustrationImage, setIllustrationImage] = useState<string | null>(
+    null,
+  );
   const [isLoadingImage, setIsLoadingImage] = useState(false);
 
   useEffect(() => {
@@ -82,14 +91,20 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
         setIsLoadingImage(true);
         try {
           // Create a clean prompt from the text for image generation
-          const cleanText = text.replace(/<lang:[^>]*>|<\/lang:[^>]*>/g, '').replace(/\([^)]*\)/g, '').trim();
+          const cleanText = text
+            .replace(/<lang:[^>]*>|<\/lang:[^>]*>/g, "")
+            .replace(/\([^)]*\)/g, "")
+            .trim();
           const imagePrompt = cleanText.slice(0, 150); // Use first 150 chars as prompt
-          const imageUrls = await generateIllustrationUrls(imagePrompt, lessonTopic);
+          const imageUrls = await generateIllustrationUrls(
+            imagePrompt,
+            lessonTopic,
+          );
           if (imageUrls && imageUrls.length > 0) {
             setIllustrationImage(imageUrls[0]);
           }
         } catch (error) {
-          console.error('Failed to generate illustration:', error);
+          console.error("Failed to generate illustration:", error);
         } finally {
           setIsLoadingImage(false);
         }
@@ -111,20 +126,24 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
 
     // Fallback to prevent crashing if text is weird
     if (!parsedSegments || parsedSegments.length === 0) {
-      return <>{text || ''}</>;
+      return <>{text || ""}</>;
     }
 
     return (
       <>
         {parsedSegments.map((segment, index) => {
-          if (segment.type === 'lang' && segment.text.trim()) {
+          if (segment.type === "lang" && segment.text.trim()) {
             // Render the language-specific text with special styling
             return (
-              <span key={index} className="mx-1 font-semibold text-yellow-300" lang={segment.langCode}>
+              <span
+                key={index}
+                className="mx-1 font-semibold text-yellow-300"
+                lang={segment.langCode}
+              >
                 {segment.text}
               </span>
             );
-          } else if (segment.type === 'plain' && segment.text.trim()) {
+          } else if (segment.type === "plain" && segment.text.trim()) {
             // Render plain text segments, preserving spaces
             return <span key={index}>{segment.text}</span>;
           }
@@ -139,13 +158,13 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
       <div className="flex items-start space-x-3 min-h-fit">
         {onPlayAudio && (
           <button
-            onClick={() => isPlaying ? onStopAudio?.() : onPlayAudio(text)}
+            onClick={() => (isPlaying ? onStopAudio?.() : onPlayAudio(text))}
             className={`flex-shrink-0 p-2 rounded-full transition-colors ${
-              isPlaying 
-                ? 'bg-red-600 hover:bg-red-500 text-white' 
-                : 'bg-blue-600 hover:bg-blue-500 text-white'
+              isPlaying
+                ? "bg-red-600 hover:bg-red-500 text-white"
+                : "bg-blue-600 hover:bg-blue-500 text-white"
             }`}
-            aria-label={isPlaying ? 'Stop narration' : 'Play narration'}
+            aria-label={isPlaying ? "Stop narration" : "Play narration"}
           >
             {isPlaying ? SpeakerStopIcon : SpeakerPlayIcon}
           </button>
@@ -153,14 +172,14 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
         <div className="flex-1">
           {generateIllustration && illustrationImage && (
             <div className="mb-3">
-              <img 
-                src={illustrationImage} 
-                alt="Illustration for narration" 
+              <img
+                src={illustrationImage}
+                alt="Illustration for narration"
                 className="w-full h-48 object-cover rounded-lg border border-slate-600"
                 onError={(e) => {
                   const container = e.currentTarget.parentElement;
                   if (container) {
-                    container.style.display = 'none';
+                    container.style.display = "none";
                   }
                 }}
               />
@@ -170,7 +189,9 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
             <div className="mb-3 w-full h-48 bg-slate-700/50 rounded-lg border border-slate-600 flex items-center justify-center">
               <div className="flex items-center space-x-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-zinc-400"></div>
-                <span className="text-slate-400 text-sm">Generating illustration...</span>
+                <span className="text-slate-400 text-sm">
+                  Generating illustration...
+                </span>
               </div>
             </div>
           )}
