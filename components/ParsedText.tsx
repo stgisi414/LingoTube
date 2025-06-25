@@ -120,7 +120,7 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
           if (segment.type === 'lang' && segment.text.trim()) {
             // Render the language-specific text with special styling
             return (
-              <span key={index} className="mx-1 font-semibold text-purple-300" lang={segment.langCode}>
+              <span key={index} className="mx-1 font-semibold text-yellow-300" lang={segment.langCode}>
                 {segment.text}
               </span>
             );
