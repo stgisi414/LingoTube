@@ -1,4 +1,5 @@
 import { GOOGLE_CUSTOM_SEARCH_API_KEY, YOUTUBE_CUSTOM_SEARCH_CX, SUPADATA_API_KEY } from '../constants';
+import { Supadata } from '@supadata/js';
 
 export interface SearchedVideo {
   youtubeId: string;
@@ -200,72 +201,52 @@ export const getVideoTranscript = async (youtubeId: string): Promise<string | nu
 
     try {
         const startTime = performance.now();
-        const apiUrl = `https://api.supadata.ai/v1/youtube/transcript?url=https://www.youtube.com/watch?v=${youtubeId}`;
-        console.log(`📜 TRANSCRIPT: Making request to: ${apiUrl}`);
         
-        const response = await fetch(apiUrl, {
-            method: 'GET',
-            headers: { 
-                'x-api-key': SUPADATA_API_KEY, 
-                'Content-Type': 'application/json' 
-            }
+        const supadata = new Supadata({
+            apiKey: SUPADATA_API_KEY,
+        });
+        
+        const youtubeUrl = `https://www.youtube.com/watch?v=${youtubeId}`;
+        console.log(`📜 TRANSCRIPT: Making request for URL: ${youtubeUrl}`);
+        
+        const transcript = await supadata.youtube.transcript({
+            url: youtubeUrl,
+            text: false,
         });
 
         const endTime = performance.now();
         console.log(`📜 TRANSCRIPT: API response received:`, {
             youtubeId,
-            status: response.status,
-            statusText: response.statusText,
             responseTime: `${(endTime - startTime).toFixed(2)}ms`,
-            headers: {
-                contentType: response.headers.get('content-type'),
-                contentLength: response.headers.get('content-length')
-            }
+            hasTranscript: !!transcript,
+            transcriptType: transcript ? (Array.isArray(transcript) ? 'array' : typeof transcript) : 'none'
         });
 
-        if (!response.ok) {
-            console.warn(`⚠️ TRANSCRIPT: API request failed for ${youtubeId}:`, {
-                status: response.status,
-                statusText: response.statusText,
-                reason: 'Video may not have available transcript or API error'
-            });
-            return null;
-        }
-        
-        const data = await response.json();
-        console.log(`📜 TRANSCRIPT: API response data structure:`, {
-            youtubeId,
-            hasData: !!data,
-            hasTranscript: !!data?.transcript,
-            transcriptType: data?.transcript ? (Array.isArray(data.transcript) ? 'array' : typeof data.transcript) : 'none',
-            dataKeys: data ? Object.keys(data) : []
-        });
-
-        if (data && data.transcript) {
+        if (transcript) {
             let processedTranscript: string;
             
-            if (Array.isArray(data.transcript)) {
-                processedTranscript = data.transcript
-                    .map(item => item.text || item.content || '')
+            if (Array.isArray(transcript)) {
+                processedTranscript = transcript
+                    .map(item => item.text || item.content || item || '')
                     .join(' ');
                 console.log(`📜 TRANSCRIPT: Processed array transcript:`, {
                     youtubeId,
-                    segments: data.transcript.length,
+                    segments: transcript.length,
                     totalLength: processedTranscript.length,
                     preview: processedTranscript.substring(0, 100) + '...'
                 });
-            } else if (typeof data.transcript === 'string') {
-                processedTranscript = data.transcript;
+            } else if (typeof transcript === 'string') {
+                processedTranscript = transcript;
                 console.log(`📜 TRANSCRIPT: Using string transcript:`, {
                     youtubeId,
                     length: processedTranscript.length,
                     preview: processedTranscript.substring(0, 100) + '...'
                 });
             } else {
-                processedTranscript = JSON.stringify(data.transcript);
+                processedTranscript = JSON.stringify(transcript);
                 console.log(`📜 TRANSCRIPT: Converting object transcript to string:`, {
                     youtubeId,
-                    originalType: typeof data.transcript,
+                    originalType: typeof transcript,
                     stringLength: processedTranscript.length
                 });
             }
@@ -274,7 +255,7 @@ export const getVideoTranscript = async (youtubeId: string): Promise<string | nu
             return processedTranscript;
         }
         
-        console.log(`⚠️ TRANSCRIPT: No transcript found in response for ${youtubeId}`);
+        console.log(`⚠️ TRANSCRIPT: No transcript found for ${youtubeId}`);
         return null;
     } catch (error) {
         console.error(`❌ TRANSCRIPT: Critical error fetching transcript for ${youtubeId}:`, {
