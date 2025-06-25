@@ -17,6 +17,14 @@ interface VideoFetchState {
   timeSegments: VideoTimeSegment[] | null;
 }
 
+// Transition states for smooth segment changes
+interface TransitionState {
+  isTransitioning: boolean;
+  fromSegment: number;
+  toSegment: number;
+  phase: 'fadeOut' | 'loading' | 'fadeIn' | 'complete';
+}
+
 // This is the main component that renders the lesson with proper progression.
 export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void; }> = ({ lessonPlan, onReset }) => {
   const [currentSegmentIdx, setCurrentSegmentIdx] = useState(0);
@@ -25,6 +33,12 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
   const [speakingSegmentId, setSpeakingSegmentId] = useState<string | null>(null);
   const [videoFetchState, setVideoFetchState] = useState<Record<string, VideoFetchState>>({});
   const [currentVideoTimeSegmentIndex, setCurrentVideoTimeSegmentIndex] = useState(0);
+  const [transitionState, setTransitionState] = useState<TransitionState>({
+    isTransitioning: false,
+    fromSegment: -1,
+    toSegment: -1,
+    phase: 'complete'
+  });
 
   const mainContentRef = useRef<HTMLDivElement>(null);
 
@@ -162,25 +176,85 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
     }
   }, [currentSegmentIdx, currentSegment, videoFetchState, orchestrateVideoSourcing]);
 
-  const handleNextSegment = useCallback(() => {
+  const handleNextSegment = useCallback(async () => {
+    if (currentSegmentIdx >= allLessonParts.length - 1) return;
+    
+    // Start smooth transition
+    const nextIdx = currentSegmentIdx + 1;
+    
+    setTransitionState({
+      isTransitioning: true,
+      fromSegment: currentSegmentIdx,
+      toSegment: nextIdx,
+      phase: 'fadeOut'
+    });
+
+    // Stop any current speech
     stopSpeech();
     setSpeakingSegmentId(null);
 
-    if (currentSegmentIdx < allLessonParts.length - 1) {
-        setCompletedSegments(prev => new Set(prev).add(currentSegment.id));
-        setCurrentSegmentIdx(prev => prev + 1);
-        setCurrentVideoTimeSegmentIndex(0); // Reset video time segment for new segment
-    }
+    // Phase 1: Fade out current content
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    // Phase 2: Show loading state
+    setTransitionState(prev => ({ ...prev, phase: 'loading' }));
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Phase 3: Update content and fade in
+    setCompletedSegments(prev => new Set(prev).add(currentSegment.id));
+    setCurrentSegmentIdx(nextIdx);
+    setCurrentVideoTimeSegmentIndex(0);
+    
+    setTransitionState(prev => ({ ...prev, phase: 'fadeIn' }));
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    // Phase 4: Complete transition
+    setTransitionState({
+      isTransitioning: false,
+      fromSegment: -1,
+      toSegment: -1,
+      phase: 'complete'
+    });
   }, [currentSegmentIdx, allLessonParts.length, currentSegment.id]);
 
-  const handlePrevSegment = useCallback(() => {
+  const handlePrevSegment = useCallback(async () => {
+    if (currentSegmentIdx <= 0) return;
+    
+    // Start smooth transition
+    const prevIdx = currentSegmentIdx - 1;
+    
+    setTransitionState({
+      isTransitioning: true,
+      fromSegment: currentSegmentIdx,
+      toSegment: prevIdx,
+      phase: 'fadeOut'
+    });
+
+    // Stop any current speech
     stopSpeech();
     setSpeakingSegmentId(null);
 
-    if (currentSegmentIdx > 0) {
-      setCurrentSegmentIdx(prev => prev - 1);
-      setCurrentVideoTimeSegmentIndex(0); // Reset video time segment for new segment
-    }
+    // Phase 1: Fade out current content
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    // Phase 2: Show loading state
+    setTransitionState(prev => ({ ...prev, phase: 'loading' }));
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Phase 3: Update content and fade in
+    setCurrentSegmentIdx(prevIdx);
+    setCurrentVideoTimeSegmentIndex(0);
+    
+    setTransitionState(prev => ({ ...prev, phase: 'fadeIn' }));
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    // Phase 4: Complete transition
+    setTransitionState({
+      isTransitioning: false,
+      fromSegment: -1,
+      toSegment: -1,
+      phase: 'complete'
+    });
   }, [currentSegmentIdx]);
 
   const handleVideoTimeSegmentComplete = useCallback(() => {
@@ -292,8 +366,38 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
             </div>
           </div>
 
+          {/* Transition Overlay */}
+          {transitionState.isTransitioning && (
+            <div className={`absolute inset-0 z-50 flex items-center justify-center transition-opacity duration-300 ${
+              transitionState.phase === 'fadeOut' ? 'bg-slate-900/80 opacity-100' :
+              transitionState.phase === 'loading' ? 'bg-slate-900/90 opacity-100' :
+              transitionState.phase === 'fadeIn' ? 'bg-slate-900/40 opacity-60' :
+              'opacity-0 pointer-events-none'
+            }`}>
+              <div className="flex flex-col items-center space-y-4 text-white">
+                <div className="relative">
+                  <div className="w-12 h-12 border-4 border-slate-600 border-t-amber-500 rounded-full animate-spin"></div>
+                  <div className="w-8 h-8 border-3 border-slate-500 border-t-zinc-400 rounded-full animate-spin absolute top-2 left-2" 
+                       style={{animationDirection: 'reverse', animationDuration: '0.8s'}}></div>
+                </div>
+                <div className="text-center">
+                  <div className="text-lg font-medium text-slate-200">
+                    {transitionState.phase === 'fadeOut' ? 'Finishing segment...' :
+                     transitionState.phase === 'loading' ? 'Loading next segment...' :
+                     transitionState.phase === 'fadeIn' ? 'Preparing content...' : ''}
+                  </div>
+                  <div className="text-sm text-slate-400 mt-1">
+                    Segment {transitionState.toSegment + 1} of {allLessonParts.length}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Segment Content */}
-          <div className="p-6">
+          <div className={`p-6 transition-opacity duration-300 ${
+            transitionState.isTransitioning && transitionState.phase !== 'fadeIn' ? 'opacity-30' : 'opacity-100'
+          }`}>
             {currentSegment.type === SegmentType.NARRATION ? (
               <div className="space-y-4 min-h-fit">
                 <div className="flex items-start justify-between">
@@ -340,10 +444,24 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                   </div>
                 ) : videoFetchInfo?.status === 'loading' ? (
                   <div className="bg-slate-700/50 rounded-lg p-8 text-center">
-                    <div className="animate-pulse text-slate-300 mb-2">
-                      🔄 {videoFetchInfo.message}
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="relative">
+                        <div className="w-16 h-16 border-4 border-slate-600 border-t-blue-500 rounded-full animate-spin"></div>
+                        <div className="w-10 h-10 border-3 border-slate-500 border-t-cyan-400 rounded-full animate-spin absolute top-3 left-3" 
+                             style={{animationDirection: 'reverse', animationDuration: '1.2s'}}></div>
+                      </div>
+                      <div className="text-slate-300 font-medium">
+                        {videoFetchInfo.message}
+                      </div>
+                      <div className="text-sm text-slate-500 max-w-md">
+                        Our AI is analyzing thousands of educational videos to find the most relevant content for your lesson
+                      </div>
+                      <div className="flex space-x-1 mt-4">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
+                        <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{animationDelay: '150ms'}}></div>
+                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '300ms'}}></div>
+                      </div>
                     </div>
-                    <div className="text-sm text-slate-500">Please wait while we find the perfect video...</div>
                   </div>
                 ) : videoFetchInfo?.status === 'error' ? (
                   <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-6 text-center">
@@ -366,24 +484,39 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <button
             onClick={handlePrevSegment}
-            disabled={isFirstSegment}
-            className="flex items-center px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            disabled={isFirstSegment || transitionState.isTransitioning}
+            className="flex items-center px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           >
-            {ChevronLeftIcon} <span className="ml-2">Previous</span>
+            {transitionState.isTransitioning ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+            ) : (
+              ChevronLeftIcon
+            )} 
+            <span className="ml-2">Previous</span>
           </button>
 
           <span className="text-slate-400 text-sm">
-            {currentSegment.type === SegmentType.VIDEO && videoFetchInfo?.timeSegments && 
-             `Video part ${currentVideoTimeSegmentIndex + 1} of ${videoFetchInfo.timeSegments.length}`
-            }
+            {transitionState.isTransitioning ? (
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+                <span>Transitioning...</span>
+              </div>
+            ) : currentSegment.type === SegmentType.VIDEO && videoFetchInfo?.timeSegments ? (
+              `Video part ${currentVideoTimeSegmentIndex + 1} of ${videoFetchInfo.timeSegments.length}`
+            ) : null}
           </span>
 
           <button
             onClick={handleNextSegment}
-            disabled={isLastSegment}
-            className="flex items-center px-6 py-3 bg-zinc-600 hover:bg-zinc-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            disabled={isLastSegment || transitionState.isTransitioning}
+            className="flex items-center px-6 py-3 bg-zinc-600 hover:bg-zinc-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           >
-            <span className="mr-2">{isLastSegment ? 'Complete' : 'Next'}</span> {ChevronRightIcon}
+            <span className="mr-2">{isLastSegment ? 'Complete' : 'Next'}</span> 
+            {transitionState.isTransitioning ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              ChevronRightIcon
+            )}
           </button>
         </div>
       </div>
