@@ -392,29 +392,34 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                     }
                   </h2>
                   {currentSegment.type === SegmentType.NARRATION ? (
-                    <div className="flex items-center space-x-2">
-                      <p className="text-slate-400 text-sm">Listen to the narration</p>
-                      <button
-                        onClick={() => handleToggleSpeech(currentSegment.id, (currentSegment as NarrationSegment).text)}
-                        className={`p-1.5 rounded-full transition-colors flex-shrink-0 ${
-                          isCurrentlySpeaking ? 'text-red-400 hover:bg-red-500/20' : 'text-zinc-400 hover:bg-zinc-500/20'
-                        }`}
-                        aria-label={isCurrentlySpeaking ? "Stop narration" : "Play narration"}
-                      >
-                        <div className="w-4 h-4">
-                          {isCurrentlySpeaking ? SpeakerStopIcon : SpeakerPlayIcon}
-                        </div>
-                      </button>
-                    </div>
+                    <p className="text-slate-400 text-sm">Listen to the narration</p>
                   ) : (
                     <p className="text-slate-400 text-sm">Watch the video segment</p>
                   )}
                 </div>
               </div>
 
-              {completedSegments.has(currentSegment.id) && (
-                <div className="text-green-400 text-xl">{CheckCircleIcon}</div>
-              )}
+              <div className="flex items-center space-x-3">
+                {currentSegment.type === SegmentType.NARRATION && (
+                  <button
+                    onClick={() => handleToggleSpeech(currentSegment.id, (currentSegment as NarrationSegment).text)}
+                    className={`p-3 rounded-full transition-colors shadow-lg ${
+                      isCurrentlySpeaking 
+                        ? 'bg-red-500 hover:bg-red-600 text-white' 
+                        : 'bg-amber-500 hover:bg-amber-600 text-white'
+                    }`}
+                    aria-label={isCurrentlySpeaking ? "Stop narration" : "Play narration"}
+                  >
+                    <div className="w-5 h-5">
+                      {isCurrentlySpeaking ? SpeakerStopIcon : SpeakerPlayIcon}
+                    </div>
+                  </button>
+                )}
+                
+                {completedSegments.has(currentSegment.id) && (
+                  <div className="text-green-400 text-xl">{CheckCircleIcon}</div>
+                )}
+              </div>
             </div>
           </div>
 
