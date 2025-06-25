@@ -179,31 +179,47 @@ const ParsedText: React.FC<ParsedTextProps> = ({
                 style={{
                   // Apply smart crop positioning if available
                   ...(illustrationImage.includes('#crop=') && (() => {
-                    const cropParams = new URLSearchParams(illustrationImage.split('#crop=')[1]);
-                    const x = parseInt(cropParams.get('x') || '0');
-                    const y = parseInt(cropParams.get('y') || '0');
-                    const w = parseInt(cropParams.get('w') || '800');
-                    const h = parseInt(cropParams.get('h') || '600');
-                    
-                    // Calculate object-position based on crop area
-                    // The crop coordinates tell us where the important content is
-                    const centerX = x + w / 2;
-                    const centerY = y + h / 2;
-                    
-                    // Convert to percentage for object-position
-                    // Get image dimensions from crop data or use defaults
-                    const imageWidth = 1024; // Standard FAL image width
-                    const imageHeight = 768;  // Standard FAL image height
-                    
-                    const posX = Math.max(0, Math.min(100, (centerX / imageWidth) * 100));
-                    const posY = Math.max(0, Math.min(100, (centerY / imageHeight) * 100));
-                    
-                    console.log(`🎯 Using Gemini crop position: ${posX}% ${posY}%`);
-                    
-                    return {
-                      objectPosition: `${posX}% ${posY}%`
-                    };
-                  })() || { objectPosition: 'center 20%' }) // Fallback that shows more of the top
+                    try {
+                      const cropString = illustrationImage.split('#crop=')[1];
+                      console.log(`🔍 Raw crop string: ${cropString}`);
+                      
+                      // Parse the crop string format: x:123,y:456,w:789,h:012
+                      const cropParts = cropString.split(',');
+                      const cropData = {};
+                      
+                      cropParts.forEach(part => {
+                        const [key, value] = part.split(':');
+                        cropData[key] = parseInt(value);
+                      });
+                      
+                      const x = cropData['x'] || 0;
+                      const y = cropData['y'] || 0;
+                      const w = cropData['w'] || 800;
+                      const h = cropData['h'] || 600;
+                      
+                      console.log(`🎯 Parsed crop coordinates: x=${x}, y=${y}, w=${w}, h=${h}`);
+                      
+                      // Calculate object-position based on crop area center
+                      const centerX = x + w / 2;
+                      const centerY = y + h / 2;
+                      
+                      // Use actual image dimensions from FAL (landscape_4_3 = 1024x768)
+                      const imageWidth = 1024;
+                      const imageHeight = 768;
+                      
+                      const posX = Math.max(0, Math.min(100, (centerX / imageWidth) * 100));
+                      const posY = Math.max(0, Math.min(100, (centerY / imageHeight) * 100));
+                      
+                      console.log(`✅ Final object-position: ${posX}% ${posY}%`);
+                      
+                      return {
+                        objectPosition: `${posX}% ${posY}%`
+                      };
+                    } catch (error) {
+                      console.error('❌ Failed to parse crop coordinates:', error);
+                      return { objectPosition: 'center 25%' };
+                    }
+                  })() || { objectPosition: 'center 25%' })
                 }}
                 onError={(e) => {
                   const container = e.currentTarget.parentElement;

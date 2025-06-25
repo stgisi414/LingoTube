@@ -57,7 +57,18 @@ export const generateIllustration = async (prompt: string, topic?: string): Prom
           try {
             // Get Gemini smart crop analysis
             const smartCrop = await getGeminiSmartCrop(img.url, topic || prompt, img.width, img.height);
+            
+            console.log(`🤖 Gemini provided crop:`, {
+              x: smartCrop.bestCrop.x,
+              y: smartCrop.bestCrop.y,
+              width: smartCrop.bestCrop.width,
+              height: smartCrop.bestCrop.height,
+              confidence: smartCrop.confidence,
+              reasoning: smartCrop.reasoning
+            });
+            
             const croppedUrl = `${img.url}#crop=x:${smartCrop.bestCrop.x},y:${smartCrop.bestCrop.y},w:${smartCrop.bestCrop.width},h:${smartCrop.bestCrop.height}`;
+            console.log(`🔗 Generated cropped URL: ${croppedUrl}`);
 
             return {
               url: img.url,
