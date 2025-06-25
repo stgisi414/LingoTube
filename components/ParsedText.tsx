@@ -151,14 +151,17 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
           </button>
         )}
         <div className="flex-1">
-          {generateIllustration && (illustrationImage || isLoadingImage) && (
+          {generateIllustration && illustrationImage && (
             <div className="mb-3">
               <img 
                 src={illustrationImage} 
                 alt="Illustration for narration" 
                 className="w-full h-48 object-cover rounded-lg border border-slate-600"
                 onError={(e) => {
-                  e.currentTarget.style.display = 'none';
+                  const container = e.currentTarget.parentElement;
+                  if (container) {
+                    container.style.display = 'none';
+                  }
                 }}
               />
             </div>
