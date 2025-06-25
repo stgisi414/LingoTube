@@ -276,7 +276,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                 <div>
                   <h2 className="text-xl font-semibold text-white">
                     {currentSegment.type === SegmentType.VIDEO ? 
-                      <ParsedText text={(videoFetchInfo?.videoTitle || (currentSegment as VideoSegment).title)} /> :
+                      <ParsedText text={(videoFetchInfo?.videoTitle || (currentSegment as VideoSegment).title)} generateIllustration={false} /> :
                       "Narration"
                     }
                   </h2>

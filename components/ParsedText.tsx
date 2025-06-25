@@ -76,16 +76,17 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
   const [isLoadingImage, setIsLoadingImage] = useState(false);
 
   useEffect(() => {
-    const generateIllustration = async () => {
-      if (text.length > 20 && generateIllustration) { // Only generate for longer text segments and if generateIllustration is true
+    const generateIllustrationAsync = async () => {
+      // Only generate illustrations for substantial content (>100 chars) when explicitly requested
+      if (text.length > 100 && generateIllustration) {
         setIsLoadingImage(true);
         try {
           // Create a clean prompt from the text for image generation
           const cleanText = text.replace(/<lang:[^>]*>|<\/lang:[^>]*>/g, '').replace(/\([^)]*\)/g, '').trim();
           const imagePrompt = cleanText.slice(0, 150); // Use first 150 chars as prompt
           const imageUrls = await generateIllustrationUrls(imagePrompt, lessonTopic);
-          if (imageUrls) {
-            setIllustrationImage(imageUrls);
+          if (imageUrls && imageUrls.length > 0) {
+            setIllustrationImage(imageUrls[0]);
           }
         } catch (error) {
           console.error('Failed to generate illustration:', error);
@@ -93,11 +94,14 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
           setIsLoadingImage(false);
         }
       } else {
-        setIllustrationImage(null); // Clear the image if generateIllustration is false
+        setIllustrationImage(null);
+        setIsLoadingImage(false);
       }
     };
 
-    generateIllustration();
+    // Add a small delay to prevent immediate loading states during quick transitions
+    const timeoutId = setTimeout(generateIllustrationAsync, 500);
+    return () => clearTimeout(timeoutId);
   }, [text, lessonTopic, generateIllustration]);
 
   const parsedSegments = parseLangText(text);
@@ -159,9 +163,12 @@ const ParsedText: React.FC<ParsedTextProps> = ({ text, onPlayAudio, onStopAudio,
               />
             </div>
           )}
-          {isLoadingImage && (
-            <div className="mb-3 w-full h-48 bg-slate-700 rounded-lg border border-slate-600 flex items-center justify-center">
-              <span className="text-slate-400 text-sm">Generating illustration...</span>
+          {isLoadingImage && generateIllustration && (
+            <div className="mb-3 w-full h-48 bg-slate-700/50 rounded-lg border border-slate-600 flex items-center justify-center">
+              <div className="flex items-center space-x-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-purple-400"></div>
+                <span className="text-slate-400 text-sm">Generating illustration...</span>
+              </div>
             </div>
           )}
           <div className="text-slate-200 leading-relaxed">
