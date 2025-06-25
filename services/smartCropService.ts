@@ -529,10 +529,23 @@ export const applySmartCrop = (imageUrl: string, cropArea: CropArea): string => 
   });
 
   // For now, return original URL with crop parameters for reference
-  return `${imageUrl}#crop=${cropParams.toString()}`oString()}`;
+  return `${imageUrl}#crop=${cropParams.toString()}`;
+
+function decodeBase64Image(base64Data: string): Blob {
+    // Function to convert base64 to Blob
+    let byteString = atob(base64Data);
+    let arrayBuffer = new ArrayBuffer(byteString.length);
+    let uint8Array = new Uint8Array(arrayBuffer);
+
+    for (let i = 0; i < byteString.length; i++) {
+        uint8Array[i] = byteString.charCodeAt(i);
+    }
+
+    return new Blob([arrayBuffer]);
+}
 };
 
-/**
+/*
  * Convert blob to base64
  */
 async function blobToBase64(blob: Blob): Promise<string> {
