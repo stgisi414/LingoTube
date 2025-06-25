@@ -54,18 +54,23 @@ export const generateLessonPlan = async (topic: string): Promise<LessonPlan> => 
 
   const prompt = `Create a detailed lesson plan for: "${topic}"
 
-IMPORTANT: For all narration text, include language code tags using this format:
-- English text: regular text
-- Spanish text: <lang:es>hola mundo</lang:es>
-- French text: <lang:fr>bonjour le monde</lang:fr>
-- German text: <lang:de>hallo welt</lang:de>
-- Italian text: <lang:it>ciao mondo</lang:it>
-- Chinese text: <lang:zh>你好世界</lang:zh>
-- Japanese text: <lang:ja>こんにちは世界</lang:ja>
-- Korean text: <lang:ko>안녕하세요 세계</lang:ko>
+IMPORTANT LANGUAGE RULES:
+- If the topic is about languages, cultures, countries, or international subjects, include appropriate language code tags using this format:
+  - Spanish text: <lang:es>hola mundo</lang:es>
+  - French text: <lang:fr>bonjour le monde</lang:fr>
+  - German text: <lang:de>hallo welt</lang:de>
+  - Italian text: <lang:it>ciao mondo</lang:it>
+  - Chinese text: <lang:zh>你好世界</lang:zh>
+  - Japanese text: <lang:ja>こんにちは世界</lang:ja>
+  - Korean text: <lang:ko>안녕하세요 세계</lang:ko>
 
-Use foreign language terms naturally when explaining concepts. For example:
-"Welcome to our lesson on French cuisine. We'll learn about <lang:fr>croissants</lang:fr>, <lang:fr>baguettes</lang:fr>, and <lang:fr>coq au vin</lang:fr>."
+- If the topic is NOT about languages, cultures, or international subjects (like science, math, technology, etc.), use ONLY English text without any language tags.
+
+Examples:
+- For "French cuisine": "We'll learn about <lang:fr>croissants</lang:fr> and <lang:fr>baguettes</lang:fr>"
+- For "Photosynthesis": "Plants convert sunlight into energy through photosynthesis" (NO language tags)
+- For "Japanese culture": "Traditional <lang:ja>おもてなし</lang:ja> (omotenashi) hospitality"
+- For "Computer programming": "Variables store data in memory" (NO language tags)
 
 Exclude any text in parentheses from narration as it's for internal notes only.
 
