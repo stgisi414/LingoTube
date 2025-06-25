@@ -156,14 +156,35 @@ function cropAroundFaces(faces: any[], width: number, height: number, aspectRati
     });
   });
 
-  // Add padding around faces
-  const padding = Math.min(width, height) * 0.1;
-  minX = Math.max(0, minX - padding);
-  minY = Math.max(0, minY - padding);
-  maxX = Math.min(width, maxX + padding);
-  maxY = Math.min(height, maxY + padding);
+  // Add generous padding around faces to ensure they're visible
+  const paddingX = Math.min(width, height) * 0.2;
+  const paddingY = Math.min(width, height) * 0.25; // Extra padding above for head/hair
+  
+  minX = Math.max(0, minX - paddingX);
+  minY = Math.max(0, minY - paddingY);
+  maxX = Math.min(width, maxX + paddingX);
+  maxY = Math.min(height, maxY + paddingY);
 
-  // Adjust to target aspect ratio
+  const faceWidth = maxX - minX;
+  const faceHeight = maxY - minY;
+
+  // Ensure minimum crop size to show full upper body/context
+  const minCropWidth = width * 0.4;
+  const minCropHeight = height * 0.4;
+
+  if (faceWidth < minCropWidth) {
+    const widthDiff = minCropWidth - faceWidth;
+    minX = Math.max(0, minX - widthDiff / 2);
+    maxX = Math.min(width, maxX + widthDiff / 2);
+  }
+
+  if (faceHeight < minCropHeight) {
+    const heightDiff = minCropHeight - faceHeight;
+    minY = Math.max(0, minY - heightDiff / 2);
+    maxY = Math.min(height, maxY + heightDiff / 2);
+  }
+
+  // Adjust to target aspect ratio while preserving faces
   return adjustToAspectRatio(minX, minY, maxX - minX, maxY - minY, width, height, aspectRatio);
 }
 
@@ -239,14 +260,29 @@ function adjustToAspectRatio(
     // Too wide, adjust height
     const newHeight = w / targetRatio;
     const heightDiff = newHeight - h;
-    y = Math.max(0, y - heightDiff / 2);
+    // Prefer expanding downward to keep faces/heads visible
+    y = Math.max(0, y - heightDiff * 0.3);
     h = Math.min(maxHeight - y, newHeight);
+    
+    // If we hit the bottom, adjust upward
+    if (y + h > maxHeight) {
+      h = maxHeight - y;
+      w = h * targetRatio;
+      x = Math.max(0, x - (w - (maxWidth - x)) / 2);
+    }
   } else {
     // Too tall, adjust width  
     const newWidth = h * targetRatio;
     const widthDiff = newWidth - w;
     x = Math.max(0, x - widthDiff / 2);
     w = Math.min(maxWidth - x, newWidth);
+    
+    // If we hit the right edge, adjust leftward
+    if (x + w > maxWidth) {
+      w = maxWidth - x;
+      h = w / targetRatio;
+      y = Math.max(0, y - (h - (maxHeight - y)) / 2);
+    }
   }
 
   return {
