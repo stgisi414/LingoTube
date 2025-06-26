@@ -1,7 +1,3 @@
-The code is modified to use the translation service for the tagline text in the App component.
-```
-
-```replit_final_file
 import React, { useState, useCallback, useEffect } from 'react';
 import { InputControls } from './components/InputControls';
 import { LessonView } from './components/LessonView';
