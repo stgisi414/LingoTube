@@ -7,6 +7,7 @@ import ParsedText from './ParsedText';
 import { speakMultilingualText, stopSpeech, isSpeaking } from '../services/googleTTSService';
 import { generateSearchQueries, checkVideoRelevance, findVideoSegments } from '../services/geminiService';
 import { searchYouTube, getVideoTranscript, SearchedVideo } from '../services/videoSourcingService';
+import { generateQuiz } from '../services/quizService';
 
 // This interface defines the state for the entire video fetching pipeline for one segment.
 interface VideoFetchState {
@@ -39,6 +40,9 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
     toSegment: -1,
     phase: 'complete'
   });
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [quizData, setQuizData] = useState<any>(null);
+  const [isGeneratingQuiz, setIsGeneratingQuiz] = useState(false);
 
   const mainContentRef = useRef<HTMLDivElement>(null);
 
@@ -322,6 +326,36 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
     }
   }, [speakingSegmentId]);
 
+  const handleGenerateQuiz = useCallback(async () => {
+    setIsGeneratingQuiz(true);
+    
+    // Collect all narration text from the lesson
+    const allNarrationText = [
+      lessonPlan.introNarration,
+      ...lessonPlan.segments
+        .filter(segment => segment.type === SegmentType.NARRATION)
+        .map(segment => (segment as NarrationSegment).text),
+      lessonPlan.outroNarration
+    ].join(' ');
+
+    try {
+      console.log('🧠 Generating comprehensive quiz from all narration content...');
+      const quiz = await generateQuiz(lessonPlan.topic, allNarrationText);
+      
+      if (quiz) {
+        setQuizData(quiz);
+        setShowQuiz(true);
+        console.log('✅ Quiz generated successfully');
+      } else {
+        console.error('❌ Failed to generate quiz');
+      }
+    } catch (error) {
+      console.error('❌ Quiz generation error:', error);
+    } finally {
+      setIsGeneratingQuiz(false);
+    }
+  }, [lessonPlan]);
+
   useEffect(() => {
     const calculateHeight = () => {
       if (mainContentRef.current) {
@@ -557,20 +591,106 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
             ) : null}
           </span>
 
-          <button
-            onClick={handleNextSegment}
-            disabled={isLastSegment || transitionState.isTransitioning}
-            className="flex items-center px-6 py-3 bg-zinc-600 hover:bg-zinc-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-          >
-            <span className="mr-2">{isLastSegment ? 'Complete' : 'Next'}</span> 
-            {transitionState.isTransitioning ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              ChevronRightIcon
-            )}
-          </button>
+          {isLastSegment ? (
+            <button
+              onClick={handleGenerateQuiz}
+              disabled={transitionState.isTransitioning || isGeneratingQuiz}
+              className="flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              <span className="mr-2">Generate Quiz</span> 
+              {isGeneratingQuiz ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                CheckCircleIcon
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={handleNextSegment}
+              disabled={transitionState.isTransitioning}
+              className="flex items-center px-6 py-3 bg-zinc-600 hover:bg-zinc-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              <span className="mr-2">Next</span> 
+              {transitionState.isTransitioning ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                ChevronRightIcon
+              )}
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Quiz Modal */}
+      {showQuiz && quizData && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-gradient-to-r from-green-900/50 to-blue-900/50 p-6 border-b border-slate-700">
+              <h2 className="text-2xl font-bold text-white mb-2">
+                📝 Lesson Quiz: {lessonPlan.topic}
+              </h2>
+              <p className="text-slate-300">Test your understanding of the lesson content</p>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="bg-slate-700/50 rounded-lg p-4">
+                <h3 className="text-lg font-semibold text-white mb-4">
+                  {quizData.question}
+                </h3>
+                
+                <div className="space-y-3">
+                  {quizData.options.map((option: string, index: number) => (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        const isCorrect = index === quizData.correct;
+                        if (isCorrect) {
+                          alert('✅ Correct! ' + quizData.explanation);
+                        } else {
+                          alert('❌ Incorrect. The correct answer is: ' + quizData.options[quizData.correct] + '\n\n' + quizData.explanation);
+                        }
+                      }}
+                      className="w-full text-left p-3 bg-slate-600 hover:bg-slate-500 text-white rounded-lg transition-colors border border-slate-500 hover:border-slate-400"
+                    >
+                      <span className="font-medium text-slate-300 mr-3">
+                        {String.fromCharCode(65 + index)}.
+                      </span>
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <button
+                  onClick={() => {
+                    setShowQuiz(false);
+                    setQuizData(null);
+                  }}
+                  className="px-6 py-3 bg-slate-600 hover:bg-slate-700 text-white rounded-lg font-medium transition-colors"
+                >
+                  Close Quiz
+                </button>
+                
+                <button
+                  onClick={handleGenerateQuiz}
+                  disabled={isGeneratingQuiz}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                >
+                  {isGeneratingQuiz ? (
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                      Generating...
+                    </div>
+                  ) : (
+                    'Generate New Quiz'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
