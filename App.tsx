@@ -1,14 +1,13 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { InputControls } from './components/InputControls';
 import { LessonView } from './components/LessonView';
 import LoadingIndicator from './components/LoadingIndicator';
 import { LanguageSelector } from './components/LanguageSelector';
 import { generateLessonPlan as callGeminiLessonPlan } from './services/geminiService';
-import { LessonPlan, AppStatus } from './types'; // Import AppStatus from types.ts
+import { LessonPlan, AppStatus } from './types';
 import { AlertTriangle } from './constants';
 import { useTranslation } from './services/translationService';
-
-// AppStatus enum is now imported from types.ts
 
 const App: React.FC = () => {
   const { t } = useTranslation();
@@ -58,7 +57,6 @@ const App: React.FC = () => {
     }
   }, [error, appStatus]);
 
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-yellow-900 text-gray-100 flex flex-col items-center p-4 selection:bg-yellow-500 selection:text-black">
       <header className="w-full max-w-4xl text-center my-8">
@@ -90,7 +88,7 @@ const App: React.FC = () => {
         {error && appStatus === AppStatus.ERROR && (
           <div 
             className="mt-6 p-4 bg-amber-900/40 border border-amber-600 rounded-lg text-amber-200 flex items-center space-x-3 shadow-lg"
-            role="alert" // Added for accessibility
+            role="alert"
           >
             {AlertTriangle}
             <span>{error}</span>
