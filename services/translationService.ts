@@ -1,7 +1,6 @@
-// Translation service for multilingual support
-// Supports: English, Korean, Chinese, Japanese, Spanish, Italian, German, French
 
 import { translations, TranslationKeys, SupportedLanguage } from '../data/translations';
+import { useState, useEffect } from 'react';
 
 /**
  * Detects the user's browser language and returns the appropriate supported language
@@ -29,14 +28,30 @@ export function detectBrowserLanguage(): SupportedLanguage {
 }
 
 /**
- * Translation service class
+ * Translation service class with event emission for React updates
  */
 class TranslationService {
   private currentLanguage: SupportedLanguage;
+  private listeners: Set<() => void> = new Set();
 
   constructor() {
     this.currentLanguage = detectBrowserLanguage();
     console.log(`🌍 Translation service initialized with language: ${this.currentLanguage}`);
+  }
+
+  /**
+   * Subscribe to language changes
+   */
+  subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
+  }
+
+  /**
+   * Notify all listeners of language change
+   */
+  private notifyListeners(): void {
+    this.listeners.forEach(listener => listener());
   }
 
   /**
@@ -57,9 +72,12 @@ class TranslationService {
    * Set language manually
    */
   setLanguage(language: SupportedLanguage): void {
-    this.currentLanguage = language;
-    localStorage.setItem('ailingo-language', language);
-    console.log(`🌍 Language changed to: ${language}`);
+    if (this.currentLanguage !== language) {
+      this.currentLanguage = language;
+      localStorage.setItem('ailingo-language', language);
+      console.log(`🌍 Language changed to: ${language}`);
+      this.notifyListeners();
+    }
   }
 
   /**
@@ -93,8 +111,17 @@ export const translationService = new TranslationService();
 // Export the translation function for convenience
 export const t = (key: keyof TranslationKeys): string => translationService.t(key);
 
-// Hook for React components
+// Hook for React components with reactive updates
 export function useTranslation() {
+  const [, forceUpdate] = useState({});
+
+  useEffect(() => {
+    const unsubscribe = translationService.subscribe(() => {
+      forceUpdate({}); // Force re-render when language changes
+    });
+    return unsubscribe;
+  }, []);
+
   return {
     t: translationService.t.bind(translationService),
     currentLanguage: translationService.getCurrentLanguage(),
