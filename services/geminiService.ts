@@ -165,15 +165,60 @@ export const checkVideoRelevance = async (
     safetySettings 
   });
 
-  const prompt = `Analyze if this YouTube video is relevant for education:
+  // Pre-filter obviously irrelevant content
+  const title = videoTitle.toLowerCase();
+  const learning = learningPoint.toLowerCase();
+  const topic = mainTopic.toLowerCase();
+  
+  // Hard filters for completely unrelated content
+  const irrelevantKeywords = [
+    'draw', 'drawing', 'sketch', 'art', 'paint', 'painting', 'illustration',
+    'recipe', 'cooking', 'baking', 'food preparation',
+    'workout', 'exercise', 'fitness', 'gym',
+    'makeup', 'beauty', 'skincare', 'fashion',
+    'gaming', 'gameplay', 'let\'s play', 'walkthrough',
+    'unboxing', 'review', 'haul', 'shopping',
+    'music video', 'song', 'lyrics', 'album',
+    'sports', 'football', 'basketball', 'soccer'
+  ];
+  
+  // Check if video title contains obviously irrelevant keywords that don't match the learning point
+  for (const keyword of irrelevantKeywords) {
+    if (title.includes(keyword) && !learning.includes(keyword) && !topic.includes(keyword)) {
+      return { 
+        relevant: false, 
+        reason: `Video about "${keyword}" is not relevant to "${learningPoint}"`, 
+        confidence: 9 
+      };
+    }
+  }
 
-Main Topic: "${mainTopic}"
-Learning Point: "${learningPoint}"
-Video Title: "${videoTitle}"
-${transcript ? `Transcript: "${transcript.substring(0, 1000)}..."` : ''}
+  const prompt = `You are an expert educator analyzing video relevance. Be VERY STRICT in your assessment.
+
+LEARNING OBJECTIVE: "${learningPoint}"
+MAIN TOPIC: "${mainTopic}"
+VIDEO TITLE: "${videoTitle}"
+${transcript ? `VIDEO TRANSCRIPT SAMPLE: "${transcript.substring(0, 1500)}..."` : 'NO TRANSCRIPT AVAILABLE'}
+
+STRICT EVALUATION CRITERIA:
+1. The video content must DIRECTLY relate to the learning objective
+2. The video title must contain relevant keywords or concepts
+3. If transcript is available, it must contain relevant educational content
+4. Generic tutorials unrelated to the topic should be marked as irrelevant
+5. Art/drawing videos are only relevant if the learning objective is about art/drawing
+6. Language learning videos should match the target language
+7. Confidence should be 8-10 for clearly relevant, 4-7 for somewhat relevant, 1-3 for questionable
+
+EXAMPLES OF IRRELEVANT MATCHES:
+- Drawing tutorials when looking for language content
+- Cooking videos when looking for technology content  
+- Music videos when looking for educational content
+- Generic "how to" videos unrelated to the specific topic
+
+Be especially strict if the video title suggests completely different subject matter than the learning objective.
 
 Return ONLY valid JSON:
-{ "relevant": boolean, "reason": "brief explanation", "confidence": number }`;
+{ "relevant": boolean, "reason": "detailed explanation of why relevant/irrelevant", "confidence": number_1_to_10 }`;
 
   try {
     const result = await model.generateContent({
@@ -187,6 +232,14 @@ Return ONLY valid JSON:
     const relevanceResult = parseJsonResponse(result.response.text());
 
     if (relevanceResult && typeof relevanceResult.relevant === 'boolean') {
+      // Apply additional confidence threshold - require higher confidence for positive matches
+      if (relevanceResult.relevant && relevanceResult.confidence < 6) {
+        return {
+          relevant: false,
+          reason: `Low confidence match (${relevanceResult.confidence}/10): ${relevanceResult.reason}`,
+          confidence: relevanceResult.confidence
+        };
+      }
       return relevanceResult;
     }
 
