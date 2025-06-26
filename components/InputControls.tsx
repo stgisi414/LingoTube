@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MicIcon, StopCircleIcon, SendIcon } from '../constants';
-import { SpeechRecognition, AppStatus } from '../types';
+import { SpeechRecognition, AppStatus, SentenceTemplate } from '../types';
+import { SENTENCE_TEMPLATES } from '../data/searchTemplateOptions';
 
 interface InputControlsProps {
   onSubmit: (topic: string) => void;
@@ -8,12 +9,7 @@ interface InputControlsProps {
   setAppStatus: (status: AppStatus) => void;
 }
 
-interface SentenceTemplate {
-  id: string;
-  template: string;
-  blanks: { id: string; placeholder: string; options?: string[] }[];
-  example: string;
-}
+
 
 export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProcessing, setAppStatus }) => {
   const [selectedTemplate, setSelectedTemplate] = useState<SentenceTemplate>(SENTENCE_TEMPLATES[0]);

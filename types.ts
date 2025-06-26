@@ -43,6 +43,13 @@ export enum AppStatus {
   ERROR = 'error',
 }
 
+export interface SentenceTemplate {
+  id: string;
+  template: string;
+  blanks: { id: string; placeholder: string; options?: string[] }[];
+  example: string;
+}
+
 // --- Speech Recognition API Types ---
 export interface SpeechRecognitionAlternative {
   readonly transcript: string;

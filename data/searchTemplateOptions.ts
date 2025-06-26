@@ -1,6 +1,6 @@
 import { SentenceTemplate } from '../types';
 
-const SENTENCE_TEMPLATES: SentenceTemplate[] = [
+export const SENTENCE_TEMPLATES: SentenceTemplate[] = [
   {
     "id": "learn-about",
     "template": "I want to learn {subject} about {topic}",
