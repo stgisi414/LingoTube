@@ -20,6 +20,11 @@ const parseJsonResponse = (responseText: string): any => {
   }
 };
 
+// Helper function to strip language tags from text
+const stripLanguageTags = (text: string): string => {
+  return text.replace(/<lang:[^>]*>([^<]*)<\/lang:[^>]*>/g, '$1');
+};
+
 const safetySettings = [
   {
     category: 'HARM_CATEGORY_HARASSMENT',
@@ -55,9 +60,12 @@ export const generateQuiz = async (topic: string, content: string): Promise<Quiz
     safetySettings 
   });
 
+  // Clean the content by removing language tags before sending to AI
+  const cleanContent = stripLanguageTags(content);
+
   const prompt = `Create a comprehensive multiple-choice quiz question about "${topic}" based on this lesson content:
 
-"${content.substring(0, 2000)}..."
+"${cleanContent.substring(0, 2000)}..."
 
 The question should test understanding of a key concept covered in the lesson narration. Make it challenging but fair.
 
@@ -84,8 +92,16 @@ Return ONLY valid JSON:
       throw new Error('Invalid quiz structure received');
     }
 
+    // Clean all text fields in the quiz data to remove any remaining language tags
+    const cleanedQuizData = {
+      question: stripLanguageTags(quizData.question),
+      options: quizData.options.map((option: string) => stripLanguageTags(option)),
+      correct: quizData.correct,
+      explanation: stripLanguageTags(quizData.explanation)
+    };
+
     console.log(`✅ Generated quiz question successfully`);
-    return quizData;
+    return cleanedQuizData;
 
   } catch (error) {
     console.error('Quiz generation error:', error);
