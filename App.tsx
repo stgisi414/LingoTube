@@ -6,10 +6,12 @@ import { LanguageSelector } from './components/LanguageSelector';
 import { generateLessonPlan as callGeminiLessonPlan } from './services/geminiService';
 import { LessonPlan, AppStatus } from './types'; // Import AppStatus from types.ts
 import { AlertTriangle } from './constants';
+import { useTranslation } from './services/translationService';
 
 // AppStatus enum is now imported from types.ts
 
 const App: React.FC = () => {
+  const { t } = useTranslation();
   const [appStatus, setAppStatus] = useState<AppStatus>(AppStatus.IDLE);
   const [lessonPlan, setLessonPlan] = useState<LessonPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +19,7 @@ const App: React.FC = () => {
 
   const handleGenerateLesson = useCallback(async (topic: string) => {
     if (!topic.trim()) {
-      setError("Please enter a topic.");
+      setError(t('typeYourQuestion'));
       setAppStatus(AppStatus.ERROR);
       return;
     }
@@ -36,8 +38,8 @@ const App: React.FC = () => {
       }
     } catch (err) {
       console.error("Error generating lesson plan:", err);
-      const errorMessage = err instanceof Error ? err.message : "An unknown error occurred.";
-      setError(`Failed to generate lesson plan: ${errorMessage}. Please check your API key and network connection.`);
+      const errorMessage = err instanceof Error ? err.message : t('error');
+      setError(`${t('apiError')}: ${errorMessage}. ${t('networkError')}`);
       setAppStatus(AppStatus.ERROR);
     }
   }, []);
@@ -83,7 +85,7 @@ const App: React.FC = () => {
           />
         )}
 
-        {appStatus === AppStatus.PROCESSING_INPUT && <LoadingIndicator message={`Generating lesson for "${currentTopic}"...`} />}
+        {appStatus === AppStatus.PROCESSING_INPUT && <LoadingIndicator message={`${t('loading')} "${currentTopic}"...`} />}
 
         {error && appStatus === AppStatus.ERROR && (
           <div 
@@ -97,7 +99,7 @@ const App: React.FC = () => {
               className="ml-auto bg-amber-700 hover:bg-amber-600 text-yellow-100 px-3 py-1 rounded-md text-sm shadow-md border border-amber-500"
               aria-label="Try generating lesson again"
             >
-              Try Again
+              {t('retry')}
             </button>
           </div>
         )}
