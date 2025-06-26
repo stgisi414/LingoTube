@@ -1,3 +1,7 @@
+The code is modified to use the translation service for the tagline text in the App component.
+```
+
+```replit_final_file
 import React, { useState, useCallback, useEffect } from 'react';
 import { InputControls } from './components/InputControls';
 import { LessonView } from './components/LessonView';
@@ -6,10 +10,12 @@ import { LanguageSelector } from './components/LanguageSelector';
 import { generateLessonPlan as callGeminiLessonPlan } from './services/geminiService';
 import { LessonPlan, AppStatus } from './types'; // Import AppStatus from types.ts
 import { AlertTriangle } from './constants';
+import { useTranslation } from './services/translationService';
 
 // AppStatus enum is now imported from types.ts
 
 const App: React.FC = () => {
+  const { t } = useTranslation();
   const [appStatus, setAppStatus] = useState<AppStatus>(AppStatus.IDLE);
   const [lessonPlan, setLessonPlan] = useState<LessonPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +76,7 @@ const App: React.FC = () => {
           </h1>
         </div>
         <p className="mt-4 text-lg text-gray-300">
-          Craft dynamic educational journeys with AI-powered narration, illustrations, and curated video segments.
+          {t('tagline')}
         </p>
       </header>
 
