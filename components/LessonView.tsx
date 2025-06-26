@@ -687,12 +687,13 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                   ) : (
                     'Generate New Quiz'
                   )}
+                ```
                 </button>
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
