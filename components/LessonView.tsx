@@ -330,7 +330,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
 
   const handleGenerateQuiz = useCallback(async () => {
     setIsGeneratingQuiz(true);
-    
+
     // Collect all narration text from the lesson
     const allNarrationText = [
       lessonPlan.introNarration,
@@ -343,7 +343,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
     try {
       console.log('🧠 Generating comprehensive quiz from all narration content...');
       const quiz = await generateQuiz(lessonPlan.topic, allNarrationText);
-      
+
       if (quiz) {
         setQuizData(quiz);
         setShowQuiz(true);
@@ -451,7 +451,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                     </div>
                   </button>
                 )}
-                
+
                 {completedSegments.has(currentSegment.id) && (
                   <div className="text-green-400 text-xl">{CheckCircleIcon}</div>
                 )}
@@ -639,7 +639,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                 <h3 className="text-lg font-semibold text-white mb-4">
                   {quizData.question}
                 </h3>
-                
+
                 <div className="space-y-3">
                   {quizData.options.map((option: string, index: number) => (
                     <button
@@ -673,7 +673,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                 >
                   Close Quiz
                 </button>
-                
+
                 <button
                   onClick={handleGenerateQuiz}
                   disabled={isGeneratingQuiz}
@@ -689,6 +689,9 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                   )}
                 </button>
               </div>
+            </div>
+          ```python
+
             </div>
           </div>
         </div>

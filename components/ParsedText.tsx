@@ -13,7 +13,7 @@ export interface ParsedSegment {
 
 interface ParsedTextProps {
   text: string;
-  onPlayAudio?: (text: string) => void;
+  onPlayAudio?: (text: string, language?: string) => void;
   onStopAudio?: () => void;
   isPlaying?: boolean;
   lessonTopic?: string;
@@ -80,7 +80,7 @@ const ParsedText: React.FC<ParsedTextProps> = ({
   lessonTopic,
   generateIllustration = false,
 }) => {
-  const { t } = useTranslation();
+  const { t, currentLanguage } = useTranslation();
   const [illustrationImage, setIllustrationImage] = useState<string | null>(
     null,
   );
@@ -160,7 +160,7 @@ const ParsedText: React.FC<ParsedTextProps> = ({
       <div className="flex items-start space-x-3 min-h-fit">
         {onPlayAudio && (
           <button
-            onClick={() => (isPlaying ? onStopAudio?.() : onPlayAudio(text))}
+            onClick={() => (isPlaying ? onStopAudio?.() : onPlayAudio(text, currentLanguage))}
             className={`flex-shrink-0 p-2 rounded-full transition-colors ${
               isPlaying
                 ? "bg-red-600 hover:bg-red-500 text-white"

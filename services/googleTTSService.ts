@@ -99,7 +99,7 @@ const speechManager = new SpeechManager();
 /**
  * Parse text with language tags into segments
  */
-function parseLanguageSegments(text: string): LanguageSegment[] {
+function parseLanguageSegments(text: string, appLanguage: string = 'en'): LanguageSegment[] {
   // Remove content in parentheses first
   const cleanText = text.replace(/\([^)]*\)/g, '');
 
@@ -109,11 +109,11 @@ function parseLanguageSegments(text: string): LanguageSegment[] {
   let match;
 
   while ((match = langTagRegex.exec(cleanText)) !== null) {
-    // Add any English text before this tag
+    // Add any main language text before this tag (use app's language, not English)
     if (match.index > lastIndex) {
-      const englishText = cleanText.slice(lastIndex, match.index).trim();
-      if (englishText) {
-        segments.push({ text: englishText, langCode: 'en' });
+      const mainText = cleanText.slice(lastIndex, match.index).trim();
+      if (mainText) {
+        segments.push({ text: mainText, langCode: appLanguage });
       }
     }
 
@@ -127,11 +127,11 @@ function parseLanguageSegments(text: string): LanguageSegment[] {
     lastIndex = langTagRegex.lastIndex;
   }
 
-  // Add any remaining English text
+  // Add any remaining main language text (use app's language, not English)
   if (lastIndex < cleanText.length) {
     const remainingText = cleanText.slice(lastIndex).trim();
     if (remainingText) {
-      segments.push({ text: remainingText, langCode: 'en' });
+      segments.push({ text: remainingText, langCode: appLanguage });
     }
   }
 
@@ -222,19 +222,20 @@ async function tryTTSRequest(text: string, voiceName: string | undefined, langua
 /**
  * Main function to speak multilingual text
  */
-export async function speakMultilingualText(text: string): Promise<void> {
+export async function speakMultilingualText(text: string, appLanguage: string = 'en'): Promise<void> {
   console.log(`🗣️ Starting multilingual TTS for: "${text.substring(0, 100)}..."`);
+  console.log(`🗣️ App language: ${appLanguage}`);
   console.log(`🗣️ TTS API Key available: ${!!GOOGLE_TTS_API_KEY}`);
 
-  const segments = parseLanguageSegments(text);
+  const segments = parseLanguageSegments(text, appLanguage);
   console.log(`🗣️ Parsed into ${segments.length} segments:`, segments.map(s => ({
     langCode: s.langCode,
     text: s.text.substring(0, 30) + (s.text.length > 30 ? '...' : '')
   })));
 
   if (segments.length === 0) {
-    console.log('🗣️ No segments found, treating as plain English text');
-    segments.push({ text: text, langCode: 'en' });
+    console.log(`🗣️ No segments found, treating as plain ${appLanguage} text`);
+    segments.push({ text: text, langCode: appLanguage });
   }
 
   const audioContents: string[] = [];
