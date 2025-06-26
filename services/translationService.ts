@@ -2,8 +2,6 @@
 // Translation service for multilingual support
 // Supports: English, Korean, Chinese, Japanese, Spanish, Italian, German, French
 
-import React from 'react';
-
 export type SupportedLanguage = 'en' | 'ko' | 'zh' | 'ja' | 'es' | 'it' | 'de' | 'fr';
 
 export interface TranslationKeys {
@@ -632,7 +630,6 @@ export function detectBrowserLanguage(): SupportedLanguage {
  */
 class TranslationService {
   private currentLanguage: SupportedLanguage;
-  private listeners: Set<() => void> = new Set();
   
   constructor() {
     this.currentLanguage = detectBrowserLanguage();
@@ -660,28 +657,6 @@ class TranslationService {
     this.currentLanguage = language;
     localStorage.setItem('ailingo-language', language);
     console.log(`🌍 Language changed to: ${language}`);
-    this.notifyListeners();
-  }
-  
-  /**
-   * Add listener for language changes
-   */
-  addLanguageChangeListener(listener: () => void): void {
-    this.listeners.add(listener);
-  }
-  
-  /**
-   * Remove listener for language changes
-   */
-  removeLanguageChangeListener(listener: () => void): void {
-    this.listeners.delete(listener);
-  }
-  
-  /**
-   * Notify all listeners of language change
-   */
-  private notifyListeners(): void {
-    this.listeners.forEach(listener => listener());
   }
   
   /**
@@ -717,14 +692,6 @@ export const t = (key: keyof TranslationKeys): string => translationService.t(ke
 
 // Hook for React components
 export function useTranslation() {
-  const [, forceUpdate] = React.useState({});
-  
-  React.useEffect(() => {
-    const handleLanguageChange = () => forceUpdate({});
-    translationService.addLanguageChangeListener(handleLanguageChange);
-    return () => translationService.removeLanguageChangeListener(handleLanguageChange);
-  }, []);
-  
   return {
     t: translationService.t.bind(translationService),
     currentLanguage: translationService.getCurrentLanguage(),
