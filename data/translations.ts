@@ -76,15 +76,15 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     retry: "Retry",
     
     // Input Controls
-    startListening: "Start Listening",
-    stopListening: "Stop Listening",
+    startListening: "Use Voice Input",
+    stopListening: "Stop Recording...",
     listening: "Listening...",
-    typeYourQuestion: "Type your question or learning goal...",
-    send: "Send",
-    selectTemplate: "Select a template to get started",
-    customPrompt: "Custom Prompt",
+    typeYourQuestion: "What do you want to learn about today?",
+    send: "Generate Lesson",
+    selectTemplate: "Choose a lesson template",
+    customPrompt: "Free Input",
     fillInTheBlanks: "Fill in the blanks and click 'Use Template'",
-    useTemplate: "Use Template",
+    useTemplate: "Guided Templates",
     
     // Lesson View
     lessonPlan: "Lesson Plan",
@@ -142,15 +142,15 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     retry: "다시 시도",
     
     // Input Controls
-    startListening: "듣기 시작",
-    stopListening: "듣기 중지",
+    startListening: "음성 입력 사용",
+    stopListening: "녹음 중지...",
     listening: "듣는 중...",
-    typeYourQuestion: "질문이나 학습 목표를 입력하세요...",
-    send: "보내기",
-    selectTemplate: "시작하려면 템플릿을 선택하세요",
-    customPrompt: "사용자 정의 프롬프트",
+    typeYourQuestion: "오늘 무엇을 배우고 싶으신가요?",
+    send: "수업 생성",
+    selectTemplate: "수업 템플릿 선택",
+    customPrompt: "자유 입력",
     fillInTheBlanks: "빈칸을 채우고 '템플릿 사용'을 클릭하세요",
-    useTemplate: "템플릿 사용",
+    useTemplate: "가이드 템플릿",
     
     // Lesson View
     lessonPlan: "수업 계획",
@@ -208,15 +208,15 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     retry: "重试",
     
     // Input Controls
-    startListening: "开始听取",
-    stopListening: "停止听取",
+    startListening: "使用语音输入",
+    stopListening: "停止录音...",
     listening: "正在听取...",
-    typeYourQuestion: "输入您的问题或学习目标...",
-    send: "发送",
-    selectTemplate: "选择模板开始",
-    customPrompt: "自定义提示",
+    typeYourQuestion: "您今天想学什么？",
+    send: "生成课程",
+    selectTemplate: "选择课程模板",
+    customPrompt: "自由输入",
     fillInTheBlanks: "填写空白并点击\"使用模板\"",
-    useTemplate: "使用模板",
+    useTemplate: "引导模板",
     
     // Lesson View
     lessonPlan: "课程计划",

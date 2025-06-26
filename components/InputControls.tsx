@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MicIcon, StopCircleIcon, SendIcon } from '../constants';
 import { SpeechRecognition, AppStatus, SentenceTemplate } from '../types';
 import { SENTENCE_TEMPLATES } from '../data/searchTemplateOptions';
+import { useTranslation } from '../services/translationService';
 
 interface InputControlsProps {
   onSubmit: (topic: string) => void;
@@ -12,6 +13,7 @@ interface InputControlsProps {
 
 
 export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProcessing, setAppStatus }) => {
+  const { t } = useTranslation();
   const [selectedTemplate, setSelectedTemplate] = useState<SentenceTemplate>(SENTENCE_TEMPLATES[0]);
   const [blankValues, setBlankValues] = useState<Record<string, string>>({});
   const [customTopic, setCustomTopic] = useState('');
@@ -168,7 +170,7 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
               !useCustomInput ? 'bg-yellow-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
-            Guided Templates
+            {t('useTemplate')}
           </button>
           <button
             type="button"
@@ -177,7 +179,7 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
               useCustomInput ? 'bg-yellow-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
-            Free Input
+            {t('customPrompt')}
           </button>
         </div>
 
@@ -187,7 +189,7 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
             {/* Template selector */}
             <div>
               <label className="block text-sm font-medium text-yellow-300 mb-2">
-                Choose a lesson template:
+                {t('selectTemplate')}:
               </label>
               <select
                 value={selectedTemplate.id}
@@ -257,13 +259,13 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
           /* Custom input */
           <div>
             <label htmlFor="custom-topic" className="block text-sm font-medium text-yellow-300 mb-1">
-              What do you want to learn about today?
+              {t('typeYourQuestion')}
             </label>
             <textarea
               id="custom-topic"
               value={customTopic}
               onChange={(e) => setCustomTopic(e.target.value)}
-              placeholder="e.g., The basics of Quantum Physics, History of the Roman Empire, How to bake sourdough bread..."
+              placeholder={t('typeYourQuestion')}
               rows={4}
               className="w-full p-3 bg-slate-700 border border-slate-600 rounded-lg text-slate-200 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-shadow placeholder-slate-500"
               disabled={isProcessing || isRecording}
@@ -288,10 +290,10 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
                               : 'bg-slate-600 hover:bg-slate-500 border-slate-500 text-slate-200'}
                           ${isProcessing || !speechRecognition ? 'opacity-50 cursor-not-allowed' : ''}`}
               aria-pressed={isRecording}
-              aria-label={isRecording ? "Stop voice input" : "Start voice input"}
+              aria-label={isRecording ? t('stopListening') : t('startListening')}
             >
               {isRecording ? StopCircleIcon : MicIcon}
-              <span className="ml-2">{isRecording ? 'Stop Recording...' : 'Use Voice Input'}</span>
+              <span className="ml-2">{isRecording ? t('stopListening') : t('startListening')}</span>
             </button>
           )}
 
@@ -303,15 +305,15 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
               (useCustomInput ? !customTopic.trim() : !isTemplateComplete())
             }
             className="flex items-center justify-center px-6 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-opacity-50 transition-colors duration-150 ease-in-out w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Generate lesson based on the entered topic"
+            aria-label={t('send')}
           >
-            <span className="mr-2">Generate Lesson</span>
+            <span className="mr-2">{t('send')}</span>
             {SendIcon}
           </button>
         </div>
 
         {!useCustomInput && !speechRecognition && window.SpeechRecognition === undefined && window.webkitSpeechRecognition === undefined && (
-          <p className="text-xs text-slate-500 text-center sm:text-left pt-2">Voice input is not supported by your browser.</p>
+          <p className="text-xs text-slate-500 text-center sm:text-left pt-2">{t('speechNotSupported')}</p>
         )}
       </form>
     </div>
