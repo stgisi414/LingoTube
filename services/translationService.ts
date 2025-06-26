@@ -604,6 +604,12 @@ const translations: Record<SupportedLanguage, TranslationKeys> = {
  * Detects the user's browser language and returns the appropriate supported language
  */
 export function detectBrowserLanguage(): SupportedLanguage {
+  // Check if user has previously selected a language
+  const savedLanguage = localStorage.getItem('ailingo-language');
+  if (savedLanguage && savedLanguage in translations) {
+    return savedLanguage as SupportedLanguage;
+  }
+  
   // Get the browser's language
   const browserLang = navigator.language || navigator.languages?.[0] || 'en';
   
@@ -649,6 +655,7 @@ class TranslationService {
    */
   setLanguage(language: SupportedLanguage): void {
     this.currentLanguage = language;
+    localStorage.setItem('ailingo-language', language);
     console.log(`🌍 Language changed to: ${language}`);
   }
   
