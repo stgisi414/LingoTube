@@ -263,7 +263,3 @@ Return ONLY valid JSON array:
     }];
   }
 };
-```
-
-```
-</replit_final_file>
