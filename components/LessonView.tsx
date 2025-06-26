@@ -87,12 +87,12 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
 
     try {
         console.log(`\n🔍 PIPELINE STEP 1: Generating search queries for "${segment.title}"`);
-        updateState('loading', 'Step 1/5: Generating search queries...', { videoId: null, videoTitle: null, timeSegments: null });
+        updateState('loading', t('step1Of5GeneratingQueries'), { videoId: null, videoTitle: null, timeSegments: null });
         const queries = await generateSearchQueries(segment.title, lessonPlan.topic);
         console.log(`✅ PIPELINE STEP 1: Generated ${queries.length} search queries:`, queries);
 
         console.log(`\n🔎 PIPELINE STEP 2: Searching YouTube with ${queries.length} queries`);
-        updateState('loading', 'Step 2/5: Searching YouTube for candidates...');
+        updateState('loading', t('step2Of5SearchingYoutube'));
         const searchPromises = queries.map(async (q, index) => {
             console.log(`🔎 PIPELINE: Searching with query ${index + 1}/${queries.length}: "${q}"`);
             const results = await searchYouTube(q);
@@ -112,7 +112,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
 
         const candidateCount = Math.min(5, uniqueVideos.length);
         console.log(`\n🤖 PIPELINE STEP 3: Checking top ${candidateCount} videos for relevance`);
-        updateState('loading', `Step 3/5: Checking top ${candidateCount} videos for relevance...`);
+        updateState('loading', interpolateString(t('step3Of5CheckingRelevance'), { count: candidateCount }));
 
         const relevancePromises = uniqueVideos.slice(0, 5).map(async (video, index) => {
             console.log(`🤖 PIPELINE: Analyzing candidate ${index + 1}/${candidateCount}: "${video.title}"`);
@@ -136,10 +136,10 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
         const bestVideo = relevantVideos[0];
 
         console.log(`\n🏆 PIPELINE STEP 4: Selected best video: "${bestVideo.title}"`);
-        updateState('loading', `Step 4/5: Best video found: "${bestVideo.title}"`);
+        updateState('loading', interpolateString(t('step4Of5BestVideoFound'), { title: bestVideo.title }));
 
         console.log(`\n🎬 PIPELINE STEP 5: Finding time segments in "${bestVideo.title}"`);
-        updateState('loading', `Step 5/5: Identifying key segments in the video...`);
+        updateState('loading', t('step5Of5IdentifyingSegments'));
         const timeSegments = await findVideoSegments(bestVideo.title, segment.title, bestVideo.transcript || null);
 
         if (!timeSegments || timeSegments.length === 0) {
@@ -147,7 +147,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
         }
 
         console.log(`\n✅ VIDEO SOURCING PIPELINE COMPLETE for "${segment.title}"`);
-        updateState('success', 'Video ready!', { videoId: bestVideo.youtubeId, videoTitle: bestVideo.title, timeSegments });
+        updateState('success', t('videoReady'), { videoId: bestVideo.youtubeId, videoTitle: bestVideo.title, timeSegments });
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "An unknown error occurred during video sourcing.";
