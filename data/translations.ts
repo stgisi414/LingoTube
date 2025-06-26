@@ -82,6 +82,22 @@ export interface TranslationKeys {
   
   // Loading states
   generatingLessonFor: string;
+  
+  // Video progress and status
+  segmentOf: string;
+  percentComplete: string;
+  videoPartOf: string;
+  watchVideoSegment: string;
+  
+  // Video sourcing pipeline messages
+  step1Of5GeneratingQueries: string;
+  step2Of5SearchingYoutube: string;
+  step3Of5CheckingRelevance: string;
+  step4Of5BestVideoFound: string;
+  step5Of5IdentifyingSegments: string;
+  checkingTopVideos: string;
+  ourAiAnalyzing: string;
+  videoReady: string;
 }
 
 export const translations: Record<SupportedLanguage, TranslationKeys> = {
@@ -165,7 +181,23 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     poweredBy: "Powered by Gemini",
     
     // Loading states
-    generatingLessonFor: "Generating lesson for"
+    generatingLessonFor: "Generating lesson for",
+    
+    // Video progress and status
+    segmentOf: "Segment {current} of {total}",
+    percentComplete: "{percent}% Complete",
+    videoPartOf: "Video part {current} of {total}",
+    watchVideoSegment: "Watch the video segment",
+    
+    // Video sourcing pipeline messages
+    step1Of5GeneratingQueries: "Step 1/5: Generating search queries...",
+    step2Of5SearchingYoutube: "Step 2/5: Searching YouTube for candidates...",
+    step3Of5CheckingRelevance: "Step 3/5: Checking top {count} videos for relevance...",
+    step4Of5BestVideoFound: "Step 4/5: Best video found: \"{title}\"",
+    step5Of5IdentifyingSegments: "Step 5/5: Identifying key segments in the video...",
+    checkingTopVideos: "Checking top {count} videos for relevance...",
+    ourAiAnalyzing: "Our AI is analyzing thousands of educational videos to find the most relevant content for your lesson",
+    videoReady: "Video ready!"
   },
   
   ko: {
@@ -248,7 +280,23 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     poweredBy: "Gemini 제공",
     
     // Loading states
-    generatingLessonFor: "수업 생성 중"
+    generatingLessonFor: "수업 생성 중",
+    
+    // Video progress and status
+    segmentOf: "세그먼트 {current} / {total}",
+    percentComplete: "{percent}% 완료",
+    videoPartOf: "비디오 파트 {current} / {total}",
+    watchVideoSegment: "비디오 세그먼트 시청",
+    
+    // Video sourcing pipeline messages
+    step1Of5GeneratingQueries: "1/5단계: 검색 쿼리 생성 중...",
+    step2Of5SearchingYoutube: "2/5단계: YouTube 후보 검색 중...",
+    step3Of5CheckingRelevance: "3/5단계: 상위 {count}개 비디오 관련성 확인 중...",
+    step4Of5BestVideoFound: "4/5단계: 최적 비디오 발견: \"{title}\"",
+    step5Of5IdentifyingSegments: "5/5단계: 비디오의 핵심 세그먼트 식별 중...",
+    checkingTopVideos: "상위 {count}개 비디오 관련성 확인 중...",
+    ourAiAnalyzing: "AI가 수천 개의 교육 비디오를 분석하여 수업에 가장 관련성 높은 콘텐츠를 찾고 있습니다",
+    videoReady: "비디오 준비 완료!"
   },
   
   zh: {
@@ -331,7 +379,23 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     poweredBy: "由 Gemini 提供支持",
     
     // Loading states
-    generatingLessonFor: "正在生成课程"
+    generatingLessonFor: "正在生成课程",
+    
+    // Video progress and status
+    segmentOf: "第 {current} 段，共 {total} 段",
+    percentComplete: "{percent}% 完成",
+    videoPartOf: "视频第 {current} 部分，共 {total} 部分",
+    watchVideoSegment: "观看视频片段",
+    
+    // Video sourcing pipeline messages
+    step1Of5GeneratingQueries: "第1/5步: 生成搜索查询中...",
+    step2Of5SearchingYoutube: "第2/5步: 搜索YouTube候选视频中...",
+    step3Of5CheckingRelevance: "第3/5步: 检查前{count}个视频的相关性中...",
+    step4Of5BestVideoFound: "第4/5步: 找到最佳视频: \"{title}\"",
+    step5Of5IdentifyingSegments: "第5/5步: 识别视频中的关键片段中...",
+    checkingTopVideos: "检查前{count}个视频的相关性中...",
+    ourAiAnalyzing: "我们的AI正在分析数千个教育视频，为您的课程找到最相关的内容",
+    videoReady: "视频准备就绪！"
   },
   
   ja: {
@@ -414,7 +478,23 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     poweredBy: "Gemini提供",
     
     // Loading states
-    generatingLessonFor: "レッスンを生成中"
+    generatingLessonFor: "レッスンを生成中",
+    
+    // Video progress and status
+    segmentOf: "セグメント {current} / {total}",
+    percentComplete: "{percent}% 完了",
+    videoPartOf: "ビデオパート {current} / {total}",
+    watchVideoSegment: "ビデオセグメントを視聴",
+    
+    // Video sourcing pipeline messages
+    step1Of5GeneratingQueries: "ステップ1/5: 検索クエリを生成中...",
+    step2Of5SearchingYoutube: "ステップ2/5: YouTube候補を検索中...",
+    step3Of5CheckingRelevance: "ステップ3/5: 上位{count}本のビデオの関連性を確認中...",
+    step4Of5BestVideoFound: "ステップ4/5: 最適なビデオを発見: \"{title}\"",
+    step5Of5IdentifyingSegments: "ステップ5/5: ビデオの重要なセグメントを特定中...",
+    checkingTopVideos: "上位{count}本のビデオの関連性を確認中...",
+    ourAiAnalyzing: "AIが数千の教育ビデオを分析して、あなたのレッスンに最も関連性の高いコンテンツを見つけています",
+    videoReady: "ビデオ準備完了！"
   },
   
   es: {
@@ -497,7 +577,23 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     poweredBy: "Desarrollado por Gemini",
     
     // Loading states
-    generatingLessonFor: "Generando lección para"
+    generatingLessonFor: "Generando lección para",
+    
+    // Video progress and status
+    segmentOf: "Segmento {current} de {total}",
+    percentComplete: "{percent}% Completado",
+    videoPartOf: "Parte del video {current} de {total}",
+    watchVideoSegment: "Ver el segmento de video",
+    
+    // Video sourcing pipeline messages
+    step1Of5GeneratingQueries: "Paso 1/5: Generando consultas de búsqueda...",
+    step2Of5SearchingYoutube: "Paso 2/5: Buscando candidatos en YouTube...",
+    step3Of5CheckingRelevance: "Paso 3/5: Verificando relevancia de los {count} mejores videos...",
+    step4Of5BestVideoFound: "Paso 4/5: Mejor video encontrado: \"{title}\"",
+    step5Of5IdentifyingSegments: "Paso 5/5: Identificando segmentos clave en el video...",
+    checkingTopVideos: "Verificando relevancia de los {count} mejores videos...",
+    ourAiAnalyzing: "Nuestra IA está analizando miles de videos educativos para encontrar el contenido más relevante para tu lección",
+    videoReady: "¡Video listo!"
   },
   
   it: {
@@ -580,7 +676,23 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     poweredBy: "Alimentato da Gemini",
     
     // Loading states
-    generatingLessonFor: "Generazione lezione per"
+    generatingLessonFor: "Generazione lezione per",
+    
+    // Video progress and status
+    segmentOf: "Segmento {current} di {total}",
+    percentComplete: "{percent}% Completato",
+    videoPartOf: "Parte video {current} di {total}",
+    watchVideoSegment: "Guarda il segmento video",
+    
+    // Video sourcing pipeline messages
+    step1Of5GeneratingQueries: "Passo 1/5: Generazione query di ricerca...",
+    step2Of5SearchingYoutube: "Passo 2/5: Ricerca candidati su YouTube...",
+    step3Of5CheckingRelevance: "Passo 3/5: Verifica rilevanza dei {count} migliori video...",
+    step4Of5BestVideoFound: "Passo 4/5: Miglior video trovato: \"{title}\"",
+    step5Of5IdentifyingSegments: "Passo 5/5: Identificazione segmenti chiave nel video...",
+    checkingTopVideos: "Verifica rilevanza dei {count} migliori video...",
+    ourAiAnalyzing: "La nostra IA sta analizzando migliaia di video educativi per trovare il contenuto più rilevante per la tua lezione",
+    videoReady: "Video pronto!"
   },
   
   de: {
@@ -663,7 +775,23 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     poweredBy: "Unterstützt von Gemini",
     
     // Loading states
-    generatingLessonFor: "Lektion wird generiert für"
+    generatingLessonFor: "Lektion wird generiert für",
+    
+    // Video progress and status
+    segmentOf: "Segment {current} von {total}",
+    percentComplete: "{percent}% Vollständig",
+    videoPartOf: "Videoteil {current} von {total}",
+    watchVideoSegment: "Videosegment ansehen",
+    
+    // Video sourcing pipeline messages
+    step1Of5GeneratingQueries: "Schritt 1/5: Suchanfragen werden generiert...",
+    step2Of5SearchingYoutube: "Schritt 2/5: YouTube-Kandidaten werden gesucht...",
+    step3Of5CheckingRelevance: "Schritt 3/5: Relevanz der besten {count} Videos wird überprüft...",
+    step4Of5BestVideoFound: "Schritt 4/5: Bestes Video gefunden: \"{title}\"",
+    step5Of5IdentifyingSegments: "Schritt 5/5: Schlüsselsegmente im Video werden identifiziert...",
+    checkingTopVideos: "Relevanz der besten {count} Videos wird überprüft...",
+    ourAiAnalyzing: "Unsere KI analysiert Tausende von Bildungsvideos, um den relevantesten Inhalt für Ihre Lektion zu finden",
+    videoReady: "Video bereit!"
   },
   
   fr: {
@@ -746,6 +874,22 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     poweredBy: "Propulsé par Gemini",
     
     // Loading states
-    generatingLessonFor: "Génération de leçon pour"
+    generatingLessonFor: "Génération de leçon pour",
+    
+    // Video progress and status
+    segmentOf: "Segment {current} sur {total}",
+    percentComplete: "{percent}% Terminé",
+    videoPartOf: "Partie vidéo {current} sur {total}",
+    watchVideoSegment: "Regarder le segment vidéo",
+    
+    // Video sourcing pipeline messages
+    step1Of5GeneratingQueries: "Étape 1/5: Génération des requêtes de recherche...",
+    step2Of5SearchingYoutube: "Étape 2/5: Recherche de candidats sur YouTube...",
+    step3Of5CheckingRelevance: "Étape 3/5: Vérification de la pertinence des {count} meilleures vidéos...",
+    step4Of5BestVideoFound: "Étape 4/5: Meilleure vidéo trouvée: \"{title}\"",
+    step5Of5IdentifyingSegments: "Étape 5/5: Identification des segments clés dans la vidéo...",
+    checkingTopVideos: "Vérification de la pertinence des {count} meilleures vidéos...",
+    ourAiAnalyzing: "Notre IA analyse des milliers de vidéos éducatives pour trouver le contenu le plus pertinent pour votre leçon",
+    videoReady: "Vidéo prête !"
   }
 };

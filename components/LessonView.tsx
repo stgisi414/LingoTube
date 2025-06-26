@@ -5,7 +5,7 @@ import { BookOpenIcon, FilmIcon, RefreshCwIcon, CheckCircleIcon, SpeakerPlayIcon
 import { YouTubePlayerWrapper } from './YouTubePlayerWrapper';
 import ParsedText from './ParsedText';
 import { speakMultilingualText, stopSpeech, isSpeaking } from '../services/googleTTSService';
-import { useTranslation } from '../services/translationService';
+import { useTranslation, interpolateString } from '../services/translationService';
 import { generateSearchQueries, checkVideoRelevance, findVideoSegments } from '../services/geminiService';
 import { searchYouTube, getVideoTranscript, SearchedVideo } from '../services/videoSourcingService';
 import { generateQuiz } from '../services/quizService';
@@ -396,8 +396,8 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
           {/* Progress bar */}
           <div className="mb-2">
             <div className="flex justify-between text-sm text-slate-400 mb-1">
-              <span>Segment {currentSegmentIdx + 1} of {allLessonParts.length}</span>
-              <span>{Math.round(progress)}% Complete</span>
+              <span>{interpolateString(t('segmentOf'), { current: currentSegmentIdx + 1, total: allLessonParts.length })}</span>
+              <span>{interpolateString(t('percentComplete'), { percent: Math.round(progress) })}</span>
             </div>
             <div className="w-full bg-slate-700 rounded-full h-2">
               <div 
@@ -430,7 +430,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                   {currentSegment.type === SegmentType.NARRATION ? (
                     <p className="text-slate-400 text-sm">{t('listenToNarration')}</p>
                   ) : (
-                    <p className="text-slate-400 text-sm">Watch the video segment</p>
+                    <p className="text-slate-400 text-sm">{t('watchVideoSegment')}</p>
                   )}
                 </div>
               </div>
@@ -522,7 +522,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                     />
                     <div className="bg-slate-700/50 rounded-lg p-4">
                       <div className="text-sm text-zinc-300 font-semibold mb-1">
-                        Playing Segment {currentVideoTimeSegmentIndex + 1} of {videoFetchInfo.timeSegments.length}
+                        {interpolateString(t('videoPartOf'), { current: currentVideoTimeSegmentIndex + 1, total: videoFetchInfo.timeSegments.length })}
                       </div>
                       <div className="text-slate-400 italic">
                         "{videoFetchInfo.timeSegments[currentVideoTimeSegmentIndex].reason}"
@@ -541,7 +541,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                         {videoFetchInfo.message}
                       </div>
                       <div className="text-sm text-slate-500 max-w-md">
-                        Our AI is analyzing thousands of educational videos to find the most relevant content for your lesson
+                        {t('ourAiAnalyzing')}
                       </div>
                       <div className="flex space-x-1 mt-4">
                         <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{animationDelay: '0ms'}}></div>
@@ -589,7 +589,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                 <span>Transitioning...</span>
               </div>
             ) : currentSegment.type === SegmentType.VIDEO && videoFetchInfo?.timeSegments ? (
-              `Video part ${currentVideoTimeSegmentIndex + 1} of ${videoFetchInfo.timeSegments.length}`
+              interpolateString(t('videoPartOf'), { current: currentVideoTimeSegmentIndex + 1, total: videoFetchInfo.timeSegments.length })
             ) : null}
           </span>
 

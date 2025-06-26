@@ -1,4 +1,3 @@
-
 import { translations, TranslationKeys, SupportedLanguage } from '../data/translations';
 import { useState, useEffect } from 'react';
 
@@ -133,3 +132,10 @@ export function useTranslation() {
 
 // Re-export types for convenience
 export type { SupportedLanguage, TranslationKeys };
+
+// Helper function for string interpolation
+export const interpolateString = (template: string, values: Record<string, string | number>): string => {
+  return template.replace(/\{(\w+)\}/g, (match, key) => {
+    return values[key]?.toString() || match;
+  });
+};
