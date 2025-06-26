@@ -477,4 +477,4 @@ export const SENTENCE_TEMPLATES: SentenceTemplate[] = [
     ],
     example: 'I want to compare and contrast Python vs JavaScript'
   }
-];`
+];
