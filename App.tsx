@@ -1,16 +1,15 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { InputControls } from './components/InputControls';
 import { LessonView } from './components/LessonView';
 import LoadingIndicator from './components/LoadingIndicator';
 import { LanguageSelector } from './components/LanguageSelector';
-import { generateLessonPlan as callGeminiLessonPlan } from './services/geminiService';
+import { generateLessonPlan } from './services/geminiService';
 import { LessonPlan, AppStatus } from './types';
 import { AlertTriangle } from './constants';
 import { useTranslation } from './services/translationService';
 
 const App: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, currentLanguage } = useTranslation();
   const [appStatus, setAppStatus] = useState<AppStatus>(AppStatus.IDLE);
   const [lessonPlan, setLessonPlan] = useState<LessonPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +27,7 @@ const App: React.FC = () => {
     setCurrentTopic(topic);
 
     try {
-      const plan = await callGeminiLessonPlan(topic);
+      const plan = await generateLessonPlan(topic, currentLanguage);
       if (plan) {
         setLessonPlan(plan);
         setAppStatus(AppStatus.DISPLAYING_LESSON);
@@ -41,7 +40,7 @@ const App: React.FC = () => {
       setError(`Failed to generate lesson plan: ${errorMessage}. Please check your API key and network connection.`);
       setAppStatus(AppStatus.ERROR);
     }
-  }, []);
+  }, [currentLanguage, setAppStatus, setError, setLessonPlan]);
 
   const resetApp = () => {
     setAppStatus(AppStatus.IDLE);
@@ -83,7 +82,7 @@ const App: React.FC = () => {
           />
         )}
 
-        {appStatus === AppStatus.PROCESSING_INPUT && <LoadingIndicator message={`Generating lesson for "${currentTopic}"...`} />}
+        {appStatus === AppStatus.PROCESSING_INPUT && <LoadingIndicator message={`${t('generatingLessonFor')} "${currentTopic}"...`} />}
 
         {error && appStatus === AppStatus.ERROR && (
           <div 
@@ -108,7 +107,7 @@ const App: React.FC = () => {
       </main>
 
       <footer className="w-full max-w-4xl text-center py-8 text-gray-400 text-sm">
-        <p>&copy; {new Date().getFullYear()} AILingo.Tube. Powered by Gemini.</p>
+        <p>&copy; {new Date().getFullYear()} AILingo.Tube. {t('poweredByGemini')}</p>
       </footer>
     </div>
   );

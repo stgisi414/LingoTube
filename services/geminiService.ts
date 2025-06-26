@@ -43,7 +43,7 @@ const safetySettings = [
 /**
  * Generate a complete lesson plan with multilingual narration tags
  */
-export const generateLessonPlan = async (topic: string): Promise<LessonPlan> => {
+export const generateLessonPlan = async (topic: string, language: string): Promise<LessonPlan> => {
   console.log(`🎓 Generating lesson plan for topic: "${topic}"`);
 
   const genAI = getAiClient();
@@ -52,19 +52,36 @@ export const generateLessonPlan = async (topic: string): Promise<LessonPlan> => 
     safetySettings 
   });
 
-  const prompt = `Create a detailed lesson plan for: "${topic}"
+  const languageInstructions = {
+    'en': 'Generate all content in English.',
+    'ko': 'Generate all lesson content in Korean. Write narration, video titles, and descriptions in Korean.',
+    'zh': 'Generate all lesson content in Chinese. Write narration, video titles, and descriptions in Chinese.',
+    'ja': 'Generate all lesson content in Japanese. Write narration, video titles, and descriptions in Japanese.',
+    'es': 'Generate all lesson content in Spanish. Write narration, video titles, and descriptions in Spanish.',
+    'fr': 'Generate all lesson content in French. Write narration, video titles, and descriptions in French.',
+    'de': 'Generate all lesson content in German. Write narration, video titles, and descriptions in German.',
+    'it': 'Generate all lesson content in Italian. Write narration, video titles, and descriptions in Italian.'
+  };
 
-IMPORTANT LANGUAGE RULES:
-- If the topic is about languages, cultures, countries, or international subjects, include appropriate language code tags using this format:
-  - Spanish text: <lang:es>hola mundo</lang:es>
-  - French text: <lang:fr>bonjour le monde</lang:fr>
-  - German text: <lang:de>hallo welt</lang:de>
-  - Italian text: <lang:it>ciao mondo</lang:it>
-  - Chinese text: <lang:zh>你好世界</lang:zh>
-  - Japanese text: <lang:ja>こんにちは世界</lang:ja>
-  - Korean text: <lang:ko>안녕하세요 세계</lang:ko>
+  const languageInstruction = languageInstructions[language as keyof typeof languageInstructions] || languageInstructions['en'];
 
-- If the topic is NOT about languages, cultures, or international subjects (like science, math, technology, etc.), use ONLY English text without any language tags.
+  const prompt = `Create a comprehensive educational lesson plan for: "${topic}"
+
+IMPORTANT: ${languageInstruction}
+
+You are an expert educator creating engaging lesson content. Generate a structured lesson plan with alternating narration and video segments.
+
+Format the lesson with these guidelines:
+1. Start with an introduction narration
+2. Alternate between narration and video segments  
+3. End with a conclusion narration
+4. Use 4-6 total segments (including intro/outro)
+5. Each video segment should have a clear search query for educational content
+
+For narration text, include strategic language tags for key terms:
+- For language learning topics: Use <lang:code>term</lang:code> for foreign words/phrases
+- For other topics: Only tag specific technical terms, proper nouns, or concepts in other languages
+- Keep most content in the target language (${language}) without language tags unless specifically highlighting foreign terms
 
 Examples:
 - For "French cuisine": "We'll learn about <lang:fr>croissants</lang:fr> and <lang:fr>baguettes</lang:fr>"
@@ -76,23 +93,23 @@ Exclude any text in parentheses from narration as it's for internal notes only.
 
 Return ONLY a valid JSON object:
 {
-  "topic": "lesson topic",
-  "introNarration": "Introduction with language tags...",
+  "topic": "lesson topic in ${language}",
+  "introNarration": "Introduction with language tags in ${language}...",
   "segments": [
     {
       "type": "narration",
       "id": "unique-id",
-      "text": "Narration with language tags..."
+      "text": "Narration with language tags in ${language}..."
     },
     {
       "type": "video", 
       "id": "unique-id",
-      "title": "Video section title",
+      "title": "Video section title in ${language}",
       "youtubeSearchQuery": "search query for YouTube",
-      "segmentDescription": "What this video will demonstrate"
+      "segmentDescription": "What this video will demonstrate in ${language}"
     }
   ],
-  "outroNarration": "Conclusion with language tags..."
+  "outroNarration": "Conclusion with language tags in ${language}..."
 }`;
 
   try {
@@ -246,3 +263,7 @@ Return ONLY valid JSON array:
     }];
   }
 };
+```
+
+```
+</replit_final_file>

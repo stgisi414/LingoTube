@@ -66,6 +66,22 @@ export interface TranslationKeys {
   grammar: string;
   pronunciation: string;
   culturalContext: string;
+  
+  // Lesson UI
+  newLesson: string;
+  narration: string;
+  listenToNarration: string;
+  generatingIllustration: string;
+  previous: string;
+  next: string;
+  generateQuiz: string;
+  
+  // Footer
+  footerText: string;
+  poweredBy: string;
+  
+  // Loading states
+  generatingLessonFor: string;
 }
 
 export const translations: Record<SupportedLanguage, TranslationKeys> = {
@@ -133,7 +149,23 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     vocabulary: "Vocabulary",
     grammar: "Grammar",
     pronunciation: "Pronunciation",
-    culturalContext: "Cultural Context"
+    culturalContext: "Cultural Context",
+    
+    // Lesson UI
+    newLesson: "New Lesson",
+    narration: "Narration",
+    listenToNarration: "Listen to the narration",
+    generatingIllustration: "Generating illustration...",
+    previous: "Previous",
+    next: "Next",
+    generateQuiz: "Generate Quiz",
+    
+    // Footer
+    footerText: "AiLingo.Tube",
+    poweredBy: "Powered by Gemini",
+    
+    // Loading states
+    generatingLessonFor: "Generating lesson for"
   },
   
   ko: {
@@ -200,7 +232,23 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     vocabulary: "어휘",
     grammar: "문법",
     pronunciation: "발음",
-    culturalContext: "문화적 맥락"
+    culturalContext: "문화적 맥락",
+    
+    // Lesson UI
+    newLesson: "새 수업",
+    narration: "나레이션",
+    listenToNarration: "나레이션을 들어보세요",
+    generatingIllustration: "일러스트 생성 중...",
+    previous: "이전",
+    next: "다음",
+    generateQuiz: "퀴즈 생성",
+    
+    // Footer
+    footerText: "AiLingo.Tube",
+    poweredBy: "Gemini 제공",
+    
+    // Loading states
+    generatingLessonFor: "수업 생성 중"
   },
   
   zh: {
@@ -267,7 +315,23 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     vocabulary: "词汇",
     grammar: "语法",
     pronunciation: "发音",
-    culturalContext: "文化背景"
+    culturalContext: "文化背景",
+    
+    // Lesson UI
+    newLesson: "新课程",
+    narration: "旁白",
+    listenToNarration: "收听旁白",
+    generatingIllustration: "生成插图中...",
+    previous: "上一个",
+    next: "下一个",
+    generateQuiz: "生成测验",
+    
+    // Footer
+    footerText: "AiLingo.Tube",
+    poweredBy: "由 Gemini 提供支持",
+    
+    // Loading states
+    generatingLessonFor: "正在生成课程"
   },
   
   ja: {
@@ -334,7 +398,23 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     vocabulary: "語彙",
     grammar: "文法",
     pronunciation: "発音",
-    culturalContext: "文化的背景"
+    culturalContext: "文化的背景",
+    
+    // Lesson UI
+    newLesson: "新しいレッスン",
+    narration: "ナレーション",
+    listenToNarration: "ナレーションを聞く",
+    generatingIllustration: "イラスト生成中...",
+    previous: "前へ",
+    next: "次へ",
+    generateQuiz: "クイズ生成",
+    
+    // Footer
+    footerText: "AiLingo.Tube",
+    poweredBy: "Gemini提供",
+    
+    // Loading states
+    generatingLessonFor: "レッスンを生成中"
   },
   
   es: {
@@ -401,7 +481,23 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     vocabulary: "Vocabulario",
     grammar: "Gramática",
     pronunciation: "Pronunciación",
-    culturalContext: "Contexto Cultural"
+    culturalContext: "Contexto Cultural",
+    
+    // Lesson UI
+    newLesson: "Nueva Lección",
+    narration: "Narración",
+    listenToNarration: "Escuchar la narración",
+    generatingIllustration: "Generando ilustración...",
+    previous: "Anterior",
+    next: "Siguiente",
+    generateQuiz: "Generar Cuestionario",
+    
+    // Footer
+    footerText: "AiLingo.Tube",
+    poweredBy: "Desarrollado por Gemini",
+    
+    // Loading states
+    generatingLessonFor: "Generando lección para"
   },
   
   it: {
@@ -468,7 +564,23 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     vocabulary: "Vocabolario",
     grammar: "Grammatica",
     pronunciation: "Pronuncia",
-    culturalContext: "Contesto Culturale"
+    culturalContext: "Contesto Culturale",
+    
+    // Lesson UI
+    newLesson: "Nuova Lezione",
+    narration: "Narrazione",
+    listenToNarration: "Ascolta la narrazione",
+    generatingIllustration: "Generazione illustrazione...",
+    previous: "Precedente",
+    next: "Successivo",
+    generateQuiz: "Genera Quiz",
+    
+    // Footer
+    footerText: "AiLingo.Tube",
+    poweredBy: "Alimentato da Gemini",
+    
+    // Loading states
+    generatingLessonFor: "Generazione lezione per"
   },
   
   de: {
@@ -535,7 +647,23 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     vocabulary: "Wortschatz",
     grammar: "Grammatik",
     pronunciation: "Aussprache",
-    culturalContext: "Kultureller Kontext"
+    culturalContext: "Kultureller Kontext",
+    
+    // Lesson UI
+    newLesson: "Neue Lektion",
+    narration: "Erzählung",
+    listenToNarration: "Erzählung anhören",
+    generatingIllustration: "Illustration wird generiert...",
+    previous: "Zurück",
+    next: "Weiter",
+    generateQuiz: "Quiz Generieren",
+    
+    // Footer
+    footerText: "AiLingo.Tube",
+    poweredBy: "Unterstützt von Gemini",
+    
+    // Loading states
+    generatingLessonFor: "Lektion wird generiert für"
   },
   
   fr: {
@@ -602,6 +730,22 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
     vocabulary: "Vocabulaire",
     grammar: "Grammaire",
     pronunciation: "Prononciation",
-    culturalContext: "Contexte Culturel"
+    culturalContext: "Contexte Culturel",
+    
+    // Lesson UI
+    newLesson: "Nouvelle Leçon",
+    narration: "Narration",
+    listenToNarration: "Écouter la narration",
+    generatingIllustration: "Génération d'illustration...",
+    previous: "Précédent",
+    next: "Suivant",
+    generateQuiz: "Générer Quiz",
+    
+    // Footer
+    footerText: "AiLingo.Tube",
+    poweredBy: "Propulsé par Gemini",
+    
+    // Loading states
+    generatingLessonFor: "Génération de leçon pour"
   }
 };

@@ -5,6 +5,7 @@ import { BookOpenIcon, FilmIcon, RefreshCwIcon, CheckCircleIcon, SpeakerPlayIcon
 import { YouTubePlayerWrapper } from './YouTubePlayerWrapper';
 import ParsedText from './ParsedText';
 import { speakMultilingualText, stopSpeech, isSpeaking } from '../services/googleTTSService';
+import { useTranslation } from '../services/translationService';
 import { generateSearchQueries, checkVideoRelevance, findVideoSegments } from '../services/geminiService';
 import { searchYouTube, getVideoTranscript, SearchedVideo } from '../services/videoSourcingService';
 import { generateQuiz } from '../services/quizService';
@@ -28,6 +29,7 @@ interface TransitionState {
 
 // This is the main component that renders the lesson with proper progression.
 export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void; }> = ({ lessonPlan, onReset }) => {
+  const { t } = useTranslation();
   const [currentSegmentIdx, setCurrentSegmentIdx] = useState(0);
   const [completedSegments, setCompletedSegments] = useState<Set<string>>(new Set());
   const [videoPlayerHeight, setVideoPlayerHeight] = useState('360');
@@ -387,7 +389,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
               onClick={onReset} 
               className="absolute top-0 right-0 flex items-center text-sm bg-zinc-600 hover:bg-zinc-700 text-white px-3 py-1.5 rounded-md transition-colors z-[9999999]"
             >
-              {RefreshCwIcon} <span className="ml-2">New Lesson</span>
+              {RefreshCwIcon} <span className="ml-2">{t('newLesson')}</span>
             </button>
           </div>
 
@@ -422,11 +424,11 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                   <h2 className="text-xl font-semibold text-white">
                     {currentSegment.type === SegmentType.VIDEO ? 
                       <ParsedText text={(videoFetchInfo?.videoTitle || (currentSegment as VideoSegment).title)} generateIllustration={false} /> :
-                      "Narration"
+                      t('narration')
                     }
                   </h2>
                   {currentSegment.type === SegmentType.NARRATION ? (
-                    <p className="text-slate-400 text-sm">Listen to the narration</p>
+                    <p className="text-slate-400 text-sm">{t('listenToNarration')}</p>
                   ) : (
                     <p className="text-slate-400 text-sm">Watch the video segment</p>
                   )}
@@ -577,7 +579,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
             ) : (
               ChevronLeftIcon
             )} 
-            <span className="ml-2">Previous</span>
+            <span className="ml-2">{t('previous')}</span>
           </button>
 
           <span className="text-slate-400 text-sm">
@@ -597,7 +599,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
               disabled={transitionState.isTransitioning || isGeneratingQuiz}
               className="flex items-center px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
-              <span className="mr-2">Generate Quiz</span> 
+              <span className="mr-2">{t('generateQuiz')}</span> 
               {isGeneratingQuiz ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
@@ -610,7 +612,7 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
               disabled={transitionState.isTransitioning}
               className="flex items-center px-6 py-3 bg-zinc-600 hover:bg-zinc-700 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
-              <span className="mr-2">Next</span> 
+              <span className="mr-2">{t('next')}</span> 
               {transitionState.isTransitioning ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (

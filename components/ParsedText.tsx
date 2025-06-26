@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { SpeakerPlayIcon, SpeakerStopIcon } from "../constants";
 import { generateIllustrationUrls } from "../services/falAiService";
+import { useTranslation } from "../services/translationService";
 
 export interface ParsedSegment {
   type: "plain" | "lang";
@@ -79,6 +80,7 @@ const ParsedText: React.FC<ParsedTextProps> = ({
   lessonTopic,
   generateIllustration = false,
 }) => {
+  const { t } = useTranslation();
   const [illustrationImage, setIllustrationImage] = useState<string | null>(
     null,
   );
@@ -182,36 +184,36 @@ const ParsedText: React.FC<ParsedTextProps> = ({
                     try {
                       const cropString = illustrationImage.split('#crop=')[1];
                       console.log(`🔍 Raw crop string: ${cropString}`);
-                      
+
                       // Parse the crop string format: x:123,y:456,w:789,h:012
                       const cropParts = cropString.split(',');
                       const cropData = {};
-                      
+
                       cropParts.forEach(part => {
                         const [key, value] = part.split(':');
                         cropData[key] = parseInt(value);
                       });
-                      
+
                       const x = cropData['x'] || 0;
                       const y = cropData['y'] || 0;
                       const w = cropData['w'] || 800;
                       const h = cropData['h'] || 600;
-                      
+
                       console.log(`🎯 Parsed crop coordinates: x=${x}, y=${y}, w=${w}, h=${h}`);
-                      
+
                       // Calculate object-position based on crop area center with face-safe adjustments
                       const centerX = x + w / 2;
                       const centerY = y + h / 2;
-                      
+
                       // Use actual image dimensions from FAL (landscape_4_3 = 1024x768)
                       const imageWidth = 1024;
                       const imageHeight = 768;
-                      
+
                       // For face safety, bias positioning to show more of the upper area
                       // This helps prevent chin cropping on wider screens
                       let posX = Math.max(0, Math.min(100, (centerX / imageWidth) * 100));
                       let posY = Math.max(0, Math.min(100, (centerY / imageHeight) * 100));
-                      
+
                       // Apply responsive adjustments based on container width
                       const containerWidth = window.innerWidth;
                       if (containerWidth > 900) {
@@ -219,15 +221,15 @@ const ParsedText: React.FC<ParsedTextProps> = ({
                         posY = Math.max(15, posY - 10); // Move up but not too much
                         console.log(`📱 Wide screen adjustment: moved Y from ${posY + 10}% to ${posY}%`);
                       }
-                      
+
                       // Extra safety: if Y position suggests faces might be cut, adjust upward
                       if (posY > 60) {
                         posY = Math.max(25, posY - 15);
                         console.log(`👤 Face safety adjustment: moved Y to ${posY}%`);
                       }
-                      
+
                       console.log(`✅ Final object-position: ${posX}% ${posY}%`);
-                      
+
                       return {
                         objectPosition: `${posX}% ${posY}%`
                       };
@@ -251,7 +253,7 @@ const ParsedText: React.FC<ParsedTextProps> = ({
               <div className="flex items-center space-x-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-zinc-400"></div>
                 <span className="text-slate-400 text-sm">
-                  Generating illustration...
+                  {t('generatingIllustration')}
                 </span>
               </div>
             </div>
