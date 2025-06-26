@@ -222,7 +222,7 @@ async function tryTTSRequest(text: string, voiceName: string | undefined, langua
 /**
  * Main function to speak multilingual text
  */
-export async function speakMultilingualText(text: string, appLanguage: string = 'en'): Promise<void> {
+export async function speakMultilingualText(text: string, appLanguage: string): Promise<void> {
   console.log(`🗣️ Starting multilingual TTS for: "${text.substring(0, 100)}..."`);
   console.log(`🗣️ App language: ${appLanguage}`);
   console.log(`🗣️ TTS API Key available: ${!!GOOGLE_TTS_API_KEY}`);

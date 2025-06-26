@@ -29,7 +29,7 @@ interface TransitionState {
 
 // This is the main component that renders the lesson with proper progression.
 export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void; }> = ({ lessonPlan, onReset }) => {
-  const { t } = useTranslation();
+  const { t, currentLanguage } = useTranslation();
   const [currentSegmentIdx, setCurrentSegmentIdx] = useState(0);
   const [completedSegments, setCompletedSegments] = useState<Set<string>>(new Set());
   const [videoPlayerHeight, setVideoPlayerHeight] = useState('360');
@@ -320,13 +320,13 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
     setSpeakingSegmentId(segmentId);
 
     try {
-      await speakMultilingualText(rawText);
+      await speakMultilingualText(rawText, currentLanguage);
     } catch (error) {
       console.warn("TTS failed:", error);
     } finally {
         setSpeakingSegmentId(null);
     }
-  }, [speakingSegmentId]);
+  }, [speakingSegmentId, currentLanguage]);
 
   const handleGenerateQuiz = useCallback(async () => {
     setIsGeneratingQuiz(true);
