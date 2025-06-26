@@ -1,6 +1,29 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MicIcon, StopCircleIcon, SendIcon } from '../constants';
 import { SpeechRecognition, AppStatus } from '../types';
+import {
+  SUBJECT_OPTIONS,
+  TOPIC_OPTIONS,
+  REVIEW_SUBJECTS,
+  REVIEW_PURPOSES,
+  LANGUAGE_SKILLS,
+  TARGET_LANGUAGES,
+  LEARNING_FOCUS,
+  SPECIFIC_LANGUAGE_SKILLS,
+  LANGUAGE_LEARNING_METHODS,
+  CULTURAL_ASPECTS,
+  LANGUAGE_CULTURES,
+  CULTURAL_CONTEXTS,
+  LANGUAGE_EXAMS,
+  EXAM_FOCUS_AREAS,
+  PROCESS_OPTIONS,
+  UNDERSTANDING_CONTEXTS,
+  RELATIONSHIP_CONCEPTS_1,
+  RELATIONSHIP_CONCEPTS_2,
+  COMPARISON_ITEM_1,
+  COMPARISON_OPERATORS,
+  COMPARISON_ITEM_2
+} from '../data/topicOptions';
 
 interface InputControlsProps {
   onSubmit: (topic: string) => void;
