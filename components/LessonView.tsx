@@ -690,12 +690,3 @@ export const LessonView: React.FC<{ lessonPlan: LessonPlan; onReset: () => void;
                 </button>
               </div>
             </div>
-          ```python
-
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
