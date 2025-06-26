@@ -23,8 +23,6 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({ className = 
   const handleLanguageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newLanguage = event.target.value as SupportedLanguage;
     setLanguage(newLanguage);
-    // Force a page refresh to apply translations throughout the app
-    window.location.reload();
   };
 
   return (

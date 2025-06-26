@@ -4,6 +4,7 @@ export type SupportedLanguage = 'en' | 'ko' | 'zh' | 'ja' | 'es' | 'it' | 'de' |
 export interface TranslationKeys {
   // App UI
   appTitle: string;
+  tagline: string;
   loading: string;
   error: string;
   retry: string;
@@ -71,6 +72,7 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
   en: {
     // App UI
     appTitle: "Multimedia Lesson Planner",
+    tagline: "Craft dynamic educational journeys with AI-powered narration, illustrations, and curated video segments.",
     loading: "Loading...",
     error: "Error",
     retry: "Retry",
@@ -137,6 +139,7 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
   ko: {
     // App UI
     appTitle: "멀티미디어 수업 계획자",
+    tagline: "AI 기반 내레이션, 일러스트레이션, 큐레이션된 비디오 세그먼트로 역동적인 교육 여정을 만들어보세요.",
     loading: "로딩 중...",
     error: "오류",
     retry: "다시 시도",
@@ -203,6 +206,7 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
   zh: {
     // App UI
     appTitle: "多媒体课程规划器",
+    tagline: "通过AI驱动的叙述、插图和精选视频片段打造动态教育旅程。",
     loading: "加载中...",
     error: "错误",
     retry: "重试",
@@ -269,6 +273,7 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
   ja: {
     // App UI
     appTitle: "マルチメディア授業プランナー",
+    tagline: "AI駆動のナレーション、イラスト、厳選されたビデオセグメントで動的な教育ジャーニーを作成。",
     loading: "読み込み中...",
     error: "エラー",
     retry: "再試行",
@@ -335,6 +340,7 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
   es: {
     // App UI
     appTitle: "Planificador de Lecciones Multimedia",
+    tagline: "Crea viajes educativos dinámicos con narración, ilustraciones y segmentos de video curados por IA.",
     loading: "Cargando...",
     error: "Error",
     retry: "Reintentar",
@@ -401,6 +407,7 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
   it: {
     // App UI
     appTitle: "Pianificatore di Lezioni Multimediali",
+    tagline: "Crea percorsi educativi dinamici con narrazione, illustrazioni e segmenti video curati dall'IA.",
     loading: "Caricamento...",
     error: "Errore",
     retry: "Riprova",
@@ -467,6 +474,7 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
   de: {
     // App UI
     appTitle: "Multimedia-Unterrichtsplaner",
+    tagline: "Gestalten Sie dynamische Bildungsreisen mit KI-gestützter Erzählung, Illustrationen und kuratierten Videosegmenten.",
     loading: "Wird geladen...",
     error: "Fehler",
     retry: "Wiederholen",
@@ -533,6 +541,7 @@ export const translations: Record<SupportedLanguage, TranslationKeys> = {
   fr: {
     // App UI
     appTitle: "Planificateur de Cours Multimédia",
+    tagline: "Créez des parcours éducatifs dynamiques avec narration IA, illustrations et segments vidéo sélectionnés.",
     loading: "Chargement...",
     error: "Erreur",
     retry: "Réessayer",
