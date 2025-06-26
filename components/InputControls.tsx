@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MicIcon, StopCircleIcon, SendIcon } from '../constants';
 import { SpeechRecognition, AppStatus, SentenceTemplate } from '../types';
 import { SENTENCE_TEMPLATES } from '../data/searchTemplateOptions';
+import { getTemplatesForLanguage } from '../data/languageTemplates';
 import { useTranslation } from '../services/translationService';
 
 interface InputControlsProps {
@@ -13,7 +14,7 @@ interface InputControlsProps {
 
 
 export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProcessing, setAppStatus }) => {
-  const { t, i18n } = useTranslation();
+  const { t, currentLanguage } = useTranslation();
   const [selectedTemplate, setSelectedTemplate] = useState<SentenceTemplate>(SENTENCE_TEMPLATES[0]);
   const [blankValues, setBlankValues] = useState<Record<string, string>>({});
   const [customTopic, setCustomTopic] = useState('');
@@ -31,29 +32,10 @@ export const InputControls: React.FC<InputControlsProps> = ({ onSubmit, isProces
 
   useEffect(() => {
     // Load templates based on current language
-    const loadTemplates = () => {
-      try {
-        // Dynamically import the template file based on the current language
-        import(`../data/searchTemplateOptions_${i18n.language}.ts`)
-          .then(module => {
-            setCurrentTemplates(module.SENTENCE_TEMPLATES);
-            setSelectedTemplate(module.SENTENCE_TEMPLATES[0]); // Reset selected template to the first one
-          })
-          .catch(error => {
-            console.error("Failed to load templates for language:", i18n.language, error);
-            // If language-specific templates fail to load, fallback to English templates
-            setCurrentTemplates(SENTENCE_TEMPLATES);
-            setSelectedTemplate(SENTENCE_TEMPLATES[0]);
-          });
-      } catch (error) {
-        console.error("Error loading template file:", error);
-        setCurrentTemplates(SENTENCE_TEMPLATES);
-        setSelectedTemplate(SENTENCE_TEMPLATES[0]);
-      }
-    };
-
-    loadTemplates();
-  }, [i18n.language]);
+    const templates = getTemplatesForLanguage(currentLanguage);
+    setCurrentTemplates(templates);
+    setSelectedTemplate(templates[0]);
+  }, [currentLanguage]);
 
   // Initialize blank values when template changes
   useEffect(() => {
